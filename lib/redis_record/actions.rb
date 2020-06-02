@@ -1,4 +1,5 @@
 # typed: strict
+require 'redis_record/range_interval'
 module RedisRecord
   # Raised by Model.find
   class RecordNotFound < StandardError; end
@@ -8,6 +9,9 @@ module RedisRecord
 end
 
 module RedisRecord::Actions
+  extend T::Sig
+  extend T::Helpers
+
   sig { params(klass: T.class_of(T::Struct)).void }
   def self.included(klass)
     klass.extend(ClassMethods)
@@ -15,6 +19,8 @@ module RedisRecord::Actions
   end
 
   module ClassMethods
+    extend T::Sig
+
     sig { params(args: T::Hash[Symbol, T.untyped]).returns(T.untyped) }
     def create!(args)
       args[:created_at] = args[:updated_at] = Time.zone.now
@@ -156,6 +162,7 @@ module RedisRecord::Actions
   end
 
   module InstanceMethods
+    extend T::Sig
     extend T::Helpers
 
     abstract!

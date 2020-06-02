@@ -1,11 +1,17 @@
 # typed: strict
+require 'rails'
 module RedisRecord::Logger
+  extend T::Sig
+  extend T::Helpers
+
   sig { params(klass: Module).void }
   def self.included(klass)
     klass.extend(ClassMethods)
   end
 
   module ClassMethods
+    extend T::Sig
+
     @@logger = T.let(Rails.logger, T.untyped)
 
     sig { returns(T.untyped) }
@@ -20,6 +26,8 @@ module RedisRecord::Logger
   end
 
   module LoggerMethods
+    extend T::Sig
+
     #
     # Forward all the logger methods call to a module -- almost all logger
     # methods are missing and handled by method_missing. We use this trick to

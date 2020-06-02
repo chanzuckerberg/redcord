@@ -1,5 +1,6 @@
 # typed: strict
 module RedisRecord::LuaScriptReader
+  extend T::Sig
 
   sig {params(script_name: String).returns(String) }
   def self.read_lua_script(script_name)

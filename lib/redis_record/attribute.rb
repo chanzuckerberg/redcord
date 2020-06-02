@@ -1,5 +1,7 @@
 # typed: strict
 module RedisRecord::Attribute
+  extend T::Sig
+  extend T::Helpers
 
   # We implicitly determine what should be a range index on Redis based on Ruby type.
   RangeIndexType = T.type_alias {
@@ -14,6 +16,8 @@ module RedisRecord::Attribute
   end
 
   module ClassMethods
+    extend T::Sig
+
     sig do
       params(
         name: Symbol,
