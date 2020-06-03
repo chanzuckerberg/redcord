@@ -2,5 +2,7 @@
 require 'sorbet-runtime'
 
 module RedisRecord
-  require 'redis_record/base'
+  if defined?(Rails)
+    require 'redis_record/base'
+  end
 end
