@@ -2,8 +2,13 @@
 #   srb rbi todo
 
 # typed: strong
-module RedisRecord::Logger::ClassMethods::Rails; end
-module RedisRecord::RedisConnection::ClassMethods::Rails; end
-module RedisRecord::RedisConnection::Rails; end
-module RedisRecord::TTL::ClassMethods::ActiveSupport::Duration; end
+module ::Anonymous_Delegator_1; end
+module ::Anonymous_Delegator_3; end
+module ActiveStorage::Blob::Analyzable; end
+module ActiveStorage::Blob::Identifiable; end
+module ActiveStorage::Variant; end
+module T::InterfaceWrapper::Helpers; end
+module T::Private::Abstract::Hooks; end
+module T::Private::Methods::MethodHooks; end
 module T::Private::Methods::SingletonMethodHooks; end
+module T::Private::MixesInClassMethods; end

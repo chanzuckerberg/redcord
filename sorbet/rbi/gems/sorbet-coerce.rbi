@@ -16,7 +16,7 @@ module TypeCoerce::Configuration
   def self.raise_coercion_error(*args, &blk); end
   def self.raise_coercion_error=(arg0); end
 end
-module Polyfill::Module::M46967231455440
+module Polyfill::Module::M47252229431520
 end
 class TypeCoerce::CoercionError < SafeType::CoercionError
 end
@@ -32,23 +32,4 @@ class TypeCoerce::Converter
   def initialize(type); end
   def new; end
   def to_s; end
-end
-module RedisRecord::ServerScripts
-  extend T::Sig::WithoutRuntime
-  extend T::Sig::WithoutRuntime
-  extend T::Sig::WithoutRuntime
-  extend T::Sig::WithoutRuntime
-  extend T::Sig::WithoutRuntime
-  extend T::Sig::WithoutRuntime
-  extend T::Sig::WithoutRuntime
-end
-module RedisRecord
-end
-module RedisRecord::Attribute
-end
-module RedisRecord::Logger
-end
-module RedisRecord::LuaScriptReader
-end
-module RedisRecord::TTL
 end
