@@ -1,4 +1,4 @@
-# typed: false
+# typed: strict
 require 'redis_record/range_interval'
 module RedisRecord
   # Raised by Model.find
@@ -167,16 +167,16 @@ module RedisRecord::Actions
 
     abstract!
 
-    sig { abstract.returns(T.nilable(Time)) }
+    sig { abstract.returns(T.nilable(ActiveSupport::TimeWithZone)) }
     def created_at; end
 
-    sig { abstract.params(time: Time).returns(T.nilable(Time)) }
+    sig { abstract.params(time: ActiveSupport::TimeWithZone).returns(T.nilable(ActiveSupport::TimeWithZone)) }
     def created_at=(time); end
 
-    sig { abstract.returns(T.nilable(Time)) }
+    sig { abstract.returns(T.nilable(ActiveSupport::TimeWithZone)) }
     def updated_at; end
 
-    sig { abstract.params(time: Time).returns(T.nilable(Time)) }
+    sig { abstract.params(time: ActiveSupport::TimeWithZone).returns(T.nilable(ActiveSupport::TimeWithZone)) }
     def updated_at=(time); end
 
     sig { void }
