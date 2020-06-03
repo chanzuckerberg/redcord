@@ -3,7 +3,7 @@ module RedisRecord::ServerScripts
   # Extending T::Sig in Redis instances will cause runtime errors. Hence
   # no real runtime sig decorators on instance methods for the following
   # methods.
-  extend T::Sig::WithoutRuntime
+  extend T::Sig
 
   sig do
     params(

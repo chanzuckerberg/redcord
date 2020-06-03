@@ -1,5 +1,11 @@
 # typed: strict
+require 'redis_record/prepared_redis'
+require 'redis_record/lua_script_reader'
+
 module RedisRecord::RedisConnection
+  extend T::Sig
+  extend T::Helpers
+
   @connections = T.let(nil, T.nilable(T::Hash[String, T.untyped]))
   @procs_to_prepare = T.let([], T::Array[Proc])
 
@@ -10,6 +16,8 @@ module RedisRecord::RedisConnection
   end
 
   module ClassMethods
+    extend T::Sig
+
     sig { returns(T::Hash[Symbol, T.untyped]) }
     def connection_config
       env_config = RedisRecord::Base.configurations[Rails.env]
@@ -64,6 +72,8 @@ module RedisRecord::RedisConnection
   end
 
   module InstanceMethods
+    extend T::Sig
+
     sig { returns(RedisRecord::PreparedRedis) }
     def redis
       self.class.redis

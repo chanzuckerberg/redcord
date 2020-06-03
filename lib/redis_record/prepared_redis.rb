@@ -1,5 +1,9 @@
 # typed: strict
+require 'redis_record/server_scripts'
+require 'redis'
+
 class RedisRecord::PreparedRedis < Redis
+  extend T::Sig
   include RedisRecord::ServerScripts
 
   sig { returns(T::Hash[Symbol, String]) }

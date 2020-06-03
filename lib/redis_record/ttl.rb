@@ -6,12 +6,17 @@
 # automatically.
 #
 module RedisRecord::TTL
+  extend T::Sig
+  extend T::Helpers
+
   sig { params(klass: T.any(Module, T.class_of(T::Struct))).void }
   def self.included(klass)
     klass.extend(ClassMethods)
   end
 
   module ClassMethods
+    extend T::Sig
+
     sig { params(duration: T.nilable(ActiveSupport::Duration)).void }
     def ttl(duration)
       RedisRecord::RedisConnection.procs_to_prepare << Proc.new do |redis|
