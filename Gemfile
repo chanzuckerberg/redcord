@@ -24,11 +24,3 @@ else
   gem "rails", "~> 5.2.3"
   gem "bundler", ">= 2.0"
 end
-
-gem 'sorbet', :group => :development
-gem 'sorbet-runtime'
-gem 'sorbet-static'
-gem 'sorbet-coerce'
-
-gem 'hiredis'
-gem 'redis', :require => ["redis", "redis/connection/hiredis"]
