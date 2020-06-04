@@ -5,11 +5,11 @@
 #   - One round trip per operation
 # - Model attributes are type-checked by sorbet
 #
-require 'redis_record/logger'
-require 'redis_record/configurations'
-require 'redis_record/redis_connection'
 require 'redis_record/actions'
 require 'redis_record/attribute'
+require 'redis_record/configurations'
+require 'redis_record/logger'
+require 'redis_record/redis_connection'
 require 'redis_record/ttl'
 
 module RedisRecord::Base

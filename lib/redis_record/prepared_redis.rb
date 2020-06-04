@@ -1,6 +1,6 @@
 # typed: strict
-require 'redis_record/server_scripts'
 require 'redis'
+require 'redis_record/server_scripts'
 
 class RedisRecord::PreparedRedis < Redis
   extend T::Sig
