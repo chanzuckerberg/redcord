@@ -1,4 +1,5 @@
 # typed: strict
+require 'rails'
 require 'yarr/prepared_redis'
 require 'yarr/lua_script_reader'
 
