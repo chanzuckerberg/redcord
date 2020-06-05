@@ -549,12 +549,3 @@ class Redis::Subscription
   def subscribe(&block); end
   def unsubscribe(&block); end
 end
-class Redis::Connection::Hiredis
-  def connected?; end
-  def disconnect; end
-  def initialize(connection); end
-  def read; end
-  def self.connect(config); end
-  def timeout=(timeout); end
-  def write(command); end
-end
