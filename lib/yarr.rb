@@ -3,6 +3,6 @@ require 'sorbet-runtime'
 
 module RedisRecord
   if defined?(Rails)
-    require 'redis_record/base'
+    require 'yarr/base'
   end
 end

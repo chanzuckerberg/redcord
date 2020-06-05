@@ -39,7 +39,7 @@
 #  Model_class.redis # using the connection to fake_url
 #  ```
 #
-require 'redis_record/redis_connection'
+require 'yarr/redis_connection'
 module RedisRecord::Configurations
   extend T::Sig
   extend T::Helpers
