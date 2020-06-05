@@ -1,6 +1,6 @@
 # typed: strict
-require 'redis_record/prepared_redis'
-require 'redis_record/lua_script_reader'
+require 'yarr/prepared_redis'
+require 'yarr/lua_script_reader'
 
 module RedisRecord::RedisConnection
   extend T::Sig

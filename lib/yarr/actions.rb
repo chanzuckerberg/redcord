@@ -1,5 +1,5 @@
 # typed: strict
-require 'redis_record/range_interval'
+require 'yarr/range_interval'
 module RedisRecord
   # Raised by Model.find
   class RecordNotFound < StandardError; end
