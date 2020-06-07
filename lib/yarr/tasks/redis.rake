@@ -1,4 +1,7 @@
-# tyepd: strict
+# typed: strict
+require 'yarr/migration/version'
+require 'yarr/migration/migrator'
+
 db_namespace = namespace :redis do
   task migrate: :environment do
     $stdout.sync = true

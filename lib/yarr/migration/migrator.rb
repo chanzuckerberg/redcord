@@ -1,5 +1,8 @@
 # typed: strict
+require 'yarr/migration'
 class RedisRecord::Migration::Migrator
+  extend T::Sig
+
   sig { params(redis: Redis).returns(T::Boolean) }
   def self.need_to_migrate?(redis)
     local_version = RedisRecord::Migration::Version.new

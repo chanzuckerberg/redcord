@@ -1,5 +1,7 @@
 # typed: strict
 class RedisRecord::Migration::Version
+  extend T::Sig
+
   MIGRATION_VERSIONS_REDIS_KEY = 'RedisRecord:__migration_versions__'
 
   sig { params(redis: T.nilable(Redis)).void }
