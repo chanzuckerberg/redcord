@@ -7,6 +7,7 @@ module RedisRecord
   end
     class Migration
     if defined?(Rails)
+      require 'yarr/railtie'
       require 'yarr/migration'
       require 'yarr/migration/version'
       require 'yarr/migration/migrator'
