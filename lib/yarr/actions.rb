@@ -1,5 +1,8 @@
 # typed: strict
+require 'sorbet-coerce'
+
 require 'yarr/relation'
+
 module RedisRecord
   # Raised by Model.find
   class RecordNotFound < StandardError; end
@@ -24,7 +27,7 @@ module RedisRecord::Actions
     sig { params(args: T::Hash[Symbol, T.untyped]).returns(T.untyped) }
     def create!(args)
       args[:created_at] = args[:updated_at] = Time.zone.now
-      instance = from_hash(args)
+      instance = TypeCoerce[self].new.from(args)
       id = redis.create_hash_returning_id(model_key, to_redis_hash(args))
       instance.send(:id=, id)
       instance

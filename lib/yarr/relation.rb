@@ -1,5 +1,6 @@
 # typed: strict
-require 'active_support'
+require 'active_support/core_ext/module'
+
 class RedisRecord::Relation
   extend T::Sig
 
