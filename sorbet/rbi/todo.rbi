@@ -3,7 +3,6 @@
 
 # typed: strong
 module ::Anonymous_Delegator_1; end
-module RedisRecord::Actions::ClassMethods::TypeCoerce; end
 module T::InterfaceWrapper::Helpers; end
 module T::Private::Abstract::Hooks; end
 module T::Private::Methods::MethodHooks; end
