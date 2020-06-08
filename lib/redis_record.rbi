@@ -36,13 +36,13 @@ module RedisRecord::RedisConnection::InstanceMethods
 end
 
 module RedisRecord::Attribute::ClassMethods
-  include RedisRecord::Actions::ClassMethods
+  include RedisRecord::Serializer::ClassMethods
   # from inherenting T::Struct
   def prop(name, type, options={}); end
 end
 
 module RedisRecord::TTL::ClassMethods
-  include RedisRecord::Actions::ClassMethods
+  include RedisRecord::Serializer::ClassMethods
 end
 
 module RedisRecord::ServerScripts
@@ -64,10 +64,7 @@ end
 module RedisRecord::Actions::ClassMethods
   include Kernel
   include RedisRecord::RedisConnection::ClassMethods
-
-  # from inherenting T::Struct
-  def from_hash(args); end
-  def props; end
+  include RedisRecord::Serializer::ClassMethods
 end
 
 module RedisRecord::Actions::InstanceMethods
@@ -83,7 +80,15 @@ end
 
 module RedisRecord::Base
   include RedisRecord::Actions::InstanceMethods
-  extend RedisRecord::Actions::ClassMethods
+  extend RedisRecord::Serializer::ClassMethods
 
   mixes_in_class_methods(RedisRecord::TTL::ClassMethods)
+end
+
+module RedisRecord::Serializer::ClassMethods
+  include ModuleClassMethodsAsInstanceMethods
+
+    # from inherenting T::Struct
+    def from_hash(args); end
+    def props; end
 end

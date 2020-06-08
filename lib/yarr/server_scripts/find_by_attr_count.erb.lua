@@ -6,7 +6,7 @@ Query for all model instances that have the given attribute values or value rang
 Return an error if an attribute is not an index.
 
 # Return value
-A hash of id:model of all the ids that match the query conditions given.
+An integer number of records that match the query conditions given.
 --]]
 
 -- The arguments can be accessed by Lua using the KEYS global variable in the
@@ -16,15 +16,11 @@ A hash of id:model of all the ids that match the query conditions given.
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 --
 --   KEYS[1] = Model.name attr_key attr_val [attr_key attr_val ..]
---   ARGV[1...N] = attr_key [attr_key ..]
 --
 --   For equality query conditions, key value pairs are expected to appear in
 --   the KEYS array as [attr_key, attr_val]
 --   For range query conditions, key value pairs are expected to appear in the
 --   KEYS array as [key min_val max_val]
---
---   The ARGV array is used to specify specific fields to select for each record. If
---   the ARGV array is empty, then all fields will be retrieved.
 
 <%= include_lua 'shared/lua_helper_methods' %>
 <%= include_lua 'shared/query_helper_methods' %>
@@ -48,20 +44,9 @@ if #range_index_sets > 0 then
   ids_set = intersect_range_index_sets(ids_set, range_index_sets)
 end
 
--- Query for the hashes for all ids in the set intersection
-local res, stale_ids = unpack(batch_hget(model, ids_set, ARGV))
-
--- Delete any stale ids which are no longer in redis from the id sets.
--- This can happen if an entry was auto expired due to ttl, but not removed up yet
--- from the id sets.
-if #stale_ids > 0 then
-  for _, key in ipairs(index_sets) do
-    redis.call('srem', key, unpack(stale_ids))
-  end
-  for _, key in ipairs(range_index_sets) do
-    local redis_key = key[1]
-    redis.call('zrem', redis_key, unpack(stale_ids))
-  end
-end
-
-return res
+-- Get the number of records which satisfy the query conditions.
+-- We do not delete stale ids as part of this function call because we do not have
+-- the list of ids which don't exist. The Redis command EXISTS key [key ...] is an O(1)
+-- operation that only returns the count of ids that exist. Getting the list of ids that
+-- don't exist would be an O(N) operation.
+return batch_exists(model, ids_set)

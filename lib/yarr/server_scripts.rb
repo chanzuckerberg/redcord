@@ -1,8 +1,5 @@
 # typed: strict
 module RedisRecord::ServerScripts
-  # Extending T::Sig in Redis instances will cause runtime errors. Hence
-  # no real runtime sig decorators on instance methods for the following
-  # methods.
   extend T::Sig
 
   sig do
@@ -47,22 +44,35 @@ module RedisRecord::ServerScripts
     )
   end
 
-  sig do (
+  sig do
     params(
       model: String,
-      attrs: T::Hash[T.untyped, T.untyped]
-      ).returns(T::Hash[Integer, T::Hash[T.untyped, T.untyped]])
-  )
+      query_conditions: T::Hash[T.untyped, T.untyped],
+      select_attrs: T::Set[Symbol]
+    ).returns(T::Hash[Integer, T::Hash[T.untyped, T.untyped]])
   end
-  def find_by_attr(model, attrs)
+  def find_by_attr(model, query_conditions, select_attrs=Set.new)
     res = evalsha(
       T.must(redis_record_server_script_shas[:find_by_attr]),
-      keys: [model],
-      argv: attrs.to_a.flatten,
+      keys: [model] + query_conditions.to_a.flatten,
+      argv: select_attrs.to_a.flatten
     )
     # The Lua script will return this as a flattened array.
     # Convert the result into a hash of {id -> model hash}
     res_hash = res.each_slice(2)
     res_hash.map { |key, val| [key.to_i, val.each_slice(2).to_h] }.to_h
+  end
+
+  sig do
+    params(
+      model: String,
+      query_conditions: T::Hash[T.untyped, T.untyped]
+    ).returns(Integer)
+  end
+  def find_by_attr_count(model, query_conditions)
+    evalsha(
+      T.must(redis_record_server_script_shas[:find_by_attr_count]),
+      keys: [model] + query_conditions.to_a.flatten,
+    )
   end
 end

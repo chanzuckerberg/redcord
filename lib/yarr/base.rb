@@ -10,6 +10,7 @@ require 'yarr/attribute'
 require 'yarr/configurations'
 require 'yarr/logger'
 require 'yarr/redis_connection'
+require 'yarr/serializer'
 
 module RedisRecord::Base
   extend T::Sig
@@ -41,6 +42,7 @@ module RedisRecord::Base
 
     klass.class_eval do
       # RedisRecord Model level methods
+      include RedisRecord::Serializer
       include RedisRecord::Actions
       include RedisRecord::Attribute
       include RedisRecord::RedisConnection
