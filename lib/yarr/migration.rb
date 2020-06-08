@@ -1,4 +1,7 @@
 # typed: strict
+class RedisRecord::Migration
+end
+
 require 'yarr/migration/ttl'
 
 class RedisRecord::Migration
