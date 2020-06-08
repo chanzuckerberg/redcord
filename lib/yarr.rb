@@ -5,7 +5,7 @@ module RedisRecord
   if defined?(Rails)
     require 'yarr/base'
   end
-    class Migration
+  class Migration
     if defined?(Rails)
       require 'yarr/railtie'
       require 'yarr/migration'

@@ -1,5 +1,6 @@
 # typed: strict
 require 'yarr/migration/ttl'
+
 class RedisRecord::Migration
   extend T::Sig
   extend T::Helpers
