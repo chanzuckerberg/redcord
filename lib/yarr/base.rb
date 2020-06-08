@@ -5,6 +5,8 @@
 #   - One round trip per operation
 # - Model attributes are type-checked by sorbet
 #
+require 'active_support/core_ext/module'
+
 require 'yarr/actions'
 require 'yarr/attribute'
 require 'yarr/configurations'

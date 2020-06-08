@@ -116,9 +116,9 @@ module RedisRecord::Serializer
       "RedisRecord:#{name}"
     end
 
-    sig { params(args: T::Hash[Symbol, T.untyped]).returns(T::Hash[Symbol, T.untyped]) }
+    sig { params(args: T::Hash[T.any(String, Symbol), T.untyped]).returns(T::Hash[Symbol, T.untyped]) }
     def to_redis_hash(args)
-      args.map { |key, val| [key, encode_attr_value(key.to_sym, val)] }.to_h
+      args.map { |key, val| [key.to_sym, encode_attr_value(key.to_sym, val)] }.to_h
     end
 
     sig { params(args: T::Hash[T.untyped, T.untyped]).returns(T::Hash[T.untyped, T.untyped]) }
