@@ -13,6 +13,7 @@ module RedisRecord::Attribute
     klass.extend(ClassMethods)
     klass.class_variable_set(:@@index_attributes, Set.new)
     klass.class_variable_set(:@@range_index_attributes, Set.new)
+    klass.class_variable_set(:@@ttl, nil)
   end
 
   module ClassMethods
@@ -43,6 +44,11 @@ module RedisRecord::Attribute
         class_variable_get(:@@index_attributes) << attr
         sadd_proc_on_redis_connection("index_attrs", attr.to_s)
       end
+    end
+
+    sig { params(duration: T.nilable(ActiveSupport::Duration)).void }
+    def ttl(duration)
+      class_variable_set(:@@ttl, duration)
     end
 
     private

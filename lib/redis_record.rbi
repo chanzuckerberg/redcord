@@ -83,6 +83,7 @@ end
 
 module RedisRecord::Base
   include RedisRecord::Actions::InstanceMethods
+  extend RedisRecord::Actions::ClassMethods
 
   mixes_in_class_methods(RedisRecord::TTL::ClassMethods)
 end

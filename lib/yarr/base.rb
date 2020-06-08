@@ -10,7 +10,6 @@ require 'yarr/attribute'
 require 'yarr/configurations'
 require 'yarr/logger'
 require 'yarr/redis_connection'
-require 'yarr/ttl'
 
 module RedisRecord::Base
   extend T::Sig
@@ -45,7 +44,6 @@ module RedisRecord::Base
       include RedisRecord::Actions
       include RedisRecord::Attribute
       include RedisRecord::RedisConnection
-      include RedisRecord::TTL
 
       # RedisRecord stores the serialized model as a hash on Redis. When
       # reading a model from Redis, the hash fields are deserialized and
