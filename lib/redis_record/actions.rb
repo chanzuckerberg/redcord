@@ -1,7 +1,7 @@
 # typed: strict
 require 'sorbet-coerce'
 
-require 'yarr/relation'
+require 'redis_record/relation'
 
 module RedisRecord
   # Raised by Model.find

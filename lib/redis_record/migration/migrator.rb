@@ -1,5 +1,5 @@
 # typed: strict
-require 'yarr/migration'
+require 'redis_record/migration'
 class RedisRecord::Migration::Migrator
   extend T::Sig
 
