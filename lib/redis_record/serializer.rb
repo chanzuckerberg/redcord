@@ -1,4 +1,4 @@
-require 'yarr/range_interval'
+require 'redis_record/range_interval'
 # typed: strict
 #
 # This module defines various helper methods on RedisRecord for serialization between the 

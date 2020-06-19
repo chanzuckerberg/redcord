@@ -2,7 +2,7 @@
 class RedisRecord::Migration
 end
 
-require 'yarr/migration/ttl'
+require 'redis_record/migration/ttl'
 
 class RedisRecord::Migration
   extend T::Sig

@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require 'yarr'
+require 'redis_record'
 
 Time.zone = 'UTC'
 

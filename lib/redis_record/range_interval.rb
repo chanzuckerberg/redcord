@@ -1,5 +1,5 @@
 # typed: strict
-require 'yarr/attribute'
+require 'redis_record/attribute'
 
 class RedisRecord::RangeInterval < T::Struct
   prop :min, T.nilable(RedisRecord::Attribute::RangeIndexType), default: nil

@@ -5,12 +5,12 @@
 #   - One round trip per operation
 # - Model attributes are type-checked by sorbet
 #
-require 'yarr/actions'
-require 'yarr/attribute'
-require 'yarr/configurations'
-require 'yarr/logger'
-require 'yarr/redis_connection'
-require 'yarr/serializer'
+require 'redis_record/actions'
+require 'redis_record/attribute'
+require 'redis_record/configurations'
+require 'redis_record/logger'
+require 'redis_record/redis_connection'
+require 'redis_record/serializer'
 
 module RedisRecord::Base
   extend T::Sig
