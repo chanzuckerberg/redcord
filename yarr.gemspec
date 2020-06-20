@@ -22,5 +22,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'sorbet-runtime', '>= 0.4.4704'
   s.add_dependency 'sorbet-static', '>= 0.4.4704'
 
+  s.add_development_dependency 'codecov'
   s.add_development_dependency 'rspec', '~> 3.2'
+  s.add_development_dependency 'simplecov'
 end
