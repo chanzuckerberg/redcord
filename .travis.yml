@@ -1,0 +1,13 @@
+language: ruby
+rvm:
+- 2.5
+- 2.6
+- 2.7
+- ruby-head
+matrix:
+  allow_failures:
+  - rvm: ruby-head
+before_install:
+- gem install bundler -v 2.0.1 --no-doc
+script:
+- bundle exec rspec
