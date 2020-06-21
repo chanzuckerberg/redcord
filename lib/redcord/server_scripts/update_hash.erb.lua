@@ -16,8 +16,8 @@ nil
 -- accessed by Lua using the ARGV global variable, very similarly to what
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 --
---   KEYS[1] = redis_record_instance.class.name
---   KEYS[2] = redis_record_instance.id
+--   KEYS[1] = redcord_instance.class.name
+--   KEYS[2] = redcord_instance.id
 --   ARGV[1...2N] = attr_key attr_val [attr_key attr_val ..]
 <%= include_lua 'shared/lua_helper_methods' %>
 <%= include_lua 'shared/index_helper_methods' %>

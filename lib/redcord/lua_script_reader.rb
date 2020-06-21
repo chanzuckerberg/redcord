@@ -1,5 +1,5 @@
 # typed: strict
-module RedisRecord::LuaScriptReader
+module Redcord::LuaScriptReader
   extend T::Sig
 
   sig {params(script_name: String).returns(String) }

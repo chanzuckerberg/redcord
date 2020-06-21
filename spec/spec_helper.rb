@@ -9,11 +9,11 @@ if ENV['CI'] == 'true'
 end
 
 RSpec.configure do |config|
-  require 'redis_record'
+  require 'redcord'
 
   Time.zone = 'UTC'
 
   config.before(:each) do
-    RedisRecord::Base.redis.flushdb
+    Redcord::Base.redis.flushdb
   end
 end
