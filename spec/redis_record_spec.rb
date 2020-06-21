@@ -1,11 +1,11 @@
 # typed: false
-describe RedisRecord do
-  include RedisRecord::Migration::TTL
+describe Redcord do
+  include Redcord::Migration::TTL
 
   context 'redis connection' do
     let!(:model_class) do
       Class.new(T::Struct) do
-        include RedisRecord::Base
+        include Redcord::Base
 
         def self.name
           'spec_model'
@@ -15,17 +15,17 @@ describe RedisRecord do
     let(:env) { 'my_env' }
 
     around(:each) do |test_example|
-      config = RedisRecord::Base.configurations
+      config = Redcord::Base.configurations
       test_example.run
     ensure
-      RedisRecord::Base.configurations = config
+      Redcord::Base.configurations = config
       model_class.establish_connection
     end
 
     it 'uses configurations to establish Redis connections' do
       fake_url = 'redis://test.fakeurl/1'
       allow(Rails).to receive(:env).and_return(env)
-      allow(RedisRecord::Base).to receive(:configurations).and_return({
+      allow(Redcord::Base).to receive(:configurations).and_return({
         env => {'spec_model' => {'url' => fake_url}},
       })
 
@@ -39,18 +39,18 @@ describe RedisRecord do
     end
 
     it 'shares the base connection config by default' do
-      expect(model_class.connection_config).to eq RedisRecord::Base.connection_config
+      expect(model_class.connection_config).to eq Redcord::Base.connection_config
     end
 
     it 'can have a different connection at model level' do
       model_class.redis = Redis.new
-      expect(model_class.redis).to_not eq RedisRecord::Base.redis
+      expect(model_class.redis).to_not eq Redcord::Base.redis
     end
   end
 
   it 'defines props' do
     klass = Class.new(T::Struct) do
-      include RedisRecord::Base
+      include Redcord::Base
 
       attribute :a, Integer
     end
@@ -63,18 +63,18 @@ describe RedisRecord do
 
   context 'scripts' do
     it 'creates a hash and increases the id' do
-      expect(RedisRecord::Base.redis.create_hash_returning_id('test', {a: 1})).to eq 1
-      expect(RedisRecord::Base.redis.hgetall('test:id:1')).to eq({'a' => '1'})
+      expect(Redcord::Base.redis.create_hash_returning_id('test', {a: 1})).to eq 1
+      expect(Redcord::Base.redis.hgetall('test:id:1')).to eq({'a' => '1'})
 
-      expect(RedisRecord::Base.redis.create_hash_returning_id('test', {b: 2})).to eq 2
-      expect(RedisRecord::Base.redis.hgetall('test:id:2')).to eq({'b' => '2'})
+      expect(Redcord::Base.redis.create_hash_returning_id('test', {b: 2})).to eq 2
+      expect(Redcord::Base.redis.hgetall('test:id:2')).to eq({'b' => '2'})
     end
 
     it 'errors when id overflows a 64 bit signed integer' do
-      RedisRecord::Base.redis.set('test:id_seq', 2 ** 63 - 2)
-      expect(RedisRecord::Base.redis.create_hash_returning_id('test', {b: 2})).to eq(2 ** 63 - 1)
+      Redcord::Base.redis.set('test:id_seq', 2 ** 63 - 2)
+      expect(Redcord::Base.redis.create_hash_returning_id('test', {b: 2})).to eq(2 ** 63 - 1)
       expect {
-        RedisRecord::Base.redis.create_hash_returning_id('test', {c: 3})
+        Redcord::Base.redis.create_hash_returning_id('test', {c: 3})
       }.to raise_error(Redis::CommandError)
     end
   end
@@ -82,12 +82,12 @@ describe RedisRecord do
   context 'CRUD options' do
     let(:klass) do
       Class.new(T::Struct) do
-        include RedisRecord::Base
+        include Redcord::Base
 
         attribute :value, Integer
 
         def self.name
-          'RedisRecordSpecModel'
+          'RedcordSpecModel'
         end
       end
     end
@@ -104,7 +104,7 @@ describe RedisRecord do
       instance.destroy
       expect {
         klass.find(instance.id)
-      }.to raise_error(RedisRecord::RecordNotFound)
+      }.to raise_error(Redcord::RecordNotFound)
 
       # save and update will fail if the record has been deleted
       expect {
@@ -186,14 +186,14 @@ describe RedisRecord do
   context 'Index attribute operations' do
     let(:klass) do
       Class.new(T::Struct) do
-        include RedisRecord::Base
+        include Redcord::Base
 
         attribute :a, Integer, index: true
         attribute :b, String, index: true
         attribute :c, Integer
         attribute :d, T.nilable(Time), index: true
         def self.name
-          'RedisRecordSpecModel2'
+          'RedcordSpecModel2'
         end
       end
     end
@@ -216,17 +216,17 @@ describe RedisRecord do
       expect(queried_instances.size).to eq 1
       expect(queried_instances[0].id).to eq first.id
 
-      queried_instances = klass.where(a: RedisRecord::RangeInterval.new(max: 5)).to_a
+      queried_instances = klass.where(a: Redcord::RangeInterval.new(max: 5)).to_a
       expect(queried_instances.size).to eq 2
       expect(queried_instances[0].id).to eq(first.id).or eq(second.id)
       expect(queried_instances[1].id).to eq(first.id).or eq(second.id)
 
       # Query using range index attributes with closed interval
-      queried_instances = klass.where(a: RedisRecord::RangeInterval.new(max: 3, max_exclusive: true)).to_a
+      queried_instances = klass.where(a: Redcord::RangeInterval.new(max: 3, max_exclusive: true)).to_a
       expect(queried_instances.size).to eq 1
       expect(queried_instances[0].id).to eq(second.id)
 
-      queried_instances = klass.where(a: RedisRecord::RangeInterval.new(min: 2, min_exclusive: true)).to_a
+      queried_instances = klass.where(a: Redcord::RangeInterval.new(min: 2, min_exclusive: true)).to_a
       expect(queried_instances.size).to eq 1
       expect(queried_instances[0].id).to eq(first.id)
     end
@@ -250,14 +250,14 @@ describe RedisRecord do
       first = klass.create!(a: 3, b: "3", c: 3)
       second = klass.create!(a: 1, b: "4", c: 3)
 
-      queried_instances = klass.where(a: RedisRecord::RangeInterval.new(max: 5), b: "3").to_a
+      queried_instances = klass.where(a: Redcord::RangeInterval.new(max: 5), b: "3").to_a
       expect(queried_instances.size).to eq 1
       expect(queried_instances[0].id).to eq first.id
 
-      queried_instances = klass.where(a: RedisRecord::RangeInterval.new(max: 3), b: "2").to_a
+      queried_instances = klass.where(a: Redcord::RangeInterval.new(max: 3), b: "2").to_a
       expect(queried_instances.size).to eq 0
 
-      queried_instances = klass.where(a: RedisRecord::RangeInterval.new(min: 5), b: "4").to_a
+      queried_instances = klass.where(a: Redcord::RangeInterval.new(min: 5), b: "4").to_a
       expect(queried_instances.size).to eq 0
     end
 
@@ -265,7 +265,7 @@ describe RedisRecord do
       first = klass.create!(a: 3, b: "3", c: 3, d: Time.zone.now - 1.hour)
       second = klass.create!(a: 3, b: "3", c: 3, d: Time.zone.now)
 
-      queried_instances = klass.where(d: RedisRecord::RangeInterval.new(max: Time.zone.now + 1.day)).to_a
+      queried_instances = klass.where(d: Redcord::RangeInterval.new(max: Time.zone.now + 1.day)).to_a
       expect(queried_instances.size).to eq 2
       expect(queried_instances[0].id).to eq(first.id).or eq(second.id)
       expect(queried_instances[1].id).to eq(first.id).or eq(second.id)
@@ -309,7 +309,7 @@ describe RedisRecord do
       instance = klass.create!(a: 3, b: "3", c: 3)
       expect {
         klass.where(c: 3).to_a
-      }.to raise_error(RedisRecord::AttributeNotIndexed)
+      }.to raise_error(Redcord::AttributeNotIndexed)
     end
 
     it 'throws an error when given an attribute of the wrong type' do
@@ -317,10 +317,10 @@ describe RedisRecord do
 
       expect {
         klass.where(a: "3").to_a
-      }.to raise_error(RedisRecord::WrongAttributeType)
+      }.to raise_error(Redcord::WrongAttributeType)
       expect {
-        klass.where(a: RedisRecord::RangeInterval.new(min: 1, max: 5.0)).to_a
-      }.to raise_error(RedisRecord::WrongAttributeType)
+        klass.where(a: Redcord::RangeInterval.new(min: 1, max: 5.0)).to_a
+      }.to raise_error(Redcord::WrongAttributeType)
     end
 
     it 'supports chaining select index query method' do

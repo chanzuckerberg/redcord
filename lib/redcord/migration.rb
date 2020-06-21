@@ -1,13 +1,13 @@
 # typed: strict
-class RedisRecord::Migration
+class Redcord::Migration
 end
 
-require 'redis_record/migration/ttl'
+require 'redcord/migration/ttl'
 
-class RedisRecord::Migration
+class Redcord::Migration
   extend T::Sig
   extend T::Helpers
-  include RedisRecord::Migration::TTL
+  include Redcord::Migration::TTL
 
   abstract!
 

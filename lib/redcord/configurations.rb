@@ -1,6 +1,6 @@
 # typed: strict
 #
-#  This allows us to configure Redis connections for RedisRecord. Redis
+#  This allows us to configure Redis connections for Redcord. Redis
 #  connections can be set at the base level or model level.
 #
 #  Connections are established by reading the connection configurations for the
@@ -32,15 +32,15 @@
 #
 #  For example,
 #  ```
-#  RedisRecord::Base.configurations = {env => {'spec_model' => {'url' => fake_url}}}
+#  Redcord::Base.configurations = {env => {'spec_model' => {'url' => fake_url}}}
 #  Model_class.redis # the same connection
 #
 #  model_class.establish_connection
 #  Model_class.redis # using the connection to fake_url
 #  ```
 #
-require 'redis_record/redis_connection'
-module RedisRecord::Configurations
+require 'redcord/redis_connection'
+module Redcord::Configurations
   extend T::Sig
   extend T::Helpers
 
@@ -53,7 +53,7 @@ module RedisRecord::Configurations
     extend T::Sig
 
     @@configurations = T.let(
-      RedisRecord::RedisConnection.merge_and_resolve_default({}),
+      Redcord::RedisConnection.merge_and_resolve_default({}),
       T::Hash[String, T.untyped]
     )
 
@@ -64,7 +64,7 @@ module RedisRecord::Configurations
 
     sig { params(config: T::Hash[String, T.untyped]).void }
     def configurations=(config)
-      @@configurations = RedisRecord::RedisConnection.merge_and_resolve_default(config)
+      @@configurations = Redcord::RedisConnection.merge_and_resolve_default(config)
     end
   end
 

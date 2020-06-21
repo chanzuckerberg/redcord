@@ -14684,137 +14684,137 @@ class Redis::HashRing
   def self.binary_search(ary, value, &block); end
 end
 
-module RedisRecord::Actions::ClassMethods
+module Redcord::Actions::ClassMethods
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-module RedisRecord::Actions::InstanceMethods
+module Redcord::Actions::InstanceMethods
   extend ::T::Private::Abstract::Hooks
   extend ::T::InterfaceWrapper::Helpers
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-module RedisRecord::Actions
+module Redcord::Actions
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
   extend ::T::Private::MixesInClassMethods
 end
 
-module RedisRecord::Attribute::ClassMethods
+module Redcord::Attribute::ClassMethods
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-module RedisRecord::Attribute
+module Redcord::Attribute
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
   extend ::T::Private::MixesInClassMethods
 end
 
-module RedisRecord::Base
+module Redcord::Base
   extend ::T::Private::Abstract::Hooks
   extend ::T::InterfaceWrapper::Helpers
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-module RedisRecord::Configurations::ClassMethods
+module Redcord::Configurations::ClassMethods
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-module RedisRecord::Configurations
-  extend ::T::Private::Methods::MethodHooks
-  extend ::T::Private::Methods::SingletonMethodHooks
-  extend ::T::Private::MixesInClassMethods
-end
-
-module RedisRecord::Logger::ClassMethods
-  extend ::T::Private::Methods::MethodHooks
-  extend ::T::Private::Methods::SingletonMethodHooks
-end
-
-module RedisRecord::Logger::LoggerMethods
-  extend ::T::Private::Methods::MethodHooks
-  extend ::T::Private::Methods::SingletonMethodHooks
-end
-
-module RedisRecord::Logger
+module Redcord::Configurations
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
   extend ::T::Private::MixesInClassMethods
 end
 
-module RedisRecord::LuaScriptReader
+module Redcord::Logger::ClassMethods
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-class RedisRecord::Migration::Migrator
+module Redcord::Logger::LoggerMethods
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-module RedisRecord::Migration::TTL
+module Redcord::Logger
+  extend ::T::Private::Methods::MethodHooks
+  extend ::T::Private::Methods::SingletonMethodHooks
+  extend ::T::Private::MixesInClassMethods
+end
+
+module Redcord::LuaScriptReader
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-class RedisRecord::Migration::Version
+class Redcord::Migration::Migrator
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-class RedisRecord::Migration
+module Redcord::Migration::TTL
+  extend ::T::Private::Methods::MethodHooks
+  extend ::T::Private::Methods::SingletonMethodHooks
+end
+
+class Redcord::Migration::Version
+  extend ::T::Private::Methods::MethodHooks
+  extend ::T::Private::Methods::SingletonMethodHooks
+end
+
+class Redcord::Migration
   extend ::T::Private::Abstract::Hooks
   extend ::T::InterfaceWrapper::Helpers
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-class RedisRecord::PreparedRedis
+class Redcord::PreparedRedis
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-class RedisRecord::RangeInterval
+class Redcord::RangeInterval
   def self.inherited(s); end
 end
 
-module RedisRecord::RedisConnection::ClassMethods
+module Redcord::RedisConnection::ClassMethods
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-module RedisRecord::RedisConnection::InstanceMethods
+module Redcord::RedisConnection::InstanceMethods
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-module RedisRecord::RedisConnection
+module Redcord::RedisConnection
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
   extend ::T::Private::MixesInClassMethods
 end
 
-class RedisRecord::Relation
+class Redcord::Relation
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-module RedisRecord::Serializer::ClassMethods
+module Redcord::Serializer::ClassMethods
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-module RedisRecord::Serializer
+module Redcord::Serializer
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-module RedisRecord::ServerScripts
+module Redcord::ServerScripts
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end

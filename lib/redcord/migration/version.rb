@@ -1,8 +1,8 @@
 # typed: strict
-class RedisRecord::Migration::Version
+class Redcord::Migration::Version
   extend T::Sig
 
-  MIGRATION_VERSIONS_REDIS_KEY = 'RedisRecord:__migration_versions__'
+  MIGRATION_VERSIONS_REDIS_KEY = 'Redcord:__migration_versions__'
 
   sig { params(redis: T.nilable(Redis)).void }
   def initialize(redis: nil)
@@ -27,8 +27,8 @@ class RedisRecord::Migration::Version
 
   sig { returns(T::Array[String]) }
   def local_versions
-    RedisRecord::Migration::Migrator.migration_files.map do |filename|
-      fields = RedisRecord::Migration::Migrator.parse_migration_filename(filename)
+    Redcord::Migration::Migrator.migration_files.map do |filename|
+      fields = Redcord::Migration::Migrator.parse_migration_filename(filename)
       fields[0]
     end
   end
