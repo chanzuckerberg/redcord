@@ -13,7 +13,17 @@ class RedisRecord::Relation
   sig { returns(T::Set[Symbol]) }
   attr_reader :select_attrs
 
+  # TODO: Add sig for []
   delegate :[], to: :to_a
+
+  sig do
+    type_parameters(:U).params(
+      blk: T.proc.params(arg0: RedisRecord::Base).returns(T.type_parameter(:U)),
+    ).returns(T::Array[T.type_parameter(:U)])
+  end
+  def map(&blk)
+    to_a.map(&blk)
+  end
 
   sig do
     params(
