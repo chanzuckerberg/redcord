@@ -1,6 +1,6 @@
 # typed: strict
-require 'yarr/migration/version'
-require 'yarr/migration/migrator'
+require 'redcord/migration/version'
+require 'redcord/migration/migrator'
 
 db_namespace = namespace :redis do
   task migrate: :environment do
@@ -15,12 +15,12 @@ db_namespace = namespace :redis do
       'duration',
     ].map { |str| str.ljust(30) }.join("\t")
 
-    local_versions = RedisRecord::Migration::Version.new.all
-    RedisRecord::Base.configurations[Rails.env].each do |model, config|
+    local_versions = Redcord::Migration::Version.new.all
+    Redcord::Base.configurations[Rails.env].each do |model, config|
       redis = Redis.new(**(config.symbolize_keys))
-      remote_versions = RedisRecord::Migration::Version.new(redis: redis).all
+      remote_versions = Redcord::Migration::Version.new(redis: redis).all
       (local_versions - remote_versions).sort.each do |version|
-        RedisRecord::Migration::Migrator.migrate(
+        Redcord::Migration::Migrator.migrate(
           redis: redis,
           version: version,
           direction: :up,

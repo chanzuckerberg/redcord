@@ -1,10 +1,10 @@
 # typed: strict
 require 'active_support/core_ext/module'
 
-class RedisRecord::Relation
+class Redcord::Relation
   extend T::Sig
 
-  sig { returns(T.class_of(RedisRecord::Base)) }
+  sig { returns(T.class_of(Redcord::Base)) }
   attr_reader :model
   
   sig { returns(T::Hash[Symbol, T.untyped]) }
@@ -18,7 +18,7 @@ class RedisRecord::Relation
 
   sig do
     type_parameters(:U).params(
-      blk: T.proc.params(arg0: RedisRecord::Base).returns(T.type_parameter(:U)),
+      blk: T.proc.params(arg0: Redcord::Base).returns(T.type_parameter(:U)),
     ).returns(T::Array[T.type_parameter(:U)])
   end
   def map(&blk)
@@ -27,7 +27,7 @@ class RedisRecord::Relation
 
   sig do
     params(
-      model: T.class_of(RedisRecord::Base),
+      model: T.class_of(Redcord::Base),
       query_conditions: T::Hash[Symbol, T.untyped],
       select_attrs: T::Set[Symbol]
     ).void
@@ -38,7 +38,7 @@ class RedisRecord::Relation
     @select_attrs = select_attrs
   end
 
-  sig { params(args: T::Hash[Symbol, T.untyped]).returns(RedisRecord::Relation) }
+  sig { params(args: T::Hash[Symbol, T.untyped]).returns(Redcord::Relation) }
   def where(args)
     encoded_args = args.map do |attr_key, attr_val|
       encoded_val = model.validate_and_encode_query(attr_key, attr_val)
@@ -52,7 +52,7 @@ class RedisRecord::Relation
     params(
     args: Symbol,
     blk: T.nilable(T.proc.params(arg0: T.untyped).void),
-  ).returns(T.any(RedisRecord::Relation, T::Array[T.untyped]))
+  ).returns(T.any(Redcord::Relation, T::Array[T.untyped]))
   end
   def select(*args, &blk)
     if block_given?
@@ -88,7 +88,7 @@ class RedisRecord::Relation
     end
   end
 
-  sig { returns(RedisRecord::PreparedRedis) }
+  sig { returns(Redcord::PreparedRedis) }
   def redis
     model.redis
   end

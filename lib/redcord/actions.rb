@@ -1,9 +1,9 @@
 # typed: strict
 require 'sorbet-coerce'
 
-require 'redis_record/relation'
+require 'redcord/relation'
 
-module RedisRecord
+module Redcord
   # Raised by Model.find
   class RecordNotFound < StandardError; end
   # Raised by Model.where
@@ -11,7 +11,7 @@ module RedisRecord
   class WrongAttributeType < TypeError; end
 end
 
-module RedisRecord::Actions
+module Redcord::Actions
   extend T::Sig
   extend T::Helpers
 
@@ -38,16 +38,16 @@ module RedisRecord::Actions
       instance_key = "#{model_key}:id:#{id}"
       args = redis.hgetall(instance_key)
       if args.empty?
-        raise RedisRecord::RecordNotFound.new(
+        raise Redcord::RecordNotFound.new(
           "Couldn't find #{name} with 'id'=#{id}"
         )
       end
       coerce_and_set_id(args, id)
     end
 
-    sig { params(args: T::Hash[Symbol, T.untyped]).returns(RedisRecord::Relation) }
+    sig { params(args: T::Hash[Symbol, T.untyped]).returns(Redcord::Relation) }
     def where(args)
-      RedisRecord::Relation.new(T.let(self, T.untyped)).where(args)
+      Redcord::Relation.new(T.let(self, T.untyped)).where(args)
     end
 
     sig { params(id: T.untyped).returns(T::Boolean) }

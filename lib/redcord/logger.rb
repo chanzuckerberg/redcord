@@ -1,6 +1,6 @@
 # typed: strict
 require 'rails'
-module RedisRecord::Logger
+module Redcord::Logger
   extend T::Sig
   extend T::Helpers
 
@@ -41,7 +41,7 @@ module RedisRecord::Logger
       ).returns(T.untyped)
     end
     def self.method_missing(method, *args, &blk)
-      logger = RedisRecord::Base.logger
+      logger = Redcord::Base.logger
       return if logger.nil?
       logger.send(method, *args)
     end
@@ -51,18 +51,18 @@ module RedisRecord::Logger
   # all.
   # Example:
   #
-  #   2.5.5 :001 > RedisRecord::Base.redis.ping
+  #   2.5.5 :001 > Redcord::Base.redis.ping
   #   [Redis] command=PING args=
   #   [Redis] call_time=0.80 ms
   #    => "PONG"
-  #   2.5.5 :002 > RedisRecord::Base.logger = nil
+  #   2.5.5 :002 > Redcord::Base.logger = nil
   #    => nil
-  #   2.5.5 :003 > RedisRecord::Base.redis.ping # show no logs
+  #   2.5.5 :003 > Redcord::Base.redis.ping # show no logs
   #    => "PONG"
   #
   sig { returns(T.untyped) }
   def self.proxy
-    RedisRecord::Logger::LoggerMethods
+    Redcord::Logger::LoggerMethods
   end
 
   mixes_in_class_methods(ClassMethods)

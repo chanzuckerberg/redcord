@@ -1,20 +1,19 @@
-YARR - Yet Another Redis Record
+Redcord
 -------------------------------
-Redis Record provides an object-relational mapping like Active Record, but for Redis.
+A Ruby ORM like Active Record, but for Redis.
 
 **Note:** This is a pre-release version.
 
 ## Getting Started
-### 1. Add yarr to your Gemfile
+### 1. Add to your Gemfile
 ```ruby
 # -- Gemfile --
 
-gem 'yarr'
+gem 'redcord'
 ```
 
 ### 2. Connect to a Redis server
-### TODO: `config/redisrecord.yml` -> `config/redis_record.yml`
-In `config/redis_record.yml`, set a default Redis URL for all Redis Record models in the test and development environment. **Note:** the local Redis server version needs to be >= 4.x.
+In `config/redcord.yml`, set a default Redis URL for all Redcord models in the test and development environment. **Note:** the local Redis server version needs to be >= 4.x.
 ```ruby
 development:
   default:
@@ -27,11 +26,11 @@ test:
 
 Learn more: [Redis Server Configurations](docs/redis_server_configurations.md)
 
-### 3. Create a Redis Record model
+### 3. Create a Redcord model
 In the example, we create a UserSession model -- The in-memory Redis database is great for session management.
 ```ruby
 class UserSession < T::Struct
-  include RedisRecord::Base
+  include Redcord::Base
 
   ttl 2.hours
 
@@ -40,7 +39,7 @@ class UserSession < T::Struct
 end
 ```
 
-Learn more: [Redis Record Model](docs/redis_record_model.md)
+Learn more: [Redcord Model](docs/redcord_model.md)
 
 ### 4. Reading and writing data
 #### Read
@@ -48,7 +47,7 @@ Return the first user session that matches the user's id:
 ```ruby
 UserSession.find_by(user_id: user.id) # TODO: support this
 ```
-**Note:** This query won’t work until we execute a Redis Record migration for adding the index.
+**Note:** This query won’t work until we execute a Redcord migration for adding the index.
 
 Like Active Record, created_at and updated_at are maintained automatically on each record. Find all user sessions created an hour ago:
 ```ruby
@@ -56,7 +55,7 @@ UserSession.where('created_at < ?',  Time.zone.now - 1.hour) # TODO: support thi
 ```
 
 #### Update
-Once a Redis Record object has been retrieved, its attributes can be modified and it can be saved to the Redis database.
+Once a Redcord object has been retrieved, its attributes can be modified and it can be saved to the Redis database.
 ```ruby
 user_session = UserSession.find_by(user_id: user.id)
 user_session.updated_at = Time.zone.now
@@ -69,7 +68,7 @@ user_session.update(updated_at: Time.zone.now) # TODO: support this
 ```
 
 #### Delete
-Once a Redis Record object has been retrieved, it can be destroyed which removes it from the database.
+Once a Redcord object has been retrieved, it can be destroyed which removes it from the database.
 ```ruby
 user_session = UserSession.find_by(user_id: user.id)
 user_session.destroy
@@ -78,13 +77,12 @@ user_session.destroy
 Learn more: [Querying interface](docs/querying_interface.md)
 
 ### 5. Migrations
-Redis Record provides a domain-specific language for updating model schemas on Redis called migrations. Migrations are stored in files which are executed against each Redis database used in the current Rails environment.
+Redcord provides a domain-specific language for updating model schemas on Redis called migrations. Migrations are stored in files which are executed against each Redis database used in the current Rails environment.
 
 Here's a migration that adds an index on user_id and adds a TTL on each user session:
-### TODO: db/redisrecord -> db/redis_record 
-`db/redis_record/migrate/20200504000000_create_user_session.rb`:
+`db/redcord/migrate/20200504000000_create_user_session.rb`:
 ```ruby
-class CreateUserSession < RedisRecord::Migration
+class CreateUserSession < Redcord::Migration
   def up
     change_ttl_passive(UserSession)
     add_index(UserSession, :user_id)
@@ -108,11 +106,11 @@ Finished in 0.024 second
 
 Learn more: [Migrations](docs/migrations.md)
 
-## Related Projects; Yet Another Redis Record
-To the best of our knowledge, YARR is the best Ruby ORM lib for Redis.
+## Related Projects; Yet Another Redcord
+To the best of our knowledge, Redcord is the best Ruby ORM lib for Redis.
 
 ### https://github.com/soveran/ohm
-This project is inspired by ohm. YARR has the following features which Ohm does not have:
+This project is inspired by ohm. Redcord has the following features which Ohm does not have:
 - An Active Record like API
 - Range index queries support
 - Atomic CRUD operations
@@ -126,21 +124,21 @@ Redis object map Redis types directly to Ruby objects, but it does not provide a
 ### https://redisql.com/
 - RediSQL is not ORM
 - RediSQL does not support indexing
-- RediSQL uses a Redis server extension, which is not supported by all Redis PaaSs. Redis Record uses Lua scripts that are generally supported.
+- RediSQL uses a Redis server extension, which is not supported by all Redis PaaSs. Redcord uses Lua scripts that are generally supported.
 
 ### Abandoned projects:
-- https://github.com/malditogeek/redisrecord/
+- https://github.com/malditogeek/redisrecord
 - https://github.com/LoonyBin/redis_record
 - https://rubygems.org/gems/redis_record
 
 ## Performance
-Redis Record is fast!
+Redcord is fast!
 
 ### TODO: Comparison with Postgres
 ### TODO: Benchmark results
 
 ## Fault tolerance
-We recommend using Redis Record on a Redis PaaS which has built-in failover support. If a Redis server is down, there will be downtime, but the Redis Platform would hopefully recover quickly.
+We recommend using Redcord on a Redis PaaS which has built-in failover support. If a Redis server is down, there will be downtime, but the Redis Platform would hopefully recover quickly.
 
 **Note:**
 - Set the Redis server to noevict

@@ -27,25 +27,25 @@ module ModuleClassMethodsAsInstanceMethods
   def name(); end
 end
 
-module RedisRecord::RedisConnection::ClassMethods
+module Redcord::RedisConnection::ClassMethods
   include ModuleClassMethodsAsInstanceMethods
 end
 
-module RedisRecord::RedisConnection::InstanceMethods
+module Redcord::RedisConnection::InstanceMethods
   include Kernel
 end
 
-module RedisRecord::Attribute::ClassMethods
-  include RedisRecord::Serializer::ClassMethods
+module Redcord::Attribute::ClassMethods
+  include Redcord::Serializer::ClassMethods
   # from inherenting T::Struct
   def prop(name, type, options={}); end
 end
 
-module RedisRecord::TTL::ClassMethods
-  include RedisRecord::Serializer::ClassMethods
+module Redcord::TTL::ClassMethods
+  include Redcord::Serializer::ClassMethods
 end
 
-module RedisRecord::ServerScripts
+module Redcord::ServerScripts
   include Kernel
 
   sig do
@@ -58,18 +58,18 @@ module RedisRecord::ServerScripts
   def evalsha(sha, keys: [], argv:[]); end
 
   sig { returns(T::Hash[Symbol, String]) }
-  def redis_record_server_script_shas; end
+  def redcord_server_script_shas; end
 end
 
-module RedisRecord::Actions::ClassMethods
+module Redcord::Actions::ClassMethods
   include Kernel
-  include RedisRecord::RedisConnection::ClassMethods
-  include RedisRecord::Serializer::ClassMethods
+  include Redcord::RedisConnection::ClassMethods
+  include Redcord::Serializer::ClassMethods
 end
 
-module RedisRecord::Actions::InstanceMethods
+module Redcord::Actions::InstanceMethods
   include Kernel
-  include RedisRecord::RedisConnection::InstanceMethods
+  include Redcord::RedisConnection::InstanceMethods
 
   sig {returns(String)}
   def to_json; end
@@ -78,14 +78,14 @@ module RedisRecord::Actions::InstanceMethods
   def serialize; end
 end
 
-module RedisRecord::Base
-  include RedisRecord::Actions::InstanceMethods
-  extend RedisRecord::Serializer::ClassMethods
+module Redcord::Base
+  include Redcord::Actions::InstanceMethods
+  extend Redcord::Serializer::ClassMethods
 
-  mixes_in_class_methods(RedisRecord::TTL::ClassMethods)
+  mixes_in_class_methods(Redcord::TTL::ClassMethods)
 end
 
-module RedisRecord::Serializer::ClassMethods
+module Redcord::Serializer::ClassMethods
   include ModuleClassMethodsAsInstanceMethods
 
     # from inherenting T::Struct

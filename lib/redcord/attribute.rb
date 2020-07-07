@@ -1,5 +1,5 @@
 # typed: strict
-module RedisRecord::Attribute
+module Redcord::Attribute
   extend T::Sig
   extend T::Helpers
 
@@ -56,7 +56,7 @@ module RedisRecord::Attribute
     def sadd_proc_on_redis_connection(redis_key, item_to_add)
       # TODO: Currently we're setting indexed attributes through procs that are run
       # when a RedisConnection is established. This should be replaced with migrations
-      RedisRecord::RedisConnection.procs_to_prepare << Proc.new do |redis|
+      Redcord::RedisConnection.procs_to_prepare << Proc.new do |redis|
         redis.sadd("#{model_key}:#{redis_key}", item_to_add)
       end
     end

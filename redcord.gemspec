@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 Gem::Specification.new do |s|
-  s.name          = 'yarr'
-  s.version       = '0.0.1'
+  s.name          = 'redcord'
+  s.version       = '0.0.1.alpha'
   s.date          = '2020-06-01'
-  s.summary       = 'A Ruby ORM API for Redis'
+  s.summary       = 'A Ruby ORM like Active Record, but for Redis'
   s.authors       = ['Chan Zuckerberg Initiative']
   s.email         = 'opensource@chanzuckerberg.com'
   s.homepage      = 'https://github.com/chanzuckerberg/redis-record'

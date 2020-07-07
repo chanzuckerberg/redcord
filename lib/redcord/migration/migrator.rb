@@ -1,12 +1,12 @@
 # typed: strict
-require 'redis_record/migration'
-class RedisRecord::Migration::Migrator
+require 'redcord/migration'
+class Redcord::Migration::Migrator
   extend T::Sig
 
   sig { params(redis: Redis).returns(T::Boolean) }
   def self.need_to_migrate?(redis)
-    local_version = RedisRecord::Migration::Version.new
-    remote_version = RedisRecord::Migration::Version.new(redis: redis)
+    local_version = Redcord::Migration::Version.new
+    remote_version = Redcord::Migration::Version.new(redis: redis)
     !(local_version.all - remote_version.all).empty?
   end
 
@@ -24,12 +24,12 @@ class RedisRecord::Migration::Migrator
     migration.new(redis).send(direction)
     if direction == :up
       redis.sadd(
-        RedisRecord::Migration::Version::MIGRATION_VERSIONS_REDIS_KEY,
+        Redcord::Migration::Version::MIGRATION_VERSIONS_REDIS_KEY,
         version,
       )
     else
       redis.srem(
-        RedisRecord::Migration::Version::MIGRATION_VERSIONS_REDIS_KEY,
+        Redcord::Migration::Version::MIGRATION_VERSIONS_REDIS_KEY,
         version,
       )
     end
@@ -39,7 +39,7 @@ class RedisRecord::Migration::Migrator
 
   private
 
-  sig { params(version: String).returns(T.class_of(RedisRecord::Migration)) }
+  sig { params(version: String).returns(T.class_of(Redcord::Migration)) }
   def self.load_version(version)
     file = T.must(migration_files.select { |f| f.match(version) }.first)
     require(File.expand_path(file))
@@ -50,7 +50,7 @@ class RedisRecord::Migration::Migrator
   MIGRATION_FILENAME_REGEX = /\A([0-9]+)_([_a-z0-9]*)\.?([_a-z0-9]*)?\.rb\z/
 
   @@migrations_paths = T.let(
-    ['db/redisrecord/migrate'],
+    ['db/redcord/migrate'],
     T::Array[String],
   )
 

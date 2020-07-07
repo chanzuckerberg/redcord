@@ -1,15 +1,15 @@
-require 'redis_record/range_interval'
+require 'redcord/range_interval'
 # typed: strict
 #
-# This module defines various helper methods on RedisRecord for serialization between the 
+# This module defines various helper methods on Redcord for serialization between the 
 # Ruby client and Redis server.
-module RedisRecord
+module Redcord
   # Raised by Model.where
   class AttributeNotIndexed < StandardError; end
   class WrongAttributeType < TypeError; end
 end
 
-module RedisRecord::Serializer
+module Redcord::Serializer
   extend T::Sig
 
   sig { params(klass: T.any(Module, T.class_of(T::Struct))).void }
@@ -45,7 +45,7 @@ module RedisRecord::Serializer
       # Validate that attributes queried for are index attributes
       if !class_variable_get(:@@index_attributes).include?(attr_key) &&
         !class_variable_get(:@@range_index_attributes).include?(attr_key)
-        raise RedisRecord::AttributeNotIndexed.new(
+        raise Redcord::AttributeNotIndexed.new(
         "#{attr_key} is not an indexed attribute."
         )
       end
@@ -55,7 +55,7 @@ module RedisRecord::Serializer
         validate_attr_type(attr_val, attr_type)
       else
         # Validate attribute types for range index attributes
-        if attr_val.is_a?(RedisRecord::RangeInterval)
+        if attr_val.is_a?(Redcord::RangeInterval)
           validate_attr_type(attr_val.min, T.cast(T.nilable(attr_type), T::Types::Base))
           validate_attr_type(attr_val.max, T.cast(T.nilable(attr_type), T::Types::Base))
         else
@@ -73,7 +73,7 @@ module RedisRecord::Serializer
     def validate_attr_type(attr_val, attr_type)
       if (attr_type.is_a?(Class) && !attr_val.is_a?(attr_type)) ||
         (attr_type.is_a?(T::Types::Base) && !attr_type.valid?(attr_val))
-        raise RedisRecord::WrongAttributeType.new(
+        raise Redcord::WrongAttributeType.new(
           "Expected type #{attr_type}, got #{attr_val.class}"
         )
       end
@@ -81,7 +81,7 @@ module RedisRecord::Serializer
 
     sig { params(attribute: Symbol, val: T.untyped).returns([T.untyped, T.untyped]) }
     def encode_range_index_attr_val(attribute, val)
-      if val.is_a?(RedisRecord::RangeInterval)
+      if val.is_a?(Redcord::RangeInterval)
         # nil is treated as -inf and +inf. This is supported in Redis sorted sets
         # so clients aren't required to know the highest and lowest scores in a range
         min_val = !val.min ? '-inf' : encode_attr_value(attribute, val.min)
@@ -113,7 +113,7 @@ module RedisRecord::Serializer
     end
     sig { returns(String) }
     def model_key
-      "RedisRecord:#{name}"
+      "Redcord:#{name}"
     end
 
     sig { params(args: T::Hash[T.any(String, Symbol), T.untyped]).returns(T::Hash[Symbol, T.untyped]) }

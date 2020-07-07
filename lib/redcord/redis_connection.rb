@@ -1,9 +1,9 @@
 # typed: strict
 require 'rails'
-require 'redis_record/prepared_redis'
-require 'redis_record/lua_script_reader'
+require 'redcord/prepared_redis'
+require 'redcord/lua_script_reader'
 
-module RedisRecord::RedisConnection
+module Redcord::RedisConnection
   extend T::Sig
   extend T::Helpers
 
@@ -21,53 +21,53 @@ module RedisRecord::RedisConnection
 
     sig { returns(T::Hash[Symbol, T.untyped]) }
     def connection_config
-      env_config = RedisRecord::Base.configurations[Rails.env]
+      env_config = Redcord::Base.configurations[Rails.env]
       (env_config[name.underscore] || env_config['default']).symbolize_keys
     end
 
-    sig { returns(RedisRecord::PreparedRedis) }
+    sig { returns(Redcord::PreparedRedis) }
     def redis
-      RedisRecord::RedisConnection.connections[name.underscore] ||= prepare_redis!
+      Redcord::RedisConnection.connections[name.underscore] ||= prepare_redis!
     end
 
-    sig { returns(RedisRecord::PreparedRedis) }
+    sig { returns(Redcord::PreparedRedis) }
     def establish_connection
-      RedisRecord::RedisConnection.connections[name.underscore] = prepare_redis!
+      Redcord::RedisConnection.connections[name.underscore] = prepare_redis!
     end
 
-    sig { params(redis: Redis).returns(RedisRecord::PreparedRedis) }
+    sig { params(redis: Redis).returns(Redcord::PreparedRedis) }
     def redis=(redis)
-      RedisRecord::RedisConnection.connections[name.underscore] = prepare_redis!(redis)
+      Redcord::RedisConnection.connections[name.underscore] = prepare_redis!(redis)
     end
 
     # We prepare the model definition such as TTL, index, and uniq when we
     # establish a Redis connection (once per connection) instead of sending the
     # definitions in each Redis query.
     #
-    # TODO: Replace this with RedisRecord migrations
-    sig { params(client: T.nilable(Redis)).returns(RedisRecord::PreparedRedis) }
+    # TODO: Replace this with Redcord migrations
+    sig { params(client: T.nilable(Redis)).returns(Redcord::PreparedRedis) }
     def prepare_redis!(client=nil)
-      return client if client.is_a?(RedisRecord::PreparedRedis)
+      return client if client.is_a?(Redcord::PreparedRedis)
 
-      client = RedisRecord::PreparedRedis.new(
+      client = Redcord::PreparedRedis.new(
         **(client.nil? ? connection_config : client.instance_variable_get(:@options)),
-        logger: RedisRecord::Logger.proxy,
+        logger: Redcord::Logger.proxy,
       )
 
       client.pipelined do
-        RedisRecord::RedisConnection.procs_to_prepare.each do |proc_to_prepare|
+        Redcord::RedisConnection.procs_to_prepare.each do |proc_to_prepare|
           proc_to_prepare.call(client)
         end
       end
 
-      script_names = RedisRecord::ServerScripts.instance_methods
+      script_names = Redcord::ServerScripts.instance_methods
       res = client.pipelined do
         script_names.each do |script_name|
-          client.script(:load, RedisRecord::LuaScriptReader.read_lua_script(script_name.to_s))
+          client.script(:load, Redcord::LuaScriptReader.read_lua_script(script_name.to_s))
         end
       end
 
-      client.redis_record_server_script_shas = script_names.zip(res).to_h
+      client.redcord_server_script_shas = script_names.zip(res).to_h
       client
     end
   end
@@ -75,7 +75,7 @@ module RedisRecord::RedisConnection
   module InstanceMethods
     extend T::Sig
 
-    sig { returns(RedisRecord::PreparedRedis) }
+    sig { returns(Redcord::PreparedRedis) }
     def redis
       self.class.redis
     end

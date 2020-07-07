@@ -1,5 +1,5 @@
 # typed: strict
-module RedisRecord::ServerScripts
+module Redcord::ServerScripts
   extend T::Sig
 
   sig do
@@ -10,7 +10,7 @@ module RedisRecord::ServerScripts
   end
   def create_hash_returning_id(key, args)
     evalsha(
-      T.must(redis_record_server_script_shas[:create_hash_returning_id]),
+      T.must(redcord_server_script_shas[:create_hash_returning_id]),
       keys: [key],
       argv: args.to_a.flatten,
     ).to_i
@@ -25,7 +25,7 @@ module RedisRecord::ServerScripts
   end
   def update_hash(model, id, args)
     evalsha(
-      T.must(redis_record_server_script_shas[:update_hash]),
+      T.must(redcord_server_script_shas[:update_hash]),
       keys: [model, id],
       argv: args.to_a.flatten,
     )
@@ -39,7 +39,7 @@ module RedisRecord::ServerScripts
   end
   def delete_hash(model, id)
     evalsha(
-      T.must(redis_record_server_script_shas[:delete_hash]),
+      T.must(redcord_server_script_shas[:delete_hash]),
       keys: [model, id]
     )
   end
@@ -53,7 +53,7 @@ module RedisRecord::ServerScripts
   end
   def find_by_attr(model, query_conditions, select_attrs=Set.new)
     res = evalsha(
-      T.must(redis_record_server_script_shas[:find_by_attr]),
+      T.must(redcord_server_script_shas[:find_by_attr]),
       keys: [model] + query_conditions.to_a.flatten,
       argv: select_attrs.to_a.flatten
     )
@@ -71,7 +71,7 @@ module RedisRecord::ServerScripts
   end
   def find_by_attr_count(model, query_conditions)
     evalsha(
-      T.must(redis_record_server_script_shas[:find_by_attr_count]),
+      T.must(redcord_server_script_shas[:find_by_attr_count]),
       keys: [model] + query_conditions.to_a.flatten,
     )
   end
