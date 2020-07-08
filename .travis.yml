@@ -1,6 +1,6 @@
 language: ruby
 services:
-  - redis-server
+- redis-server
 rvm:
 - 2.5
 - 2.6
@@ -13,3 +13,6 @@ before_install:
 - gem install bundler -v 2.0.1 --no-doc
 script:
 - bundle exec rspec
+env:
+  global:
+    secure: XMu8bnfjfCE0hCU4OgfvZ5asqingSzDahPGdVIzUej50uRrAlJ8oi765ZbwQGUcRIixy2JW417zqpImzKpn4d32OEjbpdgYWGTj1ENb9KYvlj1rgziHgvsArUi0CNpWSoDP8bFZPYwF5Db547WaJDp56sK1ddWlTanhsYAgYj4jN4dPblHTicOa8BXlwDSHfmj9GinJsHp0M+vXoORvLje3qIbgcW0/hjzYUStbaA0ciJHJdz7ubadXO11Z9pvn6gEamc+D71Yvtv4xguvSx8x4t+Ac3D1oqCEAaGnD2st06vU7aeJZpMajkAM5mDUGzAcnPHrN0iH/LfDwtcbaJq3U1EgNUPwZF7EtnRn6se3DURY0GKo0GMMos0xAc0wW9A76K2z++U+2AKP/Of5BZ8qufwi0UyiMgCb6M1hMOPzfvr+jlyAbq7K1WUwDp1DEq9gCE/JTk0sgdk4iU8x7C+8uckHigh94V9VJDxuT4xUPrulIM9dI/3gw7nnSvW7SiaS9Jj2b1DXqeKdtEQOlK/Oh1YG03c6qkbl+l3L/EP69AJhS8t9QyytuFr/XTuP4efINLAbsRy0HkG4MHvn7sN2+o69obz9TZpnbXIwBDJdphpMFuqcq7u8hIUYMitNY0d6sakb1jwZNLdOjbatXn6Phwa1f1teQ1sbaJUUsTmTE=
