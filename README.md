@@ -1,5 +1,7 @@
 Redcord
 -------------------------------
+[![Gem Version](https://badge.fury.io/rb/redcord.svg)](https://badge.fury.io/rb/redcord)
+
 A Ruby ORM like Active Record, but for Redis.
 
 **Note:** This is a pre-release version.
