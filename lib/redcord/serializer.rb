@@ -26,7 +26,7 @@ module Redcord::Serializer
     TIME_TYPES = T.let(Set[Time, T.nilable(Time)], T::Set[T.untyped])
     sig { params(attribute: Symbol, val: T.untyped).returns(T.untyped) }
     def encode_attr_value(attribute, val)
-      if val && TIME_TYPES.include?(props[attribute][:type])
+      if !val.blank? && TIME_TYPES.include?(props[attribute][:type])
         val = val.to_f
       end
       val
@@ -34,7 +34,7 @@ module Redcord::Serializer
 
     sig { params(attribute: Symbol, val: T.untyped).returns(T.untyped) }
     def decode_attr_value(attribute, val)
-      if val && TIME_TYPES.include?(props[attribute][:type])
+      if !val.blank? && TIME_TYPES.include?(props[attribute][:type])
         val = Time.zone.at(val.to_f)
       end
       val
