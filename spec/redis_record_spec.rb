@@ -350,6 +350,8 @@ describe Redcord do
 
       count = klass.where(a: 3).count
       expect(count).to eq 2
+
+      expect(klass.where(a: 0).count).to eq 0
     end
   end
 end
