@@ -52,6 +52,11 @@ local function batch_exists(model, ids_set)
   for id, _ in pairs(ids_set) do
     table.insert(id_keys, model .. ':id:' .. id)
   end
+
+  if #id_keys == 0 then
+    return 0
+  end
+
   return redis.call('exists', unpack(id_keys))
 end
 
