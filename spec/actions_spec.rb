@@ -8,6 +8,7 @@ describe Redcord::Actions do
       include Redcord::Base
 
       attribute :value, T.nilable(Integer)
+      attribute :indexed_value, T.nilable(Integer), index: true
 
       def self.name
         'RedcordSpecModel'
@@ -136,6 +137,30 @@ describe Redcord::Actions do
 
       expect(another_instance.id).to eq instance.id
       expect(another_instance.value).to eq instance.value
+    end
+
+    it '#where' do
+      klass.establish_connection
+
+      instance = klass.create!(indexed_value: 1)
+      another_instance = klass.where(
+        indexed_value: instance.indexed_value,
+      ).to_a.first
+
+      expect(another_instance.id).to eq instance.id
+      expect(another_instance.indexed_value).to eq instance.indexed_value
+    end
+
+    it '#find_by' do
+      klass.establish_connection
+
+      instance = klass.create!(indexed_value: 1)
+      another_instance = klass.find_by(indexed_value: instance.indexed_value)
+
+      expect(another_instance.id).to eq instance.id
+      expect(another_instance.indexed_value).to eq instance.indexed_value
+
+      expect(klass.find_by(indexed_value: 0)).to be_nil
     end
   end
 
