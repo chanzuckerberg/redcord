@@ -21,3 +21,9 @@ Style/TrailingCommaInHashLiteral:
 
 Style/BlockDelimiters:
   Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Layout/FirstArgumentIndentation:
+  Enabled: false
