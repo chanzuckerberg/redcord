@@ -41,7 +41,7 @@ describe Redcord::Attribute do
   it 'adds attributes to the classes' do
     expect(
       klass.class_variable_get(:@@range_index_attributes),
-    ).to eq(Set.new([:b]))
+    ).to eq(Set.new(%i[id created_at updated_at b]))
 
     expect(
       another_klass.class_variable_get(:@@index_attributes),
@@ -49,7 +49,7 @@ describe Redcord::Attribute do
 
     expect(
       another_klass.class_variable_get(:@@range_index_attributes),
-    ).to eq(Set.new(%i[float integer time]))
+    ).to eq(Set.new(%i[id created_at updated_at float integer time]))
 
     expect(
       another_klass.class_variable_get(:@@ttl),
