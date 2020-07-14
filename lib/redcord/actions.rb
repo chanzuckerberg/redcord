@@ -49,6 +49,11 @@ module Redcord::Actions
       coerce_and_set_id(args, id)
     end
 
+    sig { params(args: T::Hash[Symbol, T.untyped]).returns(T.untyped) }
+    def find_by(args)
+      where(args).to_a.first
+    end
+
     sig { params(args: T::Hash[Symbol, T.untyped]).returns(Redcord::Relation) }
     def where(args)
       Redcord::Relation.new(T.let(self, T.untyped)).where(args)

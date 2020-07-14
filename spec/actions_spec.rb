@@ -137,6 +137,24 @@ describe Redcord::Actions do
       expect(another_instance.id).to eq instance.id
       expect(another_instance.value).to eq instance.value
     end
+
+    it '#where' do
+      instance = klass.create!(value: 1)
+      another_instance = klass.where(value: instance.value).first
+
+      expect(another_instance.id).to eq instance.id
+      expect(another_instance.value).to eq instance.value
+    end
+
+    it '#find_by' do
+      instance = klass.create!(value: 1)
+      another_instance = klass.find_by(value: instance.value)
+
+      expect(another_instance.id).to eq instance.id
+      expect(another_instance.value).to eq instance.value
+
+      expect(klass.find_by(value: 0)).to be_nil
+    end
   end
 
   context 'delete' do
