@@ -1,11 +1,19 @@
+# frozen_string_literal: true
+
 # typed: strict
+
 module Redcord::Attribute
   extend T::Sig
   extend T::Helpers
 
-  # We implicitly determine what should be a range index on Redis based on Ruby type.
+  # We implicitly determine what should be a range index on Redis based on Ruby
+  # type.
   RangeIndexType = T.type_alias {
-    T.any(T.nilable(Time), T.nilable(Float), T.nilable(Integer))
+    T.any(
+      T.nilable(Float),
+      T.nilable(Integer),
+      T.nilable(Time),
+    )
   }
 
   sig { params(klass: T.class_of(T::Struct)).void }
@@ -26,23 +34,22 @@ module Redcord::Attribute
         options: T::Hash[Symbol, T.untyped],
       ).void
     end
-    def attribute(name, type, options={})
+    def attribute(name, type, options = {})
       # TODO: support uniq options
+      # TODO: validate types
       prop(name, type)
-      if options[:index]
-        index_attribute(name, type)
-      end
-    end
-    
 
-    sig { params(attr: Symbol, type: T.any(Class,T::Types::Base)).void }
+      index_attribute(name, type) if options[:index]
+    end
+
+    sig { params(attr: Symbol, type: T.any(Class, T::Types::Base)).void }
     def index_attribute(attr, type)
       if should_range_index?(type)
         class_variable_get(:@@range_index_attributes) << attr
-        sadd_proc_on_redis_connection("range_index_attrs", attr.to_s)
+        sadd_proc_on_redis_connection('range_index_attrs', attr.to_s)
       else
         class_variable_get(:@@index_attributes) << attr
-        sadd_proc_on_redis_connection("index_attrs", attr.to_s)
+        sadd_proc_on_redis_connection('index_attrs', attr.to_s)
       end
     end
 
@@ -52,22 +59,23 @@ module Redcord::Attribute
     end
 
     private
+
     sig { params(redis_key: String, item_to_add: String).void }
     def sadd_proc_on_redis_connection(redis_key, item_to_add)
-      # TODO: Currently we're setting indexed attributes through procs that are run
-      # when a RedisConnection is established. This should be replaced with migrations
-      Redcord::RedisConnection.procs_to_prepare << Proc.new do |redis|
+      # TODO: Currently we're setting indexed attributes through procs that are
+      # run when a RedisConnection is established. This should be replaced with
+      # migrations
+      Redcord::RedisConnection.procs_to_prepare << proc do |redis|
         redis.sadd("#{model_key}:#{redis_key}", item_to_add)
       end
     end
 
-    sig { params(type: T.any(Class,T::Types::Base)).returns(T::Boolean) }
+    sig { params(type: T.any(Class, T::Types::Base)).returns(T::Boolean) }
     def should_range_index?(type)
       # Change Ruby raw type to Sorbet type in order to call subtype_of?
-      if type.is_a?(Class)
-        type = T::Types::Simple.new(type)
-      end
-      return type.subtype_of?(RangeIndexType)
+      type = T::Types::Simple.new(type) if type.is_a?(Class)
+
+      type.subtype_of?(RangeIndexType)
     end
   end
 
