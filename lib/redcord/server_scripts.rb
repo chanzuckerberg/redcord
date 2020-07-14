@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 # typed: strict
+
 module Redcord::ServerScripts
   extend T::Sig
 
@@ -34,13 +37,13 @@ module Redcord::ServerScripts
   sig do
     params(
       model: String,
-      id: Integer
+      id: Integer,
     ).returns(Integer)
   end
   def delete_hash(model, id)
     evalsha(
       T.must(redcord_server_script_shas[:delete_hash]),
-      keys: [model, id]
+      keys: [model, id],
     )
   end
 
@@ -48,17 +51,18 @@ module Redcord::ServerScripts
     params(
       model: String,
       query_conditions: T::Hash[T.untyped, T.untyped],
-      select_attrs: T::Set[Symbol]
+      select_attrs: T::Set[Symbol],
     ).returns(T::Hash[Integer, T::Hash[T.untyped, T.untyped]])
   end
-  def find_by_attr(model, query_conditions, select_attrs=Set.new)
+  def find_by_attr(model, query_conditions, select_attrs = Set.new)
     res = evalsha(
       T.must(redcord_server_script_shas[:find_by_attr]),
       keys: [model] + query_conditions.to_a.flatten,
-      argv: select_attrs.to_a.flatten
+      argv: select_attrs.to_a.flatten,
     )
-    # The Lua script will return this as a flattened array.
-    # Convert the result into a hash of {id -> model hash}
+
+    # The Lua script will return this as a flattened array. Convert the result
+    # into a hash of {id -> model hash}
     res_hash = res.each_slice(2)
     res_hash.map { |key, val| [key.to_i, val.each_slice(2).to_h] }.to_h
   end
@@ -66,7 +70,7 @@ module Redcord::ServerScripts
   sig do
     params(
       model: String,
-      query_conditions: T::Hash[T.untyped, T.untyped]
+      query_conditions: T::Hash[T.untyped, T.untyped],
     ).returns(Integer)
   end
   def find_by_attr_count(model, query_conditions)
