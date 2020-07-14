@@ -1,2 +1,44 @@
 AllCops:
   TargetRubyVersion: 2.5
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Lint/UnderscorePrefixedVariableName:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false
+
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/BlockDelimiters:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Layout/FirstArgumentIndentation:
+  Enabled: false
+
+Style/RedundantSelf:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
