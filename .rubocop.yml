@@ -30,3 +30,6 @@ Layout/FirstArgumentIndentation:
 
 Style/RedundantSelf:
   Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
