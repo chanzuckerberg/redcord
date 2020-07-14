@@ -27,3 +27,6 @@ Metrics/AbcSize:
 
 Layout/FirstArgumentIndentation:
   Enabled: false
+
+Style/RedundantSelf:
+  Enabled: false
