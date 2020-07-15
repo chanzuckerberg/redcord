@@ -24,5 +24,6 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'codecov'
   s.add_development_dependency 'rspec', '~> 3.2'
+  s.add_development_dependency 'rubocop'
   s.add_development_dependency 'simplecov'
 end
