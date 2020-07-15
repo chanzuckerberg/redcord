@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 # typed: strict
+
 require 'sorbet-coerce'
 
 require 'redcord/relation'
@@ -6,6 +9,8 @@ require 'redcord/relation'
 module Redcord
   # Raised by Model.find
   class RecordNotFound < StandardError; end
+
+  # TODO: move the errors to relation.rb
   # Raised by Model.where
   class AttributeNotIndexed < StandardError; end
   class WrongAttributeType < TypeError; end
@@ -38,10 +43,9 @@ module Redcord::Actions
       instance_key = "#{model_key}:id:#{id}"
       args = redis.hgetall(instance_key)
       if args.empty?
-        raise Redcord::RecordNotFound.new(
-          "Couldn't find #{name} with 'id'=#{id}"
-        )
+        raise Redcord::RecordNotFound, "Couldn't find #{name} with 'id'=#{id}"
       end
+
       coerce_and_set_id(args, id)
     end
 
@@ -52,7 +56,7 @@ module Redcord::Actions
 
     sig { params(id: T.untyped).returns(T::Boolean) }
     def destroy(id)
-      return redis.delete_hash(model_key, id) == 1
+      redis.delete_hash(model_key, id) == 1
     end
   end
 
@@ -65,13 +69,21 @@ module Redcord::Actions
     sig { abstract.returns(T.nilable(ActiveSupport::TimeWithZone)) }
     def created_at; end
 
-    sig { abstract.params(time: ActiveSupport::TimeWithZone).returns(T.nilable(ActiveSupport::TimeWithZone)) }
+    sig {
+      abstract.params(
+        time: ActiveSupport::TimeWithZone,
+      ).returns(T.nilable(ActiveSupport::TimeWithZone))
+    }
     def created_at=(time); end
 
     sig { abstract.returns(T.nilable(ActiveSupport::TimeWithZone)) }
     def updated_at; end
 
-    sig { abstract.params(time: ActiveSupport::TimeWithZone).returns(T.nilable(ActiveSupport::TimeWithZone)) }
+    sig {
+      abstract.params(
+        time: ActiveSupport::TimeWithZone,
+      ).returns(T.nilable(ActiveSupport::TimeWithZone))
+    }
     def updated_at=(time); end
 
     sig { void }
@@ -80,15 +92,22 @@ module Redcord::Actions
       _id = id
       if _id.nil?
         self.created_at = T.must(self.updated_at)
-        _id = redis.create_hash_returning_id(self.class.model_key, self.class.to_redis_hash(serialize))
+        _id = redis.create_hash_returning_id(
+          self.class.model_key,
+          self.class.to_redis_hash(serialize),
+        )
         send(:id=, _id)
       else
-        redis.update_hash(self.class.model_key, _id, self.class.to_redis_hash(serialize))
+        redis.update_hash(
+          self.class.model_key,
+          _id,
+          self.class.to_redis_hash(serialize),
+        )
       end
     end
 
     sig { params(args: T::Hash[Symbol, T.untyped]).void }
-    def update!(args={})
+    def update!(args = {})
       _id = id
       if _id.nil?
         _set_args!(args)
@@ -96,13 +115,18 @@ module Redcord::Actions
       else
         args[:updated_at] = Time.zone.now
         _set_args!(args)
-        redis.update_hash(self.class.model_key, _id, self.class.to_redis_hash(args))
+        redis.update_hash(
+          self.class.model_key,
+          _id,
+          self.class.to_redis_hash(args),
+        )
       end
     end
 
     sig { returns(T::Boolean) }
     def destroy
       return false if id.nil?
+
       self.class.destroy(T.must(id))
     end
 
@@ -123,7 +147,7 @@ module Redcord::Actions
       instance_variable_get(:@_id)
     end
 
-  private
+    private
 
     sig { params(id: Integer).returns(Integer) }
     def id=(id)
