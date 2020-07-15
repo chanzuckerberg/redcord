@@ -1,20 +1,6 @@
 # typed: false
 describe Redcord do
   include Redcord::Migration::TTL
-
-  it 'defines props' do
-    klass = Class.new(T::Struct) do
-      include Redcord::Base
-
-      attribute :a, Integer
-    end
-
-    instance = klass.new(a: 1)
-    expect(instance.methods.include?(:a)).to be true
-    expect(instance.methods.include?(:a=)).to be true
-    expect(instance.id).to be_nil
-  end
-
   context 'scripts' do
     it 'creates a hash and increases the id' do
       expect(Redcord::Base.redis.create_hash_returning_id('test', {a: 1})).to eq 1
