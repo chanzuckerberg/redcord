@@ -48,7 +48,7 @@ Learn more: [Redcord Model](docs/redcord_model.md)
 #### Read
 Return the first user session that matches the user's id:
 ```ruby
-UserSession.find_by(user_id: user.id) # TODO: support this
+UserSession.find_by(user_id: user.id)
 ```
 **Note:** This query won’t work until we execute a Redcord migration for adding the index.
 
