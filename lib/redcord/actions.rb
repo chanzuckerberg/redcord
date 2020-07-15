@@ -9,11 +9,6 @@ require 'redcord/relation'
 module Redcord
   # Raised by Model.find
   class RecordNotFound < StandardError; end
-
-  # TODO: move the errors to relation.rb
-  # Raised by Model.where
-  class AttributeNotIndexed < StandardError; end
-  class WrongAttributeType < TypeError; end
 end
 
 module Redcord::Actions

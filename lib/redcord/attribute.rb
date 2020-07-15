@@ -58,6 +58,11 @@ module Redcord::Attribute
       class_variable_set(:@@ttl, duration)
     end
 
+    sig { returns(String) }
+    def model_key
+      "Redcord:#{name}"
+    end
+
     private
 
     sig { params(redis_key: String, item_to_add: String).void }
