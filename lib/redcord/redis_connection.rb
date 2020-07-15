@@ -1,7 +1,11 @@
+# frozen_string_literal: true
+
 # typed: strict
+
 require 'rails'
-require 'redcord/prepared_redis'
+
 require 'redcord/lua_script_reader'
+require 'redcord/prepared_redis'
 
 module Redcord::RedisConnection
   extend T::Sig
@@ -37,7 +41,8 @@ module Redcord::RedisConnection
 
     sig { params(redis: Redis).returns(Redcord::PreparedRedis) }
     def redis=(redis)
-      Redcord::RedisConnection.connections[name.underscore] = prepare_redis!(redis)
+      Redcord::RedisConnection.connections[name.underscore] =
+        prepare_redis!(redis)
     end
 
     # We prepare the model definition such as TTL, index, and uniq when we
@@ -46,11 +51,17 @@ module Redcord::RedisConnection
     #
     # TODO: Replace this with Redcord migrations
     sig { params(client: T.nilable(Redis)).returns(Redcord::PreparedRedis) }
-    def prepare_redis!(client=nil)
+    def prepare_redis!(client = nil)
       return client if client.is_a?(Redcord::PreparedRedis)
 
       client = Redcord::PreparedRedis.new(
-        **(client.nil? ? connection_config : client.instance_variable_get(:@options)),
+        **(
+          if client.nil?
+            connection_config
+          else
+            client.instance_variable_get(:@options)
+          end
+        ),
         logger: Redcord::Logger.proxy,
       )
 
@@ -63,7 +74,10 @@ module Redcord::RedisConnection
       script_names = Redcord::ServerScripts.instance_methods
       res = client.pipelined do
         script_names.each do |script_name|
-          client.script(:load, Redcord::LuaScriptReader.read_lua_script(script_name.to_s))
+          client.script(
+            :load,
+            Redcord::LuaScriptReader.read_lua_script(script_name.to_s),
+          )
         end
       end
 
@@ -81,11 +95,15 @@ module Redcord::RedisConnection
     end
   end
 
-  sig { params(config: T::Hash[String, T.untyped]).returns(T::Hash[String, T.untyped]) }
+  sig {
+    params(
+      config: T::Hash[String, T.untyped],
+    ).returns(T::Hash[String, T.untyped])
+  }
   def self.merge_and_resolve_default(config)
     env = Rails.env
-    config[env] = {} if !config.include?(env)
-    config[env]['default'] = {} if !config[env].include?('default')
+    config[env] = {} unless config.include?(env)
+    config[env]['default'] = {} unless config[env].include?('default')
     config
   end
 

@@ -2,52 +2,6 @@
 describe Redcord do
   include Redcord::Migration::TTL
 
-  context 'redis connection' do
-    let!(:model_class) do
-      Class.new(T::Struct) do
-        include Redcord::Base
-
-        def self.name
-          'spec_model'
-        end
-      end
-    end
-    let(:env) { 'my_env' }
-
-    around(:each) do |test_example|
-      config = Redcord::Base.configurations
-      test_example.run
-    ensure
-      Redcord::Base.configurations = config
-      model_class.establish_connection
-    end
-
-    it 'uses configurations to establish Redis connections' do
-      fake_url = 'redis://test.fakeurl/1'
-      allow(Rails).to receive(:env).and_return(env)
-      allow(Redcord::Base).to receive(:configurations).and_return({
-        env => {'spec_model' => {'url' => fake_url}},
-      })
-
-      expect {
-        model_class.establish_connection
-      }.to raise_error(Redis::CannotConnectError)
-    end
-
-    it 'establishes Redis connection' do
-      expect(model_class.redis.ping).to eq 'PONG'
-    end
-
-    it 'shares the base connection config by default' do
-      expect(model_class.connection_config).to eq Redcord::Base.connection_config
-    end
-
-    it 'can have a different connection at model level' do
-      model_class.redis = Redis.new
-      expect(model_class.redis).to_not eq Redcord::Base.redis
-    end
-  end
-
   it 'defines props' do
     klass = Class.new(T::Struct) do
       include Redcord::Base
