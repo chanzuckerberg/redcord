@@ -1,4 +1,8 @@
+# frozen_string_literal: true
+
 # typed: strict
+
+require 'active_support/core_ext/array'
 require 'active_support/core_ext/module'
 
 class Redcord::Relation
@@ -6,33 +10,25 @@ class Redcord::Relation
 
   sig { returns(T.class_of(Redcord::Base)) }
   attr_reader :model
-  
+
   sig { returns(T::Hash[Symbol, T.untyped]) }
   attr_reader :query_conditions
 
   sig { returns(T::Set[Symbol]) }
   attr_reader :select_attrs
 
-  # TODO: Add sig for []
-  delegate :[], to: :to_a
-
-  sig do
-    type_parameters(:U).params(
-      blk: T.proc.params(arg0: Redcord::Base).returns(T.type_parameter(:U)),
-    ).returns(T::Array[T.type_parameter(:U)])
-  end
-  def map(&blk)
-    to_a.map(&blk)
-  end
-
   sig do
     params(
       model: T.class_of(Redcord::Base),
       query_conditions: T::Hash[Symbol, T.untyped],
-      select_attrs: T::Set[Symbol]
+      select_attrs: T::Set[Symbol],
     ).void
   end
-  def initialize(model, query_conditions={}, select_attrs=Set.new)
+  def initialize(
+    model,
+    query_conditions = {},
+    select_attrs = Set.new
+  )
     @model = model
     @query_conditions = query_conditions
     @select_attrs = select_attrs
@@ -50,14 +46,17 @@ class Redcord::Relation
 
   sig do
     params(
-    args: Symbol,
+    args: T.untyped,
     blk: T.nilable(T.proc.params(arg0: T.untyped).void),
   ).returns(T.any(Redcord::Relation, T::Array[T.untyped]))
   end
   def select(*args, &blk)
     if block_given?
-      return execute_query.select { |*item| blk.call(*item) }
+      return execute_query.select do |*item|
+        blk.call(*item)
+      end
     end
+
     select_attrs.merge(args)
     self
   end
@@ -67,24 +66,93 @@ class Redcord::Relation
     redis.find_by_attr_count(model.model_key, query_conditions)
   end
 
-  sig { returns(T::Array[T.untyped]) }
-  def to_a
-    execute_query
-  end
+  delegate(
+    :&,
+    :[],
+    :all?,
+    :any?,
+    :any?,
+    :at,
+    :collect!,
+    :collect,
+    :compact!,
+    :compact,
+    :each,
+    :each_index,
+    :empty?,
+    :eql?,
+    :exists?,
+    :fetch,
+    :fifth!,
+    :fifth,
+    :filter!,
+    :filter,
+    :first!,
+    :first,
+    :forty_two!,
+    :forty_two,
+    :fourth!,
+    :fourth,
+    :include?,
+    :inspect,
+    :last!,
+    :last,
+    :many?,
+    :map!,
+    :map,
+    :none?,
+    :one?,
+    :reject!,
+    :reject,
+    :reverse!,
+    :reverse,
+    :reverse_each,
+    :second!,
+    :second,
+    :second_to_last!,
+    :second_to_last,
+    :size,
+    :sort!,
+    :sort,
+    :sort_by!,
+    :take!,
+    :take,
+    :third!,
+    :third,
+    :third_to_last!,
+    :third_to_last,
+    :to_a,
+    :to_ary,
+    :to_h,
+    :to_s,
+    :zip,
+    :|,
+    to: :execute_query,
+  )
 
   private
+
   sig { returns(T::Array[T.untyped]) }
   def execute_query
     if !select_attrs.empty?
-      res_hash = redis.find_by_attr(model.model_key, query_conditions, select_attrs)
-      return res_hash.map do |id, args|
-        args = model.from_redis_hash(args)
-        args = args.map { |k, v| [k.to_sym, TypeCoerce[model.get_attr_type(k.to_sym)].new.from(v)] }.to_h
-        args.merge!(:id => id)
+      res_hash = redis.find_by_attr(
+        model.model_key,
+        query_conditions,
+        select_attrs,
+      )
+
+      res_hash.map do |id, args|
+        model.from_redis_hash(args).map do |k, v|
+          [k.to_sym, TypeCoerce[model.get_attr_type(k.to_sym)].new.from(v)]
+        end.to_h.merge(id: id)
       end
     else
-      res_hash = redis.find_by_attr(model.model_key, query_conditions)
-      return res_hash.map { |id, args| model.coerce_and_set_id(args, id) }
+      res_hash = redis.find_by_attr(
+        model.model_key,
+        query_conditions,
+      )
+
+      res_hash.map { |id, args| model.coerce_and_set_id(args, id) }
     end
   end
 
