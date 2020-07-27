@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 # typed: false
+
 describe Redcord::Migration::Version do
   let(:redis) { Redcord::Base.redis }
   let(:migrator) { Redcord::Migration::Migrator }
@@ -10,8 +13,9 @@ describe Redcord::Migration::Version do
 
   context 'when there a new migration file locally' do
     before(:each) do
-      allow_any_instance_of(Redcord::Migration::Version).to receive(:local_versions)
-        .and_return([migration_file])
+      allow(Redcord::Migration::Migrator).to receive(:migration_files) do
+        [migration_file]
+      end
     end
 
     it 'needs to migrate the redis db' do
@@ -21,10 +25,12 @@ describe Redcord::Migration::Version do
 
   context 'when there is no new migration file locally' do
     before(:each) do
-      allow_any_instance_of(Redcord::Migration::Version).to receive(:local_versions)
-        .and_return([])
-      allow_any_instance_of(Redcord::Migration::Version).to receive(:remote_versions)
-        .and_return([])
+      allow_any_instance_of(Redcord::Migration::Version).to(
+        receive(:local_versions).and_return([]),
+      )
+      allow_any_instance_of(Redcord::Migration::Version).to(
+        receive(:remote_versions).and_return([]),
+      )
     end
 
     it 'does not need to migrate the redis db' do
