@@ -45,22 +45,6 @@ module Redcord::TTL::ClassMethods
   include Redcord::Serializer::ClassMethods
 end
 
-module Redcord::ServerScripts
-  include Kernel
-
-  sig do
-    params(
-      sha: String,
-      keys: T::Array[T.untyped],
-      argv: T::Array[T.untyped],
-    ).returns(T.untyped)
-  end
-  def evalsha(sha, keys: [], argv:[]); end
-
-  sig { returns(T::Hash[Symbol, String]) }
-  def redcord_server_script_shas; end
-end
-
 module Redcord::Actions::ClassMethods
   include Kernel
   include Redcord::RedisConnection::ClassMethods
