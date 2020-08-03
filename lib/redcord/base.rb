@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+#
 # typed: strict
 #
 # A Redis ORM API inspired by ActiveRecord:

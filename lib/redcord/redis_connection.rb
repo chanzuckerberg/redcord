@@ -71,17 +71,6 @@ module Redcord::RedisConnection
         end
       end
 
-      script_names = Redcord::ServerScripts.instance_methods
-      res = client.pipelined do
-        script_names.each do |script_name|
-          client.script(
-            :load,
-            Redcord::LuaScriptReader.read_lua_script(script_name.to_s),
-          )
-        end
-      end
-
-      client.redcord_server_script_shas = script_names.zip(res).to_h
       client
     end
   end
