@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = ['>= 2.5.0']
 
   s.add_dependency 'activesupport', '~> 5'
-  s.add_dependency 'railties', '~> 5'
+  s.add_dependency 'railties', '>= 5'
   s.add_dependency 'redis', '~> 4'
   s.add_dependency 'sorbet', '>= 0.4.4704'
   s.add_dependency 'sorbet-coerce', '>= 0.2.7'
