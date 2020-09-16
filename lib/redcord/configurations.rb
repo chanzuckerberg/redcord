@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+#
 # typed: strict
 #
 #  This allows us to configure Redis connections for Redcord. Redis
@@ -40,6 +42,7 @@
 #  ```
 #
 require 'redcord/redis_connection'
+
 module Redcord::Configurations
   extend T::Sig
   extend T::Helpers
