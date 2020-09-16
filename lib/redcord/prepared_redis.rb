@@ -81,7 +81,10 @@ class Redcord::PreparedRedis < Redis
 
   sig { void }
   def load_server_scripts!
-    script_names = Dir['lib/redcord/server_scripts/*.lua'].map do |filename|
+    script_names = Dir[File.join(
+      __dir__,
+      'server_scripts/*.lua',
+    )].map do |filename|
       # lib/redcord/server_scripts/find_by_attr.erb.lua -> find_by_attr
       T.must(filename.split('/').last).split('.').first&.to_sym
     end
