@@ -109,6 +109,17 @@ Finished in 0.024 second
 
 Learn more: [Migrations](docs/migrations.md)
 
+### 6. Monitoring
+Redcord reports metrics to a tracer (for example, [Datadog APM](https://docs.datadoghq.com/tracing/setup/ruby/#manual-instrumentation)) if it is configured.
+
+In `config/initializers/redcord.rb`, provide a block with a Ruby object that responds to  `.trace(<span_name>, <options hash>)`.
+```ruby
+Redcord.configure do |config|
+  # Don’t forget to enable manual-instrumentation in datadog’s configuration!
+  config.tracer { Datadog.tracer }
+end
+```
+
 ## Related Projects; Yet Another Redcord
 To the best of our knowledge, Redcord is the best Ruby ORM lib for Redis.
 

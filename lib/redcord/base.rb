@@ -13,6 +13,7 @@ require 'redcord/configurations'
 require 'redcord/logger'
 require 'redcord/redis_connection'
 require 'redcord/serializer'
+require 'redcord/tracer'
 
 module Redcord::Base
   extend T::Sig
@@ -25,6 +26,7 @@ module Redcord::Base
   include Redcord::Configurations
   include Redcord::Logger
   include Redcord::RedisConnection
+  include Redcord::Tracer
 
   abstract!
 
