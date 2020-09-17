@@ -22,7 +22,7 @@ class Redcord::Railtie < Rails::Railtie
     config_file = 'config/redcord.yml'
 
     if File.file?(config_file)
-      Redcord::Base.configurations = YAML.safe_load(
+      Redcord::Base.configurations = YAML.load(
         ERB.new(File.read(config_file)).result
       )
     end
