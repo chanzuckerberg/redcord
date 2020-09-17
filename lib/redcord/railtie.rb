@@ -19,6 +19,8 @@ class Redcord::Railtie < Rails::Railtie
   end
 
   config.after_initialize do
+    Redcord::Base.logger = Rails.logger
+
     config_file = 'config/redcord.yml'
 
     if File.file?(config_file)

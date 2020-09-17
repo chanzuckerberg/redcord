@@ -12,7 +12,7 @@ module Redcord::Logger
   module ClassMethods
     extend T::Sig
 
-    @@logger = T.let(Rails.logger, T.untyped)
+    @@logger = T.let(nil, T.untyped)
 
     sig { returns(T.untyped) }
     def logger
