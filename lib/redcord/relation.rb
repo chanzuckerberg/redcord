@@ -51,19 +51,29 @@ class Redcord::Relation
   ).returns(T.any(Redcord::Relation, T::Array[T.untyped]))
   end
   def select(*args, &blk)
-    if block_given?
-      return execute_query.select do |*item|
-        blk.call(*item)
+    Redcord::Base.trace(
+     'redcord_relation_select',
+     model_name: @model.name,
+    ) do
+      if block_given?
+        return execute_query.select do |*item|
+          blk.call(*item)
+        end
       end
-    end
 
-    select_attrs.merge(args)
-    self
+      select_attrs.merge(args)
+      self
+    end
   end
 
   sig { returns(Integer) }
   def count
-    redis.find_by_attr_count(model.model_key, query_conditions)
+    Redcord::Base.trace(
+     'redcord_relation_count',
+     model_name: @model.name,
+    ) do
+      redis.find_by_attr_count(model.model_key, query_conditions)
+    end
   end
 
   delegate(
@@ -134,25 +144,30 @@ class Redcord::Relation
 
   sig { returns(T::Array[T.untyped]) }
   def execute_query
-    if !select_attrs.empty?
-      res_hash = redis.find_by_attr(
-        model.model_key,
-        query_conditions,
-        select_attrs,
-      )
+    Redcord::Base.trace(
+     'redcord_relation_execute_query',
+     model_name: @model.name,
+    ) do
+      if !select_attrs.empty?
+        res_hash = redis.find_by_attr(
+          model.model_key,
+          query_conditions,
+          select_attrs,
+        )
 
-      res_hash.map do |id, args|
-        model.from_redis_hash(args).map do |k, v|
-          [k.to_sym, TypeCoerce[model.get_attr_type(k.to_sym)].new.from(v)]
-        end.to_h.merge(id: id)
+        res_hash.map do |id, args|
+          model.from_redis_hash(args).map do |k, v|
+            [k.to_sym, TypeCoerce[model.get_attr_type(k.to_sym)].new.from(v)]
+          end.to_h.merge(id: id)
+        end
+      else
+        res_hash = redis.find_by_attr(
+          model.model_key,
+          query_conditions,
+        )
+
+        res_hash.map { |id, args| model.coerce_and_set_id(args, id) }
       end
-    else
-      res_hash = redis.find_by_attr(
-        model.model_key,
-        query_conditions,
-      )
-
-      res_hash.map { |id, args| model.coerce_and_set_id(args, id) }
     end
   end
 
