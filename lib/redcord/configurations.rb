@@ -42,6 +42,7 @@
 #  ```
 #
 require 'redcord/redis_connection'
+require 'redcord/tracer'
 
 module Redcord::Configurations
   extend T::Sig
