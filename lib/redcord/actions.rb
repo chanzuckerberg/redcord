@@ -58,6 +58,11 @@ module Redcord::Actions
     def destroy(id)
       redis.delete_hash(model_key, id) == 1
     end
+
+    def vacuum
+        index_attrs = class_variable_get(:@@index_attributes)
+        for 
+    end
   end
 
   module InstanceMethods

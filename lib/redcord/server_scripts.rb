@@ -1,4 +1,4 @@
-# typed: strict
+# typed: false
 module Redcord::ServerScripts
   extend T::Sig
 
@@ -74,5 +74,41 @@ module Redcord::ServerScripts
       T.must(redcord_server_script_shas[:find_by_attr_count]),
       keys: [model] + query_conditions.to_a.flatten,
     )
+  end
+
+  sig do
+    params(
+      model_key: String,
+      attribute: Symbol
+    ).void
+  end
+  def vacuum_index_set(model_key, attribute)
+    cursor = 0
+    loop do
+      cursor = evalsha(
+        T.must(redcord_server_script_shas[:vacuum_index_set]),
+        keys: [model_key],
+        argv: [attribute, cursor]
+      ).to_i
+      break if cursor == 0
+    end
+  end
+
+  sig do
+    params(
+      model_key: String,
+      attribute: Symbol
+    ).void
+  end
+  def vacuum_range_index_set(model_key, attribute)
+    cursor = 0
+    loop do
+      cursor = evalsha(
+        T.must(redcord_server_script_shas[:vacuum_range_index_set]),
+        keys: [model_key],
+        argv: [attribute, cursor]
+      ).to_i
+      break if cursor == 0
+    end
   end
 end
