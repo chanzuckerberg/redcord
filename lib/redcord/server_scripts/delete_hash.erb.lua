@@ -42,6 +42,7 @@ if #range_index_attr_keys > 0 then
   for i=1, #range_index_attr_keys do
     delete_id_from_range_index_attr(model, range_index_attr_keys[i], attr_vals[i], id)
   end
+  -- We have to explicitly delete from the id index set, because hmget does not return the id.
   redis.call('zrem', model .. ':id', id)
 end
 
