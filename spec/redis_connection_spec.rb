@@ -56,22 +56,18 @@ describe Redcord::RedisConnection do
 end
 
 describe Redcord do
-  let!(:model_class0) do
-    Class.new(T::Struct) do
-      include Redcord::Base
+  class ModelClass0 < T::Struct
+    include Redcord::Base
 
-      def self.name
-        'spec_model0'
-      end
+    def self.name
+      'spec_model0'
     end
   end
-  let!(:model_class1) do
-    Class.new(T::Struct) do
-      include Redcord::Base
+  class ModelClass1 < T::Struct
+    include Redcord::Base
 
-      def self.name
-        'spec_model1'
-      end
+    def self.name
+      'spec_model1'
     end
   end
   let!(:env) { 'my_env' }
@@ -81,18 +77,18 @@ describe Redcord do
     test_example.run
   ensure
     Redcord::Base.configurations = config
-    Redcord.establish_connections
   end
 
 
   it 'can find all descendants' do
-    expect(Redcord::Base.descendants).to include(model_class0)
-    expect(Redcord::Base.descendants).to include(model_class1)
+    expect(Redcord::Base.descendants).to include(ModelClass0)
+    expect(Redcord::Base.descendants).to include(ModelClass1)
   end
 
 
   it 'can reestablish all connections' do
-    expect(model_class0.redis.ping).to eq 'PONG'
-    expect(model_class1.redis.ping).to eq 'PONG'
+    expect(ModelClass0).to receive(:establish_connection)
+    expect(ModelClass1).to receive(:establish_connection)
+    Redcord.establish_connections
   end
 end
