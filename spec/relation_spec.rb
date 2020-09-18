@@ -46,7 +46,6 @@ describe Redcord::Relation do
 
     queried_instances = klass.where(a: 3)
     expect(queried_instances.size).to eq 0
-    expect(klass.redis.zcard("#{klass.model_key}:id")).to eq 0
   end
 
   it 'supports chaining select index query method' do
