@@ -24,6 +24,18 @@ module Redcord::Actions
   module ClassMethods
     extend T::Sig
 
+    sig { returns(Integer) }
+    def count
+      Redcord::Base.trace(
+       'redcord_actions_class_methods_count',
+        model_name: name,
+      ) do
+        where(
+          id: Redcord::RangeInterval.new(min: 1),
+        ).count
+      end
+    end
+
     sig { params(args: T::Hash[Symbol, T.untyped]).returns(T.untyped) }
     def create!(args)
       Redcord::Base.trace(
