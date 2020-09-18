@@ -31,6 +31,7 @@ describe Redcord::Actions do
       instance = klass.create!(value: 3)
       another_instance = klass.find(instance.id)
       expect(instance.value).to eq another_instance.value
+      expect(klass.count).to eq 1
     end
 
     it 'validates types' do
@@ -90,7 +91,9 @@ describe Redcord::Actions do
         # instance_key is not available when id is nil
         instance.instance_key
       }.to raise_error(TypeError)
+      expect(klass.count).to eq 0
       instance.save!
+      expect(klass.count).to eq 1
 
       expect(instance.created_at).not_to be_nil
       expect(instance.updated_at).not_to be_nil
@@ -102,6 +105,7 @@ describe Redcord::Actions do
     it 'doesn\'t update redis until save!/update! is called' do
       instance = klass.create!(value: 3)
       instance.value = 4
+      expect(klass.count).to eq 1
 
       another_instance = klass.find(instance.id)
       expect(another_instance.value).to eq 3
@@ -109,6 +113,7 @@ describe Redcord::Actions do
       instance.save!
       another_instance = klass.find(instance.id)
       expect(another_instance.value).to eq instance.value
+      expect(klass.count).to eq 1
     end
 
     it 'resets ttl' do
@@ -190,7 +195,9 @@ describe Redcord::Actions do
 
   context 'delete' do
     it '#destroy' do
+      expect(klass.count).to eq 0
       instance = klass.create!(value: 1)
+      expect(klass.count).to eq 1
 
       another_instance = klass.find(instance.id)
       expect(another_instance.id).to eq instance.id
@@ -199,6 +206,9 @@ describe Redcord::Actions do
       expect(another_instance.updated_at.to_i).to eq instance.updated_at.to_i
 
       instance.destroy
+
+      expect(klass.count).to eq 0
+
       expect {
         klass.find(instance.id)
       }.to raise_error(Redcord::RecordNotFound)
@@ -206,15 +216,19 @@ describe Redcord::Actions do
 
     it 'does not save/update a destroyed record' do
       instance = klass.create!(value: 1)
+      expect(klass.count).to eq 1
       instance.destroy
+      expect(klass.count).to eq 0
 
       expect {
         instance.save!
       }.to raise_error(Redis::CommandError)
+      expect(klass.count).to eq 0
 
       expect {
         instance.update!(value: 2)
       }.to raise_error(Redis::CommandError)
+      expect(klass.count).to eq 0
     end
 
     it 'deletes a non-existing record' do
@@ -223,6 +237,7 @@ describe Redcord::Actions do
       expect {
         instance.destroy
       }.to_not raise_error
+      expect(klass.count).to eq 0
     end
   end
 end

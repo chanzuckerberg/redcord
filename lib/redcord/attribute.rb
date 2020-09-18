@@ -10,9 +10,11 @@ module Redcord::Attribute
   # type.
   RangeIndexType = T.type_alias {
     T.any(
-      T.nilable(Float),
-      T.nilable(Integer),
-      T.nilable(Time),
+      Float,
+      Integer,
+      NilClass,
+      Numeric,
+      Time,
     )
   }
 
