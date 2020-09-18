@@ -41,6 +41,7 @@ if #range_index_attr_keys > 0 then
   local attr_vals = redis.call('hmget', key, unpack(range_index_attr_keys))
   for i=1, #range_index_attr_keys do
     delete_id_from_range_index_attr(model, range_index_attr_keys[i], attr_vals[i], id)
+    redis.call('zrem', model .. ':' .. range_index_attr_keys[i], id)
   end
 end
 
