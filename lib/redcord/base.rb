@@ -65,6 +65,7 @@ module Redcord::Base
   sig { returns(T::Array[T.class_of(Redcord::Base)]) }
   def self.descendants
     descendants = []
+    # TODO: Use T::Struct instead of Class
     ObjectSpace.each_object(Class) do |klass|
       descendants << klass if klass < self
     end
