@@ -174,11 +174,6 @@ describe Redcord::Actions do
       expect(another_instance.indexed_value).to eq instance.indexed_value
 
       expect(klass.find_by(indexed_value: 0)).to be_nil
-      expect(klass.find_by(id: instance.id)).to_not be_nil
-      expect(klass.find_by(
-        id: instance.id,
-        indexed_value: instance.indexed_value,
-      )).to_not be_nil
     end
   end
 

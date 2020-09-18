@@ -56,9 +56,8 @@ module Redcord::Base
       # coerced to the specified attribute types. Like ActiveRecord,
       # Redcord manages the created_at and updated_at fields behind the
       # scene.
-      attribute :id, T.nilable(Integer), index: true
-      attribute :created_at, T.nilable(Time), index: true
-      attribute :updated_at, T.nilable(Time), index: true
+      prop :created_at, T.nilable(Time)
+      prop :updated_at, T.nilable(Time)
     end
   end
 

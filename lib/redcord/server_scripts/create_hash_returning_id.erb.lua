@@ -60,7 +60,6 @@ if #index_attr_keys > 0 then
   end
 end
 local range_index_attr_keys = redis.call('smembers', model .. ':range_index_attrs')
-attrs_hash['id'] = id
 if #range_index_attr_keys > 0 then
   for _, attr_key in ipairs(range_index_attr_keys) do
     add_id_to_range_index_attr(model, attr_key, attrs_hash[attr_key], id)
