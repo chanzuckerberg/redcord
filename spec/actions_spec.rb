@@ -125,6 +125,17 @@ describe Redcord::Actions do
       instance.update!(value: 4)
       expect(klass.redis.ttl(instance.instance_key)).to eq(-1)
     end
+
+    it 'resets ttl actively' do
+      instance = klass.create!(value: 3)
+
+      klass.ttl(2.days)
+      migrator.change_ttl_active(klass)
+      expect(klass.redis.ttl(instance.instance_key) > 0).to be true
+
+      instance = klass.create!(value: 3)
+      expect(klass.redis.ttl(instance.instance_key) > 0).to be true
+    end
   end
 
   context 'read' do
