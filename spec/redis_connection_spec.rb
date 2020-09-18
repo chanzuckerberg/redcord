@@ -52,4 +52,43 @@ describe Redcord::RedisConnection do
     model_class.redis = Redis.new
     expect(model_class.redis).to_not eq Redcord::Base.redis
   end
+
+end
+
+describe Redcord do
+  class ModelClass0 < T::Struct
+    include Redcord::Base
+
+    def self.name
+      'spec_model0'
+    end
+  end
+  class ModelClass1 < T::Struct
+    include Redcord::Base
+
+    def self.name
+      'spec_model1'
+    end
+  end
+  let!(:env) { 'my_env' }
+
+  around(:each) do |test_example|
+    config = Redcord::Base.configurations
+    test_example.run
+  ensure
+    Redcord::Base.configurations = config
+  end
+
+
+  it 'can find all descendants' do
+    expect(Redcord::Base.descendants).to include(ModelClass0)
+    expect(Redcord::Base.descendants).to include(ModelClass1)
+  end
+
+
+  it 'can reestablish all connections' do
+    expect(ModelClass0).to receive(:establish_connection)
+    expect(ModelClass1).to receive(:establish_connection)
+    Redcord.establish_connections
+  end
 end
