@@ -61,4 +61,14 @@ module Redcord::Base
       attribute :updated_at, T.nilable(Time), index: true
     end
   end
+
+  sig { returns(T::Array[T.class_of(Redcord::Base)]) }
+  def self.descendants
+    descendants = []
+    ObjectSpace.each_object(Class) do |klass|
+      descendants << klass if klass < self
+    end
+    descendants
+  end
+
 end

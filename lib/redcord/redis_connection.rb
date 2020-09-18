@@ -108,3 +108,10 @@ module Redcord::RedisConnection
 
   mixes_in_class_methods(ClassMethods)
 end
+
+module Redcord
+  sig { void }
+  def self.establish_connections
+    Redcord::Base.descendants.select(&:name).each(&:establish_connection)
+  end
+end
