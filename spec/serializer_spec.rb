@@ -30,7 +30,7 @@ describe Redcord::Serializer do
     allow(Time).to receive(:now).and_return(now)
 
     instance = klass.create!(a: 3, b: '3', c: 3)
-    another_instance = klass.find_by(id: instance.id)
+    another_instance = klass.find_by(a: 3)
 
     expect(instance.d).to be_nil
     expect(instance.created_at.to_i).to eq(now.to_i)
