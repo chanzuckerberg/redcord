@@ -2,11 +2,13 @@
 class Redcord::Migration
 end
 
+require 'redcord/migration/index'
 require 'redcord/migration/ttl'
 
 class Redcord::Migration
   extend T::Sig
   extend T::Helpers
+  include Redcord::Migration::Index
   include Redcord::Migration::TTL
 
   abstract!
