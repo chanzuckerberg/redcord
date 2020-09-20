@@ -1,6 +1,7 @@
 # typed: strict
 require 'redcord/migration/version'
 require 'redcord/migration/migrator'
+require 'redcord/vacuum_helper'
 
 db_namespace = namespace :redis do
   task migrate: :environment do
@@ -30,5 +31,14 @@ db_namespace = namespace :redis do
 
     migration_end = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     puts "\nFinished in #{(migration_end - migration_start).round(3)} seconds"
+  end
+
+  task :vacuum, [:model_name] => :environment do |t, args|
+    begin
+      $stdout.sync = true
+      Redcord::VacuumHelper.vacuum(Object.const_get(args[:model_name]))
+    rescue NameError => e
+      raise StandardError.new("#{args[:model_name]} is not a valid Redcord model")
+    end
   end
 end
