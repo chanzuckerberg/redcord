@@ -12,10 +12,6 @@ describe Redcord::VacuumHelper do
 
   let (:model_key) { RedcordVacuumSpecModel.model_key }
 
-  before(:each) do
-    RedcordVacuumSpecModel.establish_connection
-  end
-
   context 'vacuum' do
     it 'vacuums all index attributes' do
       instance = RedcordVacuumSpecModel.create!(a: "x", b: 1)
