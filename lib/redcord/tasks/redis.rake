@@ -34,11 +34,9 @@ db_namespace = namespace :redis do
   end
 
   task :vacuum, [:model_name] => :environment do |t, args|
-    begin
-      $stdout.sync = true
-      Redcord::VacuumHelper.vacuum(Object.const_get(args[:model_name]))
-    rescue NameError => e
-      raise StandardError.new("#{args[:model_name]} is not a valid Redcord model")
-    end
+    $stdout.sync = true
+    Redcord::VacuumHelper.vacuum(Object.const_get(args[:model_name]))
+  rescue NameError => e
+    raise StandardError.new("#{args[:model_name]} is not a valid Redcord model.")
   end
 end
