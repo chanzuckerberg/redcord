@@ -9,9 +9,11 @@ module Redcord::VacuumHelper
   sig { params(model: T.class_of(Redcord::Base)).void }
   def self.vacuum(model)
     model.class_variable_get(:@@index_attributes).each do |index_attr|
+      puts "Vacuuming index attribute: #{index_attr}"
       _vacuum_index_attribute(model, index_attr)
     end
     model.class_variable_get(:@@range_index_attributes).each do |range_index_attr|
+      puts "Vacuuming range index attribute: #{range_index_attr}"
       _vacuum_range_index_attribute(model, range_index_attr)
     end
   end
