@@ -20,7 +20,7 @@ module Redcord::VacuumHelper
   def self._vacuum_index_attribute(model, index_attr)
     # Scan through all index attribute values by matching on Redcord:Model:index_attr:*
     model.redis.scan_each(match: "#{model.model_key}:#{index_attr}:*") do |key|
-    _expire_stale_ids_from_set(model, key)
+      _expire_stale_ids_from_set(model, key)
     end
   end
 
