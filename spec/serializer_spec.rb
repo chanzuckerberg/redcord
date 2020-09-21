@@ -20,10 +20,6 @@ describe Redcord::Serializer do
     end
   end
 
-  before(:each) do
-    klass.establish_connection
-  end
-
   it 'works with time types' do
     now = Time.zone.now
     allow(Time.zone).to receive(:now).and_return(now)

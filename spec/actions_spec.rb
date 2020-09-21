@@ -153,8 +153,6 @@ describe Redcord::Actions do
     end
 
     it '#where' do
-      klass.establish_connection
-
       instance = klass.create!(indexed_value: 1)
       another_instance = klass.where(
         indexed_value: instance.indexed_value,
@@ -165,8 +163,6 @@ describe Redcord::Actions do
     end
 
     it '#find_by' do
-      klass.establish_connection
-
       instance = klass.create!(indexed_value: 1)
       another_instance = klass.find_by(indexed_value: instance.indexed_value)
 
