@@ -47,6 +47,26 @@ class Redcord::PreparedRedis < Redis
   sig do
     params(
       model: String,
+      id: Integer,
+      index_name: Symbol,
+    ).void
+  end
+  def add_index(model, id, index_name)
+    Redcord::Base.trace(
+      'redcord_redis_add_index',
+      model_name: model,
+    ) do
+      evalsha(
+        self.class.server_script_shas[:add_index],
+        keys: [model, id],
+        argv: [index_name],
+      )
+    end
+  end
+
+  sig do
+    params(
+      model: String,
       id: Integer
     ).returns(Integer)
   end
