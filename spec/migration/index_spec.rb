@@ -5,6 +5,41 @@
 describe Redcord::Migration::Index do
   include Redcord::Migration::Index
 
+  it 'adds an index' do
+    klass = Class.new(T::Struct) do
+      include Redcord::Base
+
+      attribute :index, T.nilable(String)
+      attribute :range_index, T.nilable(Integer)
+
+      def self.name
+        'RedcordSpecModel'
+      end
+    end
+
+    klass.create!(range_index: 1, index: '123')
+    expect(klass.redis.keys("#{klass.model_key}:index:*")).to eq([])
+    expect(klass.redis.keys("#{klass.model_key}:range_index")).to eq([])
+
+    klass = Class.new(T::Struct) do
+      include Redcord::Base
+
+      attribute :index, T.nilable(String), index: true
+      attribute :range_index, T.nilable(Integer), index: true
+
+      def self.name
+        'RedcordSpecModel'
+      end
+    end
+    add_index(klass, :index)
+    add_index(klass, :range_index)
+
+    klass.create!(range_index: 1, index: '321')
+    expect(klass.find_by(index: '123')).to_not be_nil
+    expect(klass.find_by(index: '321')).to_not be_nil
+    expect(klass.where(range_index: 1).count).to eq(2)
+  end
+
   it 'drops an index' do
     klass = Class.new(T::Struct) do
       include Redcord::Base

@@ -60,6 +60,7 @@ module Redcord::Attribute
 
     private
 
+    # TODO: remove me
     sig { params(redis_key: String, item_to_add: String).void }
     def sadd_proc_on_redis_connection(redis_key, item_to_add)
       # TODO: Currently we're setting indexed attributes through procs that are
