@@ -76,3 +76,7 @@ module Redcord::Serializer::ClassMethods
     def from_hash(args); end
     def props; end
 end
+
+module Redcord::Migration::Index
+  include Kernel
+end

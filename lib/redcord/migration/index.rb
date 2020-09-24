@@ -6,6 +6,41 @@ module Redcord::Migration::Index
   extend T::Sig
 
   sig { params(model: T.class_of(Redcord::Base), index_name: Symbol).void }
+  def add_index(model, index_name)
+    if model.class_variable_get(:@@range_index_attributes).include?(index_name)
+      model.redis.sadd("#{model.model_key}:range_index_attrs", index_name.to_s)
+    elsif model.class_variable_get(:@@index_attributes).include?(index_name)
+      model.redis.sadd("#{model.model_key}:index_attrs", index_name.to_s)
+    else
+      raise(
+        Redcord::AttributeNotIndexed,
+        "#{index_name} is not an indexed attribute.",
+      )
+    end
+
+    # Loop through existing records and build the index
+    model.redis.scan_each(match: "#{model.model_key}:id:*") do |key|
+      index_val = model.redis.hmget(key, index_name.to_s).first
+      id = key.split(':').last.to_i
+
+      # Force refresh on the updated index attribute. Use multi to ensure
+      # consistency incase this migration failed in the middle
+      model.redis.multi
+      model.redis.update_hash(
+        model.model_key,
+        id,
+        {index_name => index_val.empty? ? 'redcord_temp_val' : ''},
+      )
+      model.redis.update_hash(
+        model.model_key,
+        id,
+        {index_name => index_val},
+      )
+      model.redis.exec
+    end
+  end
+
+  sig { params(model: T.class_of(Redcord::Base), index_name: Symbol).void }
   def remove_index(model, index_name)
     if model.redis.sismember("#{model.model_key}:index_attrs", index_name)
       _remove_index_from_attr_set(
