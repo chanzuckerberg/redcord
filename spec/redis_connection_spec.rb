@@ -41,18 +41,12 @@ describe Redcord::RedisConnection do
   end
 
   it 'establishes Redis connection' do
-    expect(model_class.redis.ping).to eq 'PONG'
+    expect(model_class.redis.shards.first.ping).to eq 'PONG'
   end
 
   it 'shares the base connection config by default' do
     expect(model_class.connection_config).to eq Redcord::Base.connection_config
   end
-
-  it 'can have a different connection at model level' do
-    model_class.redis = Redis.new
-    expect(model_class.redis).to_not eq Redcord::Base.redis
-  end
-
 end
 
 describe Redcord do

@@ -18,8 +18,8 @@ describe Redcord::Migration::Index do
     end
 
     klass.create!(range_index: 1, index: '123')
-    expect(klass.redis.keys("#{klass.model_key}:index:*")).to eq([])
-    expect(klass.redis.keys("#{klass.model_key}:range_index")).to eq([])
+    expect(klass.redis.shards.first.keys("#{klass.model_key}:index:*")).to eq([])
+    expect(klass.redis.shards.first.keys("#{klass.model_key}:range_index")).to eq([])
 
     klass = Class.new(T::Struct) do
       include Redcord::Base
@@ -71,8 +71,8 @@ describe Redcord::Migration::Index do
 
     # Still using the previous index before running migrations
     klass.create!(range_index: 1, index: '321')
-    expect(klass.redis.exists?("#{klass.model_key}:index:321")).to be true
-    expect(klass.redis.exists?("#{klass.model_key}:range_index")).to be true
+    expect(klass.redis.shards.first.exists?("#{klass.model_key}:index:321")).to be true
+    expect(klass.redis.shards.first.exists?("#{klass.model_key}:range_index")).to be true
 
     expect {
       klass.find_by(index: '123').id
@@ -85,8 +85,8 @@ describe Redcord::Migration::Index do
     remove_index(klass, :index)
     remove_index(klass, :range_index)
     klass.create!(range_index: 2, index: '456')
-    expect(klass.redis.keys("#{klass.model_key}:index:*")).to eq([])
-    expect(klass.redis.keys("#{klass.model_key}:range_index")).to eq([])
-    expect(klass.redis.keys("#{klass.model_key}:range_index:*")).to eq([])
+    expect(klass.redis.shards.first.keys("#{klass.model_key}:index:*")).to eq([])
+    expect(klass.redis.shards.first.keys("#{klass.model_key}:range_index")).to eq([])
+    expect(klass.redis.shards.first.keys("#{klass.model_key}:range_index:*")).to eq([])
   end
 end

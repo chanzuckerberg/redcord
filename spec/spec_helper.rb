@@ -14,8 +14,8 @@ RSpec.configure do |config|
   Time.zone = 'UTC'
 
   config.before(:each) do
-    Redcord::Base.redis.flushdb
-    Redcord::PreparedRedis.load_server_scripts!
+    Redcord::Base.redis.each_shard { |shard| shard.flushdb }
+    Redcord::Redis.load_server_scripts!
     Redcord.establish_connections
   end
 end

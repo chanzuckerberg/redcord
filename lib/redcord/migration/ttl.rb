@@ -10,14 +10,18 @@ module Redcord::Migration::TTL
   # This won't change ttl until we call update on a record
   sig { params(model: T.class_of(Redcord::Base)).void }
   def change_ttl_passive(model)
-    model.redis.set("#{model.model_key}:ttl", _get_ttl(model))
+    model.redis.each_shard do |shard|
+     shard.set("#{model.model_key}:ttl", _get_ttl(model))
+    end
   end
 
   sig { params(model: T.class_of(Redcord::Base)).void }
   def change_ttl_active(model)
     change_ttl_passive(model)
-    model.redis.scan_each(match: "#{model.model_key}:id:*") do |key|
-      model.redis.expire(key, _get_ttl(model))
+    model.redis.each_shard do |shard|
+      shard.scan_each(match: "#{model.model_key}:id:*") do |key|
+        shard.expire(key, _get_ttl(model))
+      end
     end
   end
 end

@@ -14774,7 +14774,7 @@ class Redcord::Migration
   extend ::T::Private::Methods::SingletonMethodHooks
 end
 
-class Redcord::PreparedRedis
+class Redcord::Redis
   extend ::T::Private::Methods::MethodHooks
   extend ::T::Private::Methods::SingletonMethodHooks
 end

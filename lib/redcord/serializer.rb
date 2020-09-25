@@ -137,7 +137,7 @@ module Redcord::Serializer
     sig {
       params(
         redis_hash: T::Hash[T.untyped, T.untyped],
-        id: Integer,
+        id: String,
       ).returns(T.untyped)
     }
     def coerce_and_set_id(redis_hash, id)

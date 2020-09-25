@@ -73,7 +73,7 @@ describe Redcord::Migration::Migrator do
 
   it 'runs migrations' do
     redis = UserSession.redis
-    expect(migrator.need_to_migrate?(redis)).to be true
+    expect(migrator.need_to_migrate?(redis.shards.first)).to be true
 
     expect {
       Rake::Task['redis:migrate'].invoke
@@ -84,6 +84,6 @@ describe Redcord::Migration::Migrator do
       #{migration_version}\s+
     }x).to_stdout
 
-    expect(migrator.need_to_migrate?(redis)).to be false
+    expect(migrator.need_to_migrate?(redis.shards.first)).to be false
   end
 end

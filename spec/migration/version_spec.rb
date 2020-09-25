@@ -7,10 +7,6 @@ describe Redcord::Migration::Version do
   let(:migrator) { Redcord::Migration::Migrator }
   let(:migration_file) { '20200202999999_test_migration.rb' }
 
-  before(:each) do
-    redis.flushdb
-  end
-
   context 'when there a new migration file locally' do
     before(:each) do
       allow(Redcord::Migration::Migrator).to receive(:migration_files) do
@@ -19,7 +15,7 @@ describe Redcord::Migration::Version do
     end
 
     it 'needs to migrate the redis db' do
-      expect(migrator.need_to_migrate?(redis)).to be true
+      expect(migrator.need_to_migrate?(redis.shards.first)).to be true
     end
   end
 
@@ -34,7 +30,7 @@ describe Redcord::Migration::Version do
     end
 
     it 'does not need to migrate the redis db' do
-      expect(migrator.need_to_migrate?(redis)).to be false
+      expect(migrator.need_to_migrate?(redis.shards.first)).to be false
     end
   end
 end

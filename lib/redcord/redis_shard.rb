@@ -1,33 +1,38 @@
-# typed: strict
-require 'redis'
+# frozen_string_literal: true
 
-# TODO: Rename Redcord::PreparedRedis -> Redcord::Redis
-class Redcord::PreparedRedis < Redis
+# typed: strict
+
+require 'redis'
+require 'securerandom'
+
+class Redcord::RedisShard < ::Redis
   extend T::Sig
 
   sig do
     params(
       key: T.any(String, Symbol),
       args: T::Hash[T.untyped, T.untyped],
-    ).returns(Integer)
+    ).returns(String)
   end
   def create_hash_returning_id(key, args)
     Redcord::Base.trace(
       'redcord_redis_create_hash_returning_id',
       model_name: key,
     ) do
+      id = SecureRandom.uuid
       evalsha(
-        self.class.server_script_shas[:create_hash_returning_id],
-        keys: [key],
+        @@server_script_shas[:create_hash],
+        keys: [key, id],
         argv: args.to_a.flatten,
-      ).to_i
+      )
+      id
     end
   end
 
   sig do
     params(
       model: String,
-      id: Integer,
+      id: String,
       args: T::Hash[T.untyped, T.untyped],
     ).void
   end
@@ -37,7 +42,7 @@ class Redcord::PreparedRedis < Redis
       model_name: model,
     ) do
       evalsha(
-        self.class.server_script_shas[:update_hash],
+        @@server_script_shas[:update_hash],
         keys: [model, id],
         argv: args.to_a.flatten,
       )
@@ -47,7 +52,7 @@ class Redcord::PreparedRedis < Redis
   sig do
     params(
       model: String,
-      id: Integer
+      id: String 
     ).returns(Integer)
   end
   def delete_hash(model, id)
@@ -56,7 +61,7 @@ class Redcord::PreparedRedis < Redis
       model_name: model,
     ) do
       evalsha(
-        self.class.server_script_shas[:delete_hash],
+        @@server_script_shas[:delete_hash],
         keys: [model, id]
       )
     end
@@ -75,14 +80,14 @@ class Redcord::PreparedRedis < Redis
       model_name: model,
     ) do
       res = evalsha(
-        self.class.server_script_shas[:find_by_attr],
+        @@server_script_shas[:find_by_attr],
         keys: [model] + query_conditions.to_a.flatten,
         argv: select_attrs.to_a.flatten
       )
       # The Lua script will return this as a flattened array.
       # Convert the result into a hash of {id -> model hash}
       res_hash = res.each_slice(2)
-      res_hash.map { |key, val| [key.to_i, val.each_slice(2).to_h] }.to_h
+      res_hash.map { |key, val| [key, val.each_slice(2).to_h] }.to_h
     end
   end
 
@@ -98,7 +103,7 @@ class Redcord::PreparedRedis < Redis
       model_name: model,
     ) do
       evalsha(
-        self.class.server_script_shas[:find_by_attr_count],
+        @@server_script_shas[:find_by_attr_count],
         keys: [model] + query_conditions.to_a.flatten,
       )
     end
@@ -132,16 +137,4 @@ class Redcord::PreparedRedis < Redis
   end
 
   @@server_script_shas = T.let(nil, T.nilable(T::Hash[Symbol, String]))
-
-  sig { returns(T::Hash[Symbol, String]) }
-  def self.server_script_shas
-    T.must(@@server_script_shas)
-  end
-
-  sig { void }
-  def self.load_server_scripts!
-    Redcord::Base.configurations[Rails.env].each do |_, config|
-      new(**(config.symbolize_keys)).load_server_scripts!
-    end
-  end
 end

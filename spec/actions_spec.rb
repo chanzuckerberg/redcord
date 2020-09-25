@@ -34,14 +34,12 @@ describe Redcord::Actions do
       klass.create!(value: '1')
     end
 
-    it 'errors when id overflows a 64 bit signed integer' do
-      Redcord::Base.redis.set("#{klass.model_key}:id_seq", 2**63 - 2)
-
-      instance = klass.create!(value: nil)
-      expect(instance.id).to eq(2**63 - 1)
+    it 'errors when uuids collide' do
+      allow(SecureRandom).to receive(:uuid).and_return('fixed')
+      klass.create!(value: '1')
 
       expect {
-        klass.create!(value: nil)
+        klass.create!(value: '1')
       }.to raise_error(Redis::CommandError)
     end
   end
@@ -106,28 +104,28 @@ describe Redcord::Actions do
 
       klass.ttl(2.days)
       migrator.change_ttl_passive(klass)
-      expect(klass.redis.ttl(instance.instance_key)).to eq(-1)
+      expect(klass.redis.shards.first.ttl(instance.instance_key)).to eq(-1)
 
       instance.save!
-      expect(klass.redis.ttl(instance.instance_key) > 0).to be true
+      expect(klass.redis.shards.first.ttl(instance.instance_key) > 0).to be true
 
       klass.ttl(nil)
       migrator.change_ttl_passive(klass)
       instance.update!(value: 4)
-      expect(klass.redis.ttl(instance.instance_key)).to eq(-1)
+      expect(klass.redis.shards.first.ttl(instance.instance_key)).to eq(-1)
     end
 
     it 'resets ttl actively' do
       instance = klass.create!(value: 3)
 
       klass.ttl(2.days)
-      expect(klass.redis.ttl(instance.instance_key)).to eq(-1)
+      expect(klass.redis.shards.first.ttl(instance.instance_key)).to eq(-1)
 
       migrator.change_ttl_active(klass)
-      expect(klass.redis.ttl(instance.instance_key) > 0).to be true
+      expect(klass.redis.shards.first.ttl(instance.instance_key) > 0).to be true
 
       instance = klass.create!(value: 3)
-      expect(klass.redis.ttl(instance.instance_key) > 0).to be true
+      expect(klass.redis.shards.first.ttl(instance.instance_key) > 0).to be true
     end
   end
 
@@ -142,11 +140,6 @@ describe Redcord::Actions do
       instance = klass.create!(value: 1)
 
       another_instance = klass.find(instance.id)
-
-      # It validates types
-      expect {
-        klass.find(another_instance.id.to_s)
-      }.to raise_error(TypeError)
 
       expect(another_instance.id).to eq instance.id
       expect(another_instance.value).to eq instance.value

@@ -6,7 +6,7 @@ Create a hash with the specified fields to their respective values stored at
 key when key does not exist.
 
 # Return value
-The id of the created hash as a string.
+nil
 --]]
 
 -- The arguments can be accessed by Lua using the KEYS global variable in the
@@ -16,31 +16,27 @@ The id of the created hash as a string.
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 
 --   KEYS[1] = Model.name
+--   KEYS[2] = id
 --   ARGV[1...2N] = attr_key attr_val [attr_key attr_val ..]
 <%= include_lua 'shared/lua_helper_methods' %>
 <%= include_lua 'shared/index_helper_methods' %>
 
 -- Validate input to script before making Redis db calls
-if #KEYS ~= 1 then
-  error('Expected keys to be of size 1')
+if #KEYS ~= 2 then
+  error('Expected keys to be of size 2')
 end
 if #ARGV % 2 ~= 0 then
   error('Expected an even number of arguments')
 end
 
 local model = KEYS[1]
-
--- Call the Redis command: INCR "#{Model.name}:id_seq". If "#{Model.name}:id_seq" does
--- not exist, the command returns 0. It errors if the id_seq overflows a 64 bit
--- signed integer.
-redis.call('incr', model .. ':id_seq')
-
--- The Lua version used by Redis does not support 64 bit integers:
---   https://github.com/antirez/redis/issues/5261
--- We ignore the integer response from INCR and use the string response from
--- the GET/MGET command.
-local id, ttl = unpack(redis.call('mget', model .. ':id_seq', model .. ':ttl'))
+local id = KEYS[2]
+local ttl = redis.call('get', model .. ':ttl')
 local key = model .. ':id:' .. id
+
+if redis.call('exists', key) ~= 0 then
+  error(key .. ' already exists')
+end
 
 -- Forward the script arguments to the Redis command HSET.
 -- Call the Redis command: HSET "#{Model.name}:id:#{id}" field value ...
@@ -65,4 +61,4 @@ if #range_index_attr_keys > 0 then
     add_id_to_range_index_attr(model, attr_key, attrs_hash[attr_key], id)
   end
 end
-return id
+return nil

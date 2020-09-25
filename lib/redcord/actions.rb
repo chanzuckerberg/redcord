@@ -177,14 +177,14 @@ module Redcord::Actions
       end
     end
 
-    sig { returns(T.nilable(Integer)) }
+    sig { returns(T.nilable(String)) }
     def id
       instance_variable_get(:@_id)
     end
 
     private
 
-    sig { params(id: Integer).returns(Integer) }
+    sig { params(id: String).returns(String) }
     def id=(id)
       instance_variable_set(:@_id, id)
     end
