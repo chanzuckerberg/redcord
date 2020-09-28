@@ -10,6 +10,26 @@ local function intersect_range_index_sets(set, tuples)
   return set
 end
 
+local function get_custom_index_set(set, tuples)
+  local ids = {}
+  local index_strings = {}
+  local sep = ':'
+  local id = ''
+  for _, redis_key in ipairs(tuples) do
+    local key, min, max = unpack(redis_key)
+    redis.call('set', 'testquery', key .. '::' .. min .. '::' .. max)
+    index_strings = redis.call('zrangebylex', key, min, max)
+    for _, index_string in ipairs(index_strings) do
+      for str in string.gmatch(index_string, "([^"..sep.."]+)") do
+        id = str
+      end
+      table.insert(ids, id)
+    end
+    set = set_list_intersect(set, ids)
+  end
+  return set
+end
+
 -- Gets the hash of all the ids given. Returns the results in a
 -- table, as well as any ids not found in Redis as a separate table
 local function batch_hget(model, ids_set, fields)
@@ -79,9 +99,54 @@ end
 local function validate_and_parse_query_conditions(model, args)
   local index_attrs = to_set(redis.call('smembers', model .. ':index_attrs'))
   local range_index_attrs = to_set(redis.call('smembers', model .. ':range_index_attrs'))
+  local custom_index_attrs = redis.call('zrange', model .. ':custom_indexes_main', 0, -1)
   -- Iterate through the arguments of the script to form the redis keys at which the
   -- indexed id sets are stored.
-  local index_sets, range_index_sets = {}, {}
+  local index_sets, range_index_sets, custom_index_sets = {}, {}, {}
+
+  local numeric_value_length = 10
+  local i = 2
+  local j = 1
+  local query_string_min = ''
+  local query_string_max = ''
+  local min, max = '', ''
+  while i <= #args do
+    local attr_key, attr_val = args[i], args[i+1]
+    if custom_index_attrs[j] == attr_key then
+      min, max = args[i+1], args[i+2]
+      if j > 1 then
+        query_string_min = query_string_min .. ':'
+        query_string_max = query_string_max .. ':'
+      else
+        query_string_min = query_string_min .. '['
+        query_string_max = query_string_max .. '['
+      end
+      if min ~= '-inf' then
+        for i=string.len(min), numeric_value_length-1 do
+          query_string_min = query_string_min .. '0'
+        end
+        query_string_min = query_string_min .. min
+      end
+      if max ~= '+inf' then
+        for i=string.len(max), numeric_value_length-1 do
+          query_string_max = query_string_max .. '0'
+        end
+        query_string_max = query_string_max .. max
+      else
+        query_string_max = query_string_max .. '9999999999'
+      end
+      j = j + 1
+      i = i + 3
+    else
+      break
+    end
+  end
+  query_string_max = query_string_max .. ':9999999999'
+  if i > #args then
+    table.insert(custom_index_sets, {model .. ':' .. 'custom_indexes_main_1', query_string_min, query_string_max})
+    return {index_sets, range_index_sets, custom_index_sets}
+  end
+
   local i = 2
   while i <= #args do
     local attr_key, attr_val = args[i], args[i+1]
@@ -106,5 +171,5 @@ local function validate_and_parse_query_conditions(model, args)
       error(attr_key .. ' is not an indexed attribute')
     end
   end
-  return {index_sets, range_index_sets}
+  return {index_sets, range_index_sets, custom_index_sets}
 end

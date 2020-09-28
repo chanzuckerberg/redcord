@@ -34,20 +34,23 @@ if #KEYS < 3 then
 end
 
 local model = KEYS[1]
-local index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(model, KEYS))
+local index_sets, range_index_sets, custom_index_sets = unpack(validate_and_parse_query_conditions(model, KEYS))
 
 -- Get all ids which have the corresponding attribute values.
 local ids_set = nil
--- For normal sets, Redis has SINTER built in to return the set intersection
-if #index_sets > 0 then
-   ids_set = to_set(redis.call('sinter', unpack(index_sets)))
+if #custom_index_sets > 0 then
+  ids_set = get_custom_index_set(ids_set, custom_index_sets)
+else
+  -- For normal sets, Redis has SINTER built in to return the set intersection
+  if #index_sets > 0 then
+    ids_set = to_set(redis.call('sinter', unpack(index_sets)))
+  end
+  -- For sorted sets, call helper function zinter_zrangebyscore, which calls
+  -- ZRANGEBYSCORE for each {redis_key, min, max} tuple and returns the set intersection
+  if #range_index_sets > 0 then
+    ids_set = intersect_range_index_sets(ids_set, range_index_sets)
+  end
 end
--- For sorted sets, call helper function zinter_zrangebyscore, which calls
--- ZRANGEBYSCORE for each {redis_key, min, max} tuple and returns the set intersection
-if #range_index_sets > 0 then
-  ids_set = intersect_range_index_sets(ids_set, range_index_sets)
-end
-
 -- Query for the hashes for all ids in the set intersection
 local res, stale_ids = unpack(batch_hget(model, ids_set, ARGV))
 

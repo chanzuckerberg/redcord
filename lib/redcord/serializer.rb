@@ -31,7 +31,7 @@ module Redcord::Serializer
     sig { params(attribute: Symbol, val: T.untyped).returns(T.untyped) }
     def encode_attr_value(attribute, val)
       if !val.blank? && TIME_TYPES.include?(props[attribute][:type])
-        val = val.to_f
+        val = val.to_i
       end
 
       val
