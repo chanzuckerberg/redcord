@@ -19,9 +19,11 @@ module Redcord::Attribute
   sig { params(klass: T.class_of(T::Struct)).void }
   def self.included(klass)
     klass.extend(ClassMethods)
+    klass.include(InstanceMethods)
     klass.class_variable_set(:@@index_attributes, Set.new)
     klass.class_variable_set(:@@range_index_attributes, Set.new)
     klass.class_variable_set(:@@ttl, nil)
+    klass.class_variable_set(:@@shard_by_attribute, nil)
   end
 
   module ClassMethods
@@ -58,6 +60,11 @@ module Redcord::Attribute
       class_variable_set(:@@ttl, duration)
     end
 
+    def shard_by_attribute(attr)
+      # attr must be an index attribute (index: true)
+      class_variable_set(:@@shard_by_attribute, attr)
+    end
+
     private
 
     sig { params(redis_key: String, item_to_add: String).void }
@@ -76,6 +83,19 @@ module Redcord::Attribute
       type = T::Types::Simple.new(type) if type.is_a?(Class)
 
       type.subtype_of?(RangeIndexType)
+    end
+  end
+
+  module InstanceMethods
+    extend T::Sig
+
+    sig { returns(T.nilable(String)) }
+    def hash_tag
+      attr = self.class.class_variable_get(:@@shard_by_attribute)
+
+      return nil if attr.nil?
+
+      send(attr)
     end
   end
 

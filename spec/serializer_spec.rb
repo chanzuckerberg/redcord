@@ -143,7 +143,7 @@ describe Redcord::Serializer do
     # query with one attribute should return both values
     queried_instances = klass.where(a: 3)
     expect(queried_instances.size).to eq 2
-    expect(queried_instances.map(&:id)).to eq([first.id, second.id])
+    expect(queried_instances.map(&:id).sort).to eq([first.id, second.id].sort)
 
     queried_instances = klass.where(a: 3, b: '3')
     expect(queried_instances.size).to eq 1

@@ -15,7 +15,7 @@ An integer number of records that match the query conditions given.
 -- accessed by Lua using the ARGV global variable, very similarly to what
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 --
---   KEYS[1] = Model.name attr_key attr_val [attr_key attr_val ..]
+--   KEYS[1] = Model.name attr_key attr_val [attr_key attr_val ..] hash_tag
 --
 --   For equality query conditions, key value pairs are expected to appear in
 --   the KEYS array as [attr_key, attr_val]
@@ -25,7 +25,7 @@ An integer number of records that match the query conditions given.
 <%= include_lua 'shared/lua_helper_methods' %>
 <%= include_lua 'shared/query_helper_methods' %>
 
-if #KEYS < 3 then
+if #KEYS < 4 then
   error('Expected keys to be at least of size 3')
 end
 

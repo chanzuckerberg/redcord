@@ -32,7 +32,7 @@ module Redcord::Actions
       ) do
         args[:created_at] = args[:updated_at] = Time.zone.now
         instance = TypeCoerce[self].new.from(args)
-        id = redis.create_hash_returning_id(model_key, to_redis_hash(args))
+        id = redis.create_hash_returning_id(model_key, to_redis_hash(args), instance.hash_tag)
         instance.send(:id=, id)
         instance
       end
@@ -177,14 +177,14 @@ module Redcord::Actions
       end
     end
 
-    sig { returns(T.nilable(Integer)) }
+    sig { returns(T.nilable(String)) }
     def id
       instance_variable_get(:@_id)
     end
 
     private
 
-    sig { params(id: Integer).returns(Integer) }
+    sig { params(id: String).returns(String) }
     def id=(id)
       instance_variable_set(:@_id, id)
     end

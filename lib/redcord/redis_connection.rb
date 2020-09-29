@@ -5,7 +5,7 @@
 require 'rails'
 
 require 'redcord/lua_script_reader'
-require 'redcord/prepared_redis'
+require 'redcord/redis'
 
 module Redcord::RedisConnection
   extend T::Sig
@@ -29,17 +29,17 @@ module Redcord::RedisConnection
       (env_config[name.underscore] || env_config['default']).symbolize_keys
     end
 
-    sig { returns(Redcord::PreparedRedis) }
+    sig { returns(Redcord::Redis) }
     def redis
       Redcord::RedisConnection.connections[name.underscore] ||= prepare_redis!
     end
 
-    sig { returns(Redcord::PreparedRedis) }
+    sig { returns(Redcord::Redis) }
     def establish_connection
       Redcord::RedisConnection.connections[name.underscore] = prepare_redis!
     end
 
-    sig { params(redis: Redis).returns(Redcord::PreparedRedis) }
+    sig { params(redis: Redis).returns(Redcord::Redis) }
     def redis=(redis)
       Redcord::RedisConnection.connections[name.underscore] =
         prepare_redis!(redis)
@@ -50,11 +50,11 @@ module Redcord::RedisConnection
     # definitions in each Redis query.
     #
     # TODO: Replace this with Redcord migrations
-    sig { params(client: T.nilable(Redis)).returns(Redcord::PreparedRedis) }
+    sig { params(client: T.nilable(Redis)).returns(Redcord::Redis) }
     def prepare_redis!(client = nil)
-      return client if client.is_a?(Redcord::PreparedRedis)
+      return client if client.is_a?(Redcord::Redis)
 
-      client = Redcord::PreparedRedis.new(
+      client = Redcord::Redis.new(
         **(
           if client.nil?
             connection_config
@@ -78,7 +78,7 @@ module Redcord::RedisConnection
   module InstanceMethods
     extend T::Sig
 
-    sig { returns(Redcord::PreparedRedis) }
+    sig { returns(Redcord::Redis) }
     def redis
       self.class.redis
     end

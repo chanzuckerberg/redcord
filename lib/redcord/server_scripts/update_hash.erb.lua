@@ -18,12 +18,13 @@ nil
 --
 --   KEYS[1] = redcord_instance.class.name
 --   KEYS[2] = redcord_instance.id
+--   KEYS[3] = hash_tag
 --   ARGV[1...2N] = attr_key attr_val [attr_key attr_val ..]
 <%= include_lua 'shared/lua_helper_methods' %>
 <%= include_lua 'shared/index_helper_methods' %>
 
-if #KEYS ~= 2 then
-  error('Expected keys of be of size 2')
+if #KEYS ~= 3 then
+  error('Expected keys of be of size 3')
 end
 if #ARGV % 2 ~= 0 then
   error('Expected an even number of arguments')
