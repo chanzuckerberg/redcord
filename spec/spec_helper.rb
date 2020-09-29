@@ -15,7 +15,7 @@ RSpec.configure do |config|
 
   config.before(:each) do
     Redcord::Base.redis.flushdb
-    Redcord::PreparedRedis.load_server_scripts!
+    Redcord::Redis.load_server_scripts!
     Redcord.establish_connections
   end
 end

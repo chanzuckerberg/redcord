@@ -166,7 +166,7 @@ class Redcord::Relation
     end
   end
 
-  sig { returns(Redcord::PreparedRedis) }
+  sig { returns(Redcord::Redis) }
   def redis
     model.redis
   end

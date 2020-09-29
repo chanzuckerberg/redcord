@@ -14,11 +14,12 @@ The number of keys deleted from Redis
 --
 --   KEYS[1] = Model.name
 --   KEYS[2] = id
+--   KEYS[3] = hash_tag
 <%= include_lua 'shared/index_helper_methods' %>
 
 -- Validate input to script before making Redis db calls
-if #KEYS ~= 2 then
-  error('Expected keys of be of size 2')
+if #KEYS ~= 3 then
+  error('Expected keys of be of size 3')
 end
 
 local model = KEYS[1]

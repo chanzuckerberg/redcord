@@ -83,7 +83,7 @@ local function validate_and_parse_query_conditions(model, args)
   -- indexed id sets are stored.
   local index_sets, range_index_sets = {}, {}
   local i = 2
-  while i <= #args do
+  while i + 1 <= #args do
     local attr_key, attr_val = args[i], args[i+1]
     if index_attrs[attr_key] then
       validate_attr_vals(attr_key, {attr_val})
