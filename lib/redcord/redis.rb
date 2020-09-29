@@ -1,4 +1,5 @@
-# typed: strict
+# typed: true
+require 'digest'
 require 'redis'
 require 'securerandom'
 
@@ -18,7 +19,7 @@ class Redcord::Redis < Redis
       model_name: key,
     ) do
       id = "#{SecureRandom.uuid}{#{hash_tag}}"
-      evalsha(
+      run_script(
         self.class.server_script_shas[:create_hash],
         keys: [key, id],
         argv: args.to_a.flatten,
@@ -40,7 +41,7 @@ class Redcord::Redis < Redis
       'redcord_redis_update_hash',
       model_name: model,
     ) do
-      evalsha(
+      run_script(
         self.class.server_script_shas[:update_hash],
         keys: [model, id, "{#{hash_tag}}"],
         argv: args.to_a.flatten,
@@ -60,7 +61,7 @@ class Redcord::Redis < Redis
       'redcord_redis_delete_hash',
       model_name: model,
     ) do
-      evalsha(
+      run_script(
         self.class.server_script_shas[:delete_hash],
         keys: [model, id, "{#{hash_tag}}"]
       )
@@ -80,7 +81,7 @@ class Redcord::Redis < Redis
       'redcord_redis_find_by_attr',
       model_name: model,
     ) do
-      res = evalsha(
+      res = run_script(
         self.class.server_script_shas[:find_by_attr],
         keys: [model] + query_conditions.to_a.flatten + ["{#{hash_tag}}"],
         argv: select_attrs.to_a.flatten
@@ -104,51 +105,25 @@ class Redcord::Redis < Redis
       'redcord_redis_find_by_attr_count',
       model_name: model,
     ) do
-      evalsha(
+      run_script(
         self.class.server_script_shas[:find_by_attr_count],
         keys: [model] + query_conditions.to_a.flatten + ["{#{hash_tag}}"],
       )
     end
   end
 
-  sig { void }
-  def load_server_scripts!
-    script_names = Dir[File.join(
-      __dir__,
-      'server_scripts/*.lua',
-    )].map do |filename|
-      # lib/redcord/server_scripts/find_by_attr.erb.lua -> find_by_attr
-      T.must(filename.split('/').last).split('.').first&.to_sym
+  private
+
+  def run_script(script_name, *args)
+    hash = instance_variable_get(script_name)
+    evalsha(hash, *args)
+  rescue Redis::CommandError => e
+    if e.message != 'NOSCRIPT No matching script. Please use EVAL.'
+      raise e
     end
 
-    res = pipelined do
-      script_names.each do |script_name|
-        script(
-          :load,
-          Redcord::LuaScriptReader.read_lua_script(script_name.to_s),
-        )
-      end
-    end
-
-    if self.class.class_variable_get(:@@server_script_shas).nil?
-      self.class.class_variable_set(
-        :@@server_script_shas,
-        script_names.zip(res).to_h
-      )
-    end
-  end
-
-  @@server_script_shas = T.let(nil, T.nilable(T::Hash[Symbol, String]))
-
-  sig { returns(T::Hash[Symbol, String]) }
-  def self.server_script_shas
-    T.must(@@server_script_shas)
-  end
-
-  sig { void }
-  def self.load_server_scripts!
-    Redcord::Base.configurations[Rails.env].each do |_, config|
-      new(**(config.symbolize_keys)).load_server_scripts!
-    end
+    script_content = Redcord::LuaScriptReader.read_lua_script(script_name.to_s)
+    instance_variable_set(script_name, Digest::SHA1.hexdigest(script_content))
+    self.eval(script_content, *args)
   end
 end
