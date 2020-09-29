@@ -29,7 +29,6 @@ class Redcord::Railtie < Rails::Railtie
       )
     end
 
-    Redcord::Redis.load_server_scripts!
     Redcord._after_initialize!
   end
 end
