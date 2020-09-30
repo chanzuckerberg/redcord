@@ -48,10 +48,8 @@ module Redcord::Attribute
     def index_attribute(attr, type)
       if should_range_index?(type)
         class_variable_get(:@@range_index_attributes) << attr
-        sadd_proc_on_redis_connection('range_index_attrs', attr.to_s)
       else
         class_variable_get(:@@index_attributes) << attr
-        sadd_proc_on_redis_connection('index_attrs', attr.to_s)
       end
     end
 
@@ -66,16 +64,6 @@ module Redcord::Attribute
     end
 
     private
-
-    sig { params(redis_key: String, item_to_add: String).void }
-    def sadd_proc_on_redis_connection(redis_key, item_to_add)
-      # TODO: Currently we're setting indexed attributes through procs that are
-      # run when a RedisConnection is established. This should be replaced with
-      # migrations
-      Redcord::RedisConnection.procs_to_prepare << proc do |redis|
-        redis.sadd("#{model_key}:#{redis_key}", item_to_add)
-      end
-    end
 
     sig { params(type: T.any(Class, T::Types::Base)).returns(T::Boolean) }
     def should_range_index?(type)
@@ -95,7 +83,7 @@ module Redcord::Attribute
 
       return nil if attr.nil?
 
-      send(attr)
+      "{#{send(attr)}}"
     end
   end
 

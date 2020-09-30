@@ -65,12 +65,7 @@ module Redcord::RedisConnection
         logger: Redcord::Logger.proxy,
       )
 
-      client.pipelined do
-        Redcord::RedisConnection.procs_to_prepare.each do |proc_to_prepare|
-          proc_to_prepare.call(client)
-        end
-      end
-
+      client.ping
       client
     end
   end

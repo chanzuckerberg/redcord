@@ -32,7 +32,14 @@ module Redcord::Actions
       ) do
         args[:created_at] = args[:updated_at] = Time.zone.now
         instance = TypeCoerce[self].new.from(args)
-        id = redis.create_hash_returning_id(model_key, to_redis_hash(args), instance.hash_tag)
+        id = redis.create_hash_returning_id(
+          model_key,
+          to_redis_hash(args),
+          ttl: class_variable_get(:@@ttl)&.to_i || -1,
+          index_attrs: class_variable_get(:@@index_attributes).to_a,
+          range_index_attrs: class_variable_get(:@@range_index_attributes).to_a,
+          hash_tag: instance.hash_tag,
+        )
         instance.send(:id=, id)
         instance
       end
@@ -75,7 +82,12 @@ module Redcord::Actions
        'redcord_actions_class_methods_destroy',
         model_name: name,
       ) do
-        redis.delete_hash(model_key, id) == 1
+        redis.delete_hash(
+          model_key,
+          id,
+          index_attrs: class_variable_get(:@@index_attributes).to_a,
+          range_index_attrs: class_variable_get(:@@range_index_attributes).to_a,
+        ) == 1
       end
     end
   end
@@ -119,6 +131,10 @@ module Redcord::Actions
           _id = redis.create_hash_returning_id(
             self.class.model_key,
             self.class.to_redis_hash(serialize),
+            ttl: self.class.class_variable_get(:@@ttl)&.to_i || -1,
+            index_attrs: self.class.class_variable_get(:@@index_attributes).to_a,
+            range_index_attrs: self.class.class_variable_get(:@@range_index_attributes).to_a,
+            hash_tag: hash_tag,
           )
           send(:id=, _id)
         else
@@ -126,6 +142,10 @@ module Redcord::Actions
             self.class.model_key,
             _id,
             self.class.to_redis_hash(serialize),
+            ttl: self.class.class_variable_get(:@@ttl)&.to_i || -1,
+            index_attrs: self.class.class_variable_get(:@@index_attributes).to_a,
+            range_index_attrs: self.class.class_variable_get(:@@range_index_attributes).to_a,
+            hash_tag: hash_tag,
           )
         end
       end
@@ -148,6 +168,10 @@ module Redcord::Actions
             self.class.model_key,
             _id,
             self.class.to_redis_hash(args),
+            ttl: self.class.class_variable_get(:@@ttl)&.to_i || -1,
+            index_attrs: self.class.class_variable_get(:@@index_attributes).to_a,
+            range_index_attrs: self.class.class_variable_get(:@@range_index_attributes).to_a,
+            hash_tag: hash_tag,
           )
         end
       end

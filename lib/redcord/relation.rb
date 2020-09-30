@@ -68,7 +68,13 @@ class Redcord::Relation
 
   sig { returns(Integer) }
   def count
-    redis.find_by_attr_count(model.model_key, query_conditions)
+    redis.find_by_attr_count(
+      model.model_key,
+      query_conditions,
+      index_attrs: model.class_variable_get(:@@index_attributes).to_a,
+      range_index_attrs: model.class_variable_get(:@@range_index_attributes).to_a,
+      hash_tag: hash_tag,
+    )
   end
 
   delegate(
@@ -137,6 +143,18 @@ class Redcord::Relation
 
   private
 
+  sig { returns(T.nilable(String)) }
+  def hash_tag
+    attr = model.class_variable_get(:@@shard_by_attribute)
+    return '' if attr.nil?
+
+    if !query_conditions.keys.include?(attr)
+      raise "Queries must contain #{attr} attribute since model #{model.name} is shared by #{attr}"
+    end
+
+    "{#{query_conditions[attr]}}"
+  end
+
   sig { returns(T::Array[T.untyped]) }
   def execute_query
     Redcord::Base.trace(
@@ -148,6 +166,9 @@ class Redcord::Relation
           model.model_key,
           query_conditions,
           select_attrs,
+          index_attrs: model.class_variable_get(:@@index_attributes).to_a,
+          range_index_attrs: model.class_variable_get(:@@range_index_attributes).to_a,
+          hash_tag: hash_tag,
         )
 
         res_hash.map do |id, args|
@@ -159,6 +180,9 @@ class Redcord::Relation
         res_hash = redis.find_by_attr(
           model.model_key,
           query_conditions,
+          index_attrs: model.class_variable_get(:@@index_attributes).to_a,
+          range_index_attrs: model.class_variable_get(:@@range_index_attributes).to_a,
+          hash_tag: hash_tag,
         )
 
         res_hash.map { |id, args| model.coerce_and_set_id(args, id) }

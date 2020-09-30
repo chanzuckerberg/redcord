@@ -1,9 +1,8 @@
 -- Helper function to convert argument array to hash set
-local function to_hash(list)
+local function to_hash(...)
   local hash = {}
-  if not list then return hash end
-  for i=1, #list, 2 do
-    hash[list[i]] = list[i+1]
+  for i=1, #arg, 2 do
+    hash[arg[i]] = arg[i+1]
   end
   return hash
 end

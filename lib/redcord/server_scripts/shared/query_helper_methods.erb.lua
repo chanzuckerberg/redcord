@@ -12,16 +12,16 @@ end
 
 -- Gets the hash of all the ids given. Returns the results in a
 -- table, as well as any ids not found in Redis as a separate table
-local function batch_hget(model, ids_set, fields)
+local function batch_hget(model, ids_set, ...)
   local res, stale_ids = {}, {}
   for id, _ in pairs(ids_set) do
     local instance = nil
-    if fields and #fields > 0 then
-      local values = redis.call('hmget', model .. ':id:' .. id, unpack(fields))
+    if #{...}> 0 then
+      local values = redis.call('hmget', model .. ':id:' .. id, ...)
       -- HMGET returns the value in the order of the fields given. Map back to
       -- field value [field value ..]
       instance = {}
-      for i, field in ipairs(fields) do
+      for i, field in ipairs({...}) do
         if not values[i] then
           instance = nil
           break
@@ -76,30 +76,28 @@ end
 -- attributes. Parse query conditions into two separate tables: 
 -- 1. index_sets formatted as the id set keys in Redis '#{Model.name}:#{attr_key}:#{attr_val}'
 -- 2. range_index_sets formatted as a tuple {id set key, min, max} => { '#{Model.name}:#{attr_key}' min max }
-local function validate_and_parse_query_conditions(model, args)
-  local index_attrs = to_set(redis.call('smembers', model .. ':index_attrs'))
-  local range_index_attrs = to_set(redis.call('smembers', model .. ':range_index_attrs'))
+local function validate_and_parse_query_conditions(hash_tag, model, index_attrs, range_index_attrs, ...) 
   -- Iterate through the arguments of the script to form the redis keys at which the
   -- indexed id sets are stored.
   local index_sets, range_index_sets = {}, {}
-  local i = 2
-  while i + 1 <= #args do
-    local attr_key, attr_val = args[i], args[i+1]
+  local i = 1
+  while i <= #arg do
+    local attr_key, attr_val = arg[i], arg[i+1]
     if index_attrs[attr_key] then
       validate_attr_vals(attr_key, {attr_val})
       -- For normal index attributes, keys are stored at "#{Model.name}:#{attr_key}:#{attr_val}"
-      table.insert(index_sets, model .. ':' .. attr_key .. ':' .. attr_val)
+      table.insert(index_sets, model .. ':' .. attr_key .. ':' .. attr_val .. hash_tag)
       i = i + 2
     elseif range_index_attrs[attr_key] then
       -- For range attributes, nil values are stored as normal sets
       if attr_val == "" then
-        table.insert(index_sets, model .. ':' .. attr_key .. ':' .. attr_val)
+        table.insert(index_sets, model .. ':' .. attr_key .. ':' .. attr_val .. hash_tag)
         i = i + 2
       else
-        local min, max = args[i+1], args[i+2]
+        local min, max = arg[i+1], arg[i+2]
         validate_attr_vals(attr_key, {min, max})
         -- For range index attributes, they are stored at "#{Model.name}:#{attr_key}"
-        table.insert(range_index_sets, {model .. ':' .. attr_key, min, max})
+        table.insert(range_index_sets, {model .. ':' .. attr_key .. hash_tag, min, max})
         i = i + 3
       end
     else

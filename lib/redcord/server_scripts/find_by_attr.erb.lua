@@ -15,8 +15,8 @@ A hash of id:model of all the ids that match the query conditions given.
 -- accessed by Lua using the ARGV global variable, very similarly to what
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 --
---   KEYS[1] = Model.name attr_key attr_val [attr_key attr_val ..] hash_tag
---   ARGV[1...N] = attr_key [attr_key ..]
+--   KEYS[1] = hash_tag
+--   ARGV = Model.name num_index_attr num_range_index_attr num_query_conditions ...
 --
 --   For equality query conditions, key value pairs are expected to appear in
 --   the KEYS array as [attr_key, attr_val]
@@ -29,12 +29,25 @@ A hash of id:model of all the ids that match the query conditions given.
 <%= include_lua 'shared/lua_helper_methods' %>
 <%= include_lua 'shared/query_helper_methods' %>
 
-if #KEYS < 4 then
-  error('Expected keys to be at least of size 3')
+if #KEYS ~=1 then
+  error('Expected keys to be of size 1')
 end
 
-local model = KEYS[1]
-local index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(model, KEYS))
+local model = ARGV[1]
+
+local index_attr_pos = 5
+local range_attr_pos = index_attr_pos + ARGV[2]
+local query_cond_pos = range_attr_pos + ARGV[3]
+local attr_selection_pos = query_cond_pos + ARGV[4]
+
+
+local index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(
+  KEYS[1],
+  model,
+  to_set({unpack(ARGV, index_attr_pos, range_attr_pos - 1)}),
+  to_set({unpack(ARGV, range_attr_pos, query_cond_pos - 1)}),
+  unpack(ARGV, query_cond_pos, attr_selection_pos - 1)
+))
 
 -- Get all ids which have the corresponding attribute values.
 local ids_set = nil
@@ -49,7 +62,7 @@ if #range_index_sets > 0 then
 end
 
 -- Query for the hashes for all ids in the set intersection
-local res, stale_ids = unpack(batch_hget(model, ids_set, ARGV))
+local res, stale_ids = unpack(batch_hget(model, ids_set, unpack(ARGV, attr_selection_pos)))
 
 -- Delete any stale ids which are no longer in redis from the id sets.
 -- This can happen if an entry was auto expired due to ttl, but not removed up yet
