@@ -15,9 +15,8 @@ The id of the created hash as a string.
 -- accessed by Lua using the ARGV global variable, very similarly to what
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 
---   KEYS[1] = Model.name
---   KEYS[2] = id
---   ARGV[1...2N] = attr_key attr_val [attr_key attr_val ..]
+--   KEYS = id hash_tag
+--   ARGV = Model.name ttl index_attr_size range_index_attr_size [index_attr_key ...] [range_index_attr_key ...] attr_key attr_val [attr_key attr_val ..]
 <%= include_lua 'shared/lua_helper_methods' %>
 <%= include_lua 'shared/index_helper_methods' %>
 
@@ -25,14 +24,16 @@ The id of the created hash as a string.
 if #KEYS ~= 2 then
   error('Expected keys to be of size 2')
 end
-if #ARGV % 2 ~= 0 then
-  error('Expected an even number of arguments')
-end
 
-local model = KEYS[1]
-local id = KEYS[2]
-local ttl = redis.call('get', model .. ':ttl')
+local id, hash_tag = unpack(KEYS)
+local model = ARGV[1]
+local ttl = ARGV[2]
 local key = model .. ':id:' .. id
+
+local index_attr_pos = 5
+local range_attr_pos = index_attr_pos + ARGV[3]
+-- Starting position of the attr_key-attr_val pairs
+local attr_pos = range_attr_pos + ARGV[4]
 
 if redis.call('exists', key) ~= 0 then
   error(key .. ' already exists')
@@ -40,7 +41,7 @@ end
 
 -- Forward the script arguments to the Redis command HSET.
 -- Call the Redis command: HSET "#{Model.name}:id:#{id}" field value ...
-redis.call('hset', key, unpack(ARGV))
+redis.call('hset', key, unpack(ARGV, attr_pos))
 
 -- Set TTL on key
 if ttl and ttl ~= '-1' then
@@ -48,17 +49,17 @@ if ttl and ttl ~= '-1' then
 end
 
 -- Add id value for any index and range index attributes
-local attrs_hash = to_hash(ARGV)
-local index_attr_keys = redis.call('smembers', model .. ':index_attrs')
+local attrs_hash = to_hash(unpack(ARGV, attr_pos))
+local index_attr_keys = {unpack(ARGV, index_attr_pos, range_attr_pos - 1)}
 if #index_attr_keys > 0 then
   for _, attr_key in ipairs(index_attr_keys) do
-    add_id_to_index_attr(model, attr_key, attrs_hash[attr_key], id)
+    add_id_to_index_attr(hash_tag, model, attr_key, attrs_hash[attr_key], id)
   end
 end
-local range_index_attr_keys = redis.call('smembers', model .. ':range_index_attrs')
+local range_index_attr_keys = {unpack(ARGV, range_attr_pos, attr_pos - 1)}
 if #range_index_attr_keys > 0 then
   for _, attr_key in ipairs(range_index_attr_keys) do
-    add_id_to_range_index_attr(model, attr_key, attrs_hash[attr_key], id)
+    add_id_to_range_index_attr(hash_tag, model, attr_key, attrs_hash[attr_key], id)
   end
 end
 return nil

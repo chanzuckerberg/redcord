@@ -15,7 +15,8 @@ An integer number of records that match the query conditions given.
 -- accessed by Lua using the ARGV global variable, very similarly to what
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 --
---   KEYS[1] = Model.name attr_key attr_val [attr_key attr_val ..] hash_tag
+--   KEYS[1] = hash_tag
+--   ARGV = Model.name num_index_attr num_range_index_attr num_query_conditions ...
 --
 --   For equality query conditions, key value pairs are expected to appear in
 --   the KEYS array as [attr_key, attr_val]
@@ -25,12 +26,22 @@ An integer number of records that match the query conditions given.
 <%= include_lua 'shared/lua_helper_methods' %>
 <%= include_lua 'shared/query_helper_methods' %>
 
-if #KEYS < 4 then
-  error('Expected keys to be at least of size 3')
+if #KEYS ~=1 then
+  error('Expected keys to be of size 1')
 end
 
-local model = KEYS[1]
-local index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(model, KEYS))
+local index_attr_pos = 4
+local range_attr_pos = index_attr_pos + ARGV[2]
+local query_cond_pos = range_attr_pos + ARGV[3]
+
+local model = ARGV[1]
+local index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(
+  KEYS[1],
+  model,
+  to_set({unpack(ARGV, index_attr_pos, range_attr_pos - 1)}),
+  to_set({unpack(ARGV, range_attr_pos, query_cond_pos - 1)}),
+  unpack(ARGV, query_cond_pos)
+))
 
 -- Get all ids which have the corresponding attribute values.
 local ids_set = nil
