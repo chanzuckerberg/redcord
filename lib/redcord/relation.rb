@@ -22,16 +22,19 @@ class Redcord::Relation
       model: T.class_of(Redcord::Base),
       query_conditions: T::Hash[Symbol, T.untyped],
       select_attrs: T::Set[Symbol],
+      index_name: T.nilable(Symbol)
     ).void
   end
   def initialize(
     model,
-    query_conditions = {},
-    select_attrs = Set.new
+    query_conditions: {},
+    select_attrs: Set.new,
+    index_name: nil
   )
     @model = model
     @query_conditions = query_conditions
     @select_attrs = select_attrs
+    @index_name = index_name
   end
 
   sig { params(args: T::Hash[Symbol, T.untyped]).returns(Redcord::Relation) }
@@ -147,7 +150,7 @@ class Redcord::Relation
         res_hash = redis.find_by_attr(
           model.model_key,
           query_conditions,
-          select_attrs,
+          select_attrs: select_attrs,
         )
 
         res_hash.map do |id, args|
@@ -159,6 +162,7 @@ class Redcord::Relation
         res_hash = redis.find_by_attr(
           model.model_key,
           query_conditions,
+          index_name: @index_name,
         )
 
         res_hash.map { |id, args| model.coerce_and_set_id(args, id) }

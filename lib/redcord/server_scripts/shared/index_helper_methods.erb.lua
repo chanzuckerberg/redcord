@@ -61,14 +61,14 @@ local function replace_id_in_range_index_attr(model, attr_key, prev_attr_val, cu
 end
 
 -- Add an index record to the sorted set of the custom index
-local function add_record_to_custom_index(model, attr_values, id)
-  local numeric_value_length = 10
-  local index_name = 'custom_indexes_main_1'
-  local index_string = ''
+local function add_record_to_custom_index(model, index_name, attr_values, id)
+  local numeric_value_length = 12
+  local sep = ':'
   if attr_values then
+    local index_string = ''
     for i, attr_value in ipairs(attr_values) do
       if i > 1 then
-        index_string = index_string .. ':'
+        index_string = index_string .. sep
       end
       for i=string.len(attr_value), numeric_value_length-1 do
         index_string = index_string .. '0'
@@ -76,7 +76,6 @@ local function add_record_to_custom_index(model, attr_values, id)
       index_string = index_string .. attr_value
     end
 
-    -- Call the Redis command: SADD "#{Model.name}:#{attr_name}:#{attr_val}" member ..
-    redis.call('zadd', model .. ':' .. index_name, 0, index_string .. ':' .. id)
+    redis.call('zadd', model .. sep .. 'custom_indexes_' .. index_name, 0, index_string .. sep .. id)
   end
 end

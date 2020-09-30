@@ -21,7 +21,7 @@ module Redcord::Attribute
     klass.extend(ClassMethods)
     klass.class_variable_set(:@@index_attributes, Set.new)
     klass.class_variable_set(:@@range_index_attributes, Set.new)
-    klass.class_variable_set(:@@custom_indexes, Array.new)
+    klass.class_variable_set(:@@custom_indexes, Set.new)
     klass.class_variable_set(:@@ttl, nil)
   end
 
@@ -54,10 +54,10 @@ module Redcord::Attribute
       end
     end
 
-    sig { params(name: String, attrs: T::Array[Symbol]).void }
-    def custom_index(name, attrs)
+    sig { params(index_name: Symbol, attrs: T::Array[Symbol]).void }
+    def custom_index(index_name, attrs)
       class_variable_get(:@@custom_indexes) << attrs
-      zadd_proc_on_redis_connection("custom_indexes_#{name}", attrs.map(&:to_s))
+      zadd_proc_on_redis_connection("custom_indexes", index_name, attrs.map(&:to_s))
     end
 
     sig { params(duration: T.nilable(ActiveSupport::Duration)).void }
@@ -77,12 +77,13 @@ module Redcord::Attribute
       end
     end
 
-    sig { params(redis_key: String, items_to_add: T::Array[String]).void }
-    def zadd_proc_on_redis_connection(redis_key, items_to_add)
+    sig { params(redis_key: String, index_name: Symbol, items_to_add: T::Array[String]).void }
+    def zadd_proc_on_redis_connection(redis_key, index_name, items_to_add)
       order = 1
       Redcord::RedisConnection.procs_to_prepare << proc do |redis|
+        redis.sadd("#{model_key}:#{redis_key}", index_name)
         items_to_add.each do |item_to_add|
-          redis.zadd("#{model_key}:#{redis_key}", order, item_to_add)
+          redis.zadd("#{model_key}:#{redis_key}_#{index_name}_attrs", order, item_to_add)
           order += 1
         end
       end

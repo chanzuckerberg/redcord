@@ -34,13 +34,13 @@ if #KEYS < 3 then
 end
 
 local model = KEYS[1]
-local index_sets, range_index_sets, custom_index_sets = unpack(validate_and_parse_query_conditions(model, KEYS))
+local index = KEYS[2]
+redis.call('set', 'testindex', index)
 
 -- Get all ids which have the corresponding attribute values.
 local ids_set = nil
-if #custom_index_sets > 0 then
-  ids_set = get_custom_index_set(ids_set, custom_index_sets)
-else
+if index == 'default' then
+  local index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(model, KEYS))
   -- For normal sets, Redis has SINTER built in to return the set intersection
   if #index_sets > 0 then
     ids_set = to_set(redis.call('sinter', unpack(index_sets)))
@@ -50,7 +50,15 @@ else
   if #range_index_sets > 0 then
     ids_set = intersect_range_index_sets(ids_set, range_index_sets)
   end
+else
+  local custom_index_query = validate_and_parse_query_conditions_custom(model, index, KEYS)
+  if #custom_index_query > 0 then
+    ids_set = get_custom_index_set(ids_set, custom_index_query)
+  else
+    ids_set = {}
+  end
 end
+
 -- Query for the hashes for all ids in the set intersection
 local res, stale_ids = unpack(batch_hget(model, ids_set, ARGV))
 

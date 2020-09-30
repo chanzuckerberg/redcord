@@ -66,18 +66,20 @@ class Redcord::PreparedRedis < Redis
     params(
       model: String,
       query_conditions: T::Hash[T.untyped, T.untyped],
+      index_name: T.nilable(Symbol),
       select_attrs: T::Set[Symbol]
     ).returns(T::Hash[Integer, T::Hash[T.untyped, T.untyped]])
   end
-  def find_by_attr(model, query_conditions, select_attrs=Set.new)
+  def find_by_attr(model, query_conditions, index_name: nil, select_attrs: Set.new)
     Redcord::Base.trace(
       'redcord_redis_find_by_attr',
       model_name: model,
     ) do
+      index_name = index_name ? index_name : :default
       res = evalsha(
         self.class.server_script_shas[:find_by_attr],
-        keys: [model] + query_conditions.to_a.flatten,
-        argv: select_attrs.to_a.flatten
+        keys: [model] + [index_name.to_s] + query_conditions.to_a.flatten,
+        argv: select_attrs.to_a.flatten,
       )
       # The Lua script will return this as a flattened array.
       # Convert the result into a hash of {id -> model hash}

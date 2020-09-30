@@ -65,12 +65,17 @@ if #range_index_attr_keys > 0 then
     add_id_to_range_index_attr(model, attr_key, attrs_hash[attr_key], id)
   end
 end
-local custom_index_attr_keys = redis.call('zrange', model .. ':custom_indexes_main', 0, -1)
-local attr_values = {}
-if #custom_index_attr_keys > 0 then
-  for i, attr_key in ipairs(custom_index_attr_keys) do
-    attr_values[i] = attrs_hash[attr_key]
+local custom_indexes = redis.call('smembers', model .. ':custom_indexes')
+if #custom_indexes > 0 then
+  for _, index_name in ipairs(custom_indexes) do
+    local custom_index_attr_keys = redis.call('zrange', model .. ':custom_indexes_' .. index_name .. '_attrs', 0, -1)
+    local attr_values = {}
+    if #custom_index_attr_keys > 0 then
+      for i, attr_key in ipairs(custom_index_attr_keys) do
+        attr_values[i] = attrs_hash[attr_key]
+      end
+      add_record_to_custom_index(model, index_name, attr_values, id)
+    end
   end
-  add_record_to_custom_index(model, attr_values, id)
 end
 return id

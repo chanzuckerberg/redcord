@@ -66,7 +66,8 @@ module Redcord::Actions
 
     sig { params(args: T::Hash[Symbol, T.untyped]).returns(Redcord::Relation) }
     def where(args)
-      Redcord::Relation.new(T.let(self, T.untyped)).where(args)
+      index_name = args.delete(:index)
+      Redcord::Relation.new(T.let(self, T.untyped), index_name: index_name).where(args)
     end
 
     sig { params(id: T.untyped).returns(T::Boolean) }
