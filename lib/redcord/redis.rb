@@ -118,7 +118,6 @@ class Redcord::Redis < Redis
       'redcord_redis_find_by_attr_count',
       model_name: model,
     ) do
-      p [model, index_attrs.size, range_index_attrs.size] + index_attrs + range_index_attrs + query_conditions.to_a.flatten,
       run_script(
         :find_by_attr_count,
         keys: [hash_tag],
@@ -130,6 +129,7 @@ class Redcord::Redis < Redis
   private
 
   def run_script(script_name, *args)
+    # Use EVAL when a redis shard has not loaded the script before
     hash_var_name = :"@script_sha_#{script_name}"
     hash = instance_variable_get(hash_var_name)
     evalsha(hash, *args)
