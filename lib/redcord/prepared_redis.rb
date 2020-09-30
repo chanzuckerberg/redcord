@@ -101,7 +101,7 @@ class Redcord::PreparedRedis < Redis
     ) do
       evalsha(
         self.class.server_script_shas[:find_by_attr_count],
-        keys: [model] + query_conditions.to_a.flatten,
+        keys: [model] + ["dummy"] + query_conditions.to_a.flatten,
       )
     end
   end
