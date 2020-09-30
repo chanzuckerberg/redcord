@@ -5,7 +5,7 @@
 describe Redcord::Migration::Index do
   include Redcord::Migration::Index
 
-  xit 'drops an index' do
+  it 'drops an index' do
     klass = Class.new(T::Struct) do
       include Redcord::Base
 

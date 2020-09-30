@@ -7,32 +7,13 @@ module Redcord::Migration::Index
 
   sig { params(model: T.class_of(Redcord::Base), index_name: Symbol).void }
   def remove_index(model, index_name)
-    if model.redis.sismember("#{model.model_key}:index_attrs", index_name)
-      _remove_index_from_attr_set(
-        model: model,
-        attr_set_name: 'index_attrs',
-        index_name: index_name,
-      )
+    model.redis.scan_each(match: "#{model.model_key}:#{index_name}:*") { |key| _del_set(model, key) }
 
-      model.redis.scan_each(match: "#{model.model_key}:#{index_name}:*") { |key| _del_set(model, key) }
-    elsif model.redis.sismember("#{model.model_key}:range_index_attrs", index_name)
-      _remove_index_from_attr_set(
-        model: model,
-        attr_set_name: 'range_index_attrs',
-        index_name: index_name,
-      )
+    attr_set = "#{model.model_key}:#{index_name}"
+    nil_attr_set = "#{attr_set}:"
 
-      attr_set = "#{model.model_key}:#{index_name}"
-      nil_attr_set = "#{attr_set}:"
-
-      _del_set(model, nil_attr_set)
-      _del_zset(model, attr_set)
-    else
-      raise(
-        Redcord::AttributeNotIndexed,
-        "#{index_name} is not an indexed attribute.",
-      )
-    end
+    _del_set(model, nil_attr_set)
+    _del_zset(model, attr_set)
   end
 
   sig {
