@@ -12,6 +12,10 @@ describe Redcord::Migration::Index do
       attribute :index, T.nilable(String), index: true
       attribute :range_index, T.nilable(Integer), index: true
 
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        shard_by_attribute :index
+      end
+
       def self.name
         'RedcordSpecModel'
       end
@@ -19,7 +23,7 @@ describe Redcord::Migration::Index do
     klass.establish_connection
 
     k = klass.create!(range_index: 1, index: '123')
-    expect(klass.find_by(range_index: 1).id).to eq k.id
+    expect(klass.find_by(index: '123', range_index: 1).id).to eq k.id
     expect(klass.find_by(index: '123').id).to eq k.id
 
     klass = Class.new(T::Struct) do
@@ -27,6 +31,12 @@ describe Redcord::Migration::Index do
 
       attribute :index, T.nilable(String)
       attribute :range_index, T.nilable(Integer)
+
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        attribute :new_index, T.nilable(String), index: true
+
+        shard_by_attribute :new_index
+      end
 
       def self.name
         'RedcordSpecModel'

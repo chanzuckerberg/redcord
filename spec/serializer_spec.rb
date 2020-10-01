@@ -14,6 +14,10 @@ describe Redcord::Serializer do
       attribute :float, T.nilable(Float), index: true
       attribute :boolean, T.nilable(T::Boolean), index: true
 
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        shard_by_attribute :a
+      end
+
       def self.name
         'RedcordSpecModel'
       end
@@ -37,11 +41,11 @@ describe Redcord::Serializer do
 
   it 'works with boolean types' do
     instance = klass.create!(a: 3, b: '3', c: 3, boolean: true)
-    another_instance = klass.find_by(boolean: true)
+    another_instance = klass.find_by(a: 3, boolean: true)
 
     expect(instance.id).to eq(another_instance.id)
-    expect(klass.find_by(boolean: false)).to be_nil
-    expect(klass.find_by(boolean: nil)).to be_nil
+    expect(klass.find_by(a: 3, boolean: false)).to be_nil
+    expect(klass.find_by(a: 3, boolean: nil)).to be_nil
   end
 
   it 'works with float types' do
@@ -49,11 +53,13 @@ describe Redcord::Serializer do
     klass.create!(a: 3, b: '3', c: 3, float: 2.0)
     klass.create!(a: 3, b: '3', c: 3, float: 3.0)
 
-    expect(klass.find_by(float: 1.0)).to_not be_nil
+    expect(klass.find_by(a: 3, float: 1.0)).to_not be_nil
     expect(klass.find_by(
+      a: 3,
       float: Redcord::RangeInterval.new(min: 0.0)),
     ).to_not be_nil
     expect(klass.find_by(
+      a: 3,
       float: Redcord::RangeInterval.new(min: 4.0)),
     ).to be_nil
   end
@@ -80,38 +86,50 @@ describe Redcord::Serializer do
     first = klass.create!(a: 3, b: '3', c: 3)
     second = klass.create!(a: 2, b: '2', c: 3)
 
-    queried_instances = klass.where(
-      a: Redcord::RangeInterval.new(max: 3, max_exclusive: true),
-    )
-    expect(queried_instances.size).to eq 1
-    expect(queried_instances.first.id).to eq(second.id)
+    if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+      # Since we shard by a, we must use equality
+      expect {
+        klass.where(
+          a: Redcord::RangeInterval.new(max: 3, max_exclusive: true),
+        ).count
+      }.to raise_error(RuntimeError)
+    else
+      queried_instances = klass.where(
+        a: Redcord::RangeInterval.new(max: 3, max_exclusive: true),
+      )
+      expect(queried_instances.size).to eq 1
+      expect(queried_instances.first.id).to eq(second.id)
 
-    queried_instances = klass.where(
-      a: Redcord::RangeInterval.new(min: 2, min_exclusive: true),
-    )
-    expect(queried_instances.size).to eq 1
-    expect(queried_instances.first.id).to eq(first.id)
+      queried_instances = klass.where(
+        a: Redcord::RangeInterval.new(min: 2, min_exclusive: true),
+      )
+      expect(queried_instances.size).to eq 1
+      expect(queried_instances.first.id).to eq(first.id)
+    end
   end
 
   it 'allows combining range and equality conditions in queries' do
-    first = klass.create!(a: 3, b: '3', c: 3)
+    first = klass.create!(a: 3, b: '3', c: 3, float: 3.0)
 
     queried_instances = klass.where(
-      a: Redcord::RangeInterval.new(max: 5),
+      a: 3,
       b: '3',
+      float: Redcord::RangeInterval.new(max: 5.0),
     )
     expect(queried_instances.size).to eq 1
     expect(queried_instances.first.id).to eq first.id
 
     queried_instances = klass.where(
-      a: Redcord::RangeInterval.new(max: 3),
+      a: 3,
       b: '2',
+      float: Redcord::RangeInterval.new(max: 3.0),
     )
     expect(queried_instances.size).to eq 0
 
     queried_instances = klass.where(
-      a: Redcord::RangeInterval.new(min: 5),
+      a: 3,
       b: '4',
+      float: Redcord::RangeInterval.new(min: 5.0),
     )
     expect(queried_instances.size).to eq 0
   end
@@ -121,6 +139,7 @@ describe Redcord::Serializer do
     second = klass.create!(a: 3, b: '3', c: 3, d: Time.zone.now)
 
     queried_instances = klass.where(
+      a: 3,
       d: Redcord::RangeInterval.new(max: Time.zone.now + 1.day),
     )
     expect(queried_instances.size).to eq 2
@@ -131,7 +150,7 @@ describe Redcord::Serializer do
   it 'allows nil values for range index attributes' do
     first = klass.create!(a: 3, b: '3', c: 3, d: nil)
 
-    queried_instances = klass.where(d: nil)
+    queried_instances = klass.where(a: 3, d: nil)
     expect(queried_instances.size).to eq 1
     expect(queried_instances.first.id).to eq first.id
   end

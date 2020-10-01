@@ -10,6 +10,10 @@ describe Redcord::Actions do
       attribute :value, T.nilable(Integer)
       attribute :indexed_value, T.nilable(Integer), index: true
 
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        shard_by_attribute :indexed_value
+      end
+
       def self.name
         'RedcordSpecModel'
       end
@@ -103,14 +107,12 @@ describe Redcord::Actions do
       instance = klass.create!(value: 3)
 
       klass.ttl(2.days)
-      migrator.change_ttl_passive(klass)
       expect(klass.redis.ttl(instance.instance_key)).to eq(-1)
 
       instance.save!
       expect(klass.redis.ttl(instance.instance_key) > 0).to be true
 
       klass.ttl(nil)
-      migrator.change_ttl_passive(klass)
       instance.update!(value: 4)
       expect(klass.redis.ttl(instance.instance_key)).to eq(-1)
     end

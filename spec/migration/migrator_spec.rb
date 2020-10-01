@@ -39,12 +39,12 @@ describe Redcord::Migration::Migrator do
 
   let!(:migration_path) { 'db/redcord/migrate' }
   let!(:migration_version) { '20200504000000' }
-  let!(:migration_filename) { "#{migration_version}_set_user_session_ttl.rb" }
+  let!(:migration_filename) { "#{migration_version}_test_migration.rb" }
   let!(:migration_content) do
     <<~RUBY
-      class SetUserSessionTtl < Redcord::Migration
+      class TestMigration < Redcord::Migration
         def up
-          change_ttl_passive(UserSession) # 14.days
+         
         end
 
         def down
@@ -79,7 +79,7 @@ describe Redcord::Migration::Migrator do
       Rake::Task['redis:migrate'].invoke
     }.to output(%r{
       redis\s+direction\s+version\s+migration\s+duration\s+
-      redis://127\.0\.0\.1:6379/0\s+
+      redis://.+\s+
       UP\s+
       #{migration_version}\s+
     }x).to_stdout

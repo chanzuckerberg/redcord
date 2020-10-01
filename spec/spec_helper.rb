@@ -81,7 +81,7 @@ RSpec.configure do |config|
       run_system_command(cmd, allow_failure: true)
     end
 
-    Redis.new(cluster: node_ips.map { |ip| "redis://#{ip}:#{cluster_node_port}" })
+    node_ips.map { |ip| "redis://#{ip}:#{cluster_node_port}" }
   end
 
   def run_system_command(cmd, allow_failure: false)
@@ -100,7 +100,7 @@ RSpec.configure do |config|
   end
 
   if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-    Redcord::Base.redis = create_redis_cluster(num_nodes: 3)
+    $redcord_redis_cluster = create_redis_cluster(num_nodes: 3)
   end
 
   config.before(:each) do

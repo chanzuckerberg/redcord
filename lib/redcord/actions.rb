@@ -157,6 +157,11 @@ module Redcord::Actions
        'redcord_actions_instance_methods_update!',
         model_name: self.class.name,
       ) do
+        shard_by_attr = self.class.class_variable_get(:@@shard_by_attribute)
+        if args.keys.include?(shard_by_attr)
+          raise "Cannot update shard_by attribute #{shard_by_attr}"
+        end
+
         _id = id
         if _id.nil?
           _set_args!(args)
