@@ -35,9 +35,9 @@ module Redcord::Actions
         id = redis.create_hash_returning_id(
           model_key,
           to_redis_hash(args),
-          ttl: class_variable_get(:@@ttl)&.to_i || -1,
-          index_attrs: class_variable_get(:@@index_attributes).to_a,
-          range_index_attrs: class_variable_get(:@@range_index_attributes).to_a,
+          ttl: _script_arg_ttl,
+          index_attrs: _script_arg_index_attrs,
+          range_index_attrs: _script_arg_range_index_attrs,
           hash_tag: instance.hash_tag,
         )
         instance.send(:id=, id)
@@ -85,8 +85,8 @@ module Redcord::Actions
         redis.delete_hash(
           model_key,
           id,
-          index_attrs: class_variable_get(:@@index_attributes).to_a,
-          range_index_attrs: class_variable_get(:@@range_index_attributes).to_a,
+          index_attrs: _script_arg_index_attrs,
+          range_index_attrs: _script_arg_range_index_attrs,
         ) == 1
       end
     end
@@ -131,9 +131,9 @@ module Redcord::Actions
           _id = redis.create_hash_returning_id(
             self.class.model_key,
             self.class.to_redis_hash(serialize),
-            ttl: self.class.class_variable_get(:@@ttl)&.to_i || -1,
-            index_attrs: self.class.class_variable_get(:@@index_attributes).to_a,
-            range_index_attrs: self.class.class_variable_get(:@@range_index_attributes).to_a,
+            ttl: self.class._script_arg_ttl,
+            index_attrs: self.class._script_arg_index_attrs,
+            range_index_attrs: self.class._script_arg_range_index_attrs,
             hash_tag: hash_tag,
           )
           send(:id=, _id)
@@ -142,9 +142,9 @@ module Redcord::Actions
             self.class.model_key,
             _id,
             self.class.to_redis_hash(serialize),
-            ttl: self.class.class_variable_get(:@@ttl)&.to_i || -1,
-            index_attrs: self.class.class_variable_get(:@@index_attributes).to_a,
-            range_index_attrs: self.class.class_variable_get(:@@range_index_attributes).to_a,
+            ttl: self.class._script_arg_ttl,
+            index_attrs: self.class._script_arg_index_attrs,
+            range_index_attrs: self.class._script_arg_range_index_attrs,
             hash_tag: hash_tag,
           )
         end
@@ -173,9 +173,9 @@ module Redcord::Actions
             self.class.model_key,
             _id,
             self.class.to_redis_hash(args),
-            ttl: self.class.class_variable_get(:@@ttl)&.to_i || -1,
-            index_attrs: self.class.class_variable_get(:@@index_attributes).to_a,
-            range_index_attrs: self.class.class_variable_get(:@@range_index_attributes).to_a,
+            ttl: self.class._script_arg_ttl,
+            index_attrs: self.class._script_arg_index_attrs,
+            range_index_attrs: self.class._script_arg_range_index_attrs,
             hash_tag: hash_tag,
           )
         end

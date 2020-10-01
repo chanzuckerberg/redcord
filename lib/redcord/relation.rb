@@ -71,9 +71,9 @@ class Redcord::Relation
     redis.find_by_attr_count(
       model.model_key,
       query_conditions,
-      index_attrs: model.class_variable_get(:@@index_attributes).to_a,
-      range_index_attrs: model.class_variable_get(:@@range_index_attributes).to_a,
-      hash_tag: hash_tag,
+      index_attrs: model._script_arg_index_attrs,
+      range_index_attrs: model._script_arg_range_index_attrs,
+      hash_tag: extract_hash_tag!,
     )
   end
 
@@ -144,12 +144,12 @@ class Redcord::Relation
   private
 
   sig { returns(T.nilable(String)) }
-  def hash_tag
+  def extract_hash_tag!
     attr = model.class_variable_get(:@@shard_by_attribute)
-    return '' if attr.nil?
+    return nil if attr.nil?
 
     if !query_conditions.keys.include?(attr)
-      raise "Queries must contain attribute '#{attr}' since model #{model.name} is shared by this attribute"
+      raise "Queries must contain attribute '#{attr}' since model #{model.name} is sharded by this attribute"
     end
 
     condition = query_conditions[attr]
@@ -158,7 +158,7 @@ class Redcord::Relation
       "{#{condition}}"
     when Array
       if condition.size != 2 || condition.first != condition.last
-        raise 'Must query for equality on the shared attribute'
+        raise 'Must query for equality on the sharded attribute'
       end
 
       "{#{condition.first}}"
@@ -178,9 +178,9 @@ class Redcord::Relation
           model.model_key,
           query_conditions,
           select_attrs,
-          index_attrs: model.class_variable_get(:@@index_attributes).to_a,
-          range_index_attrs: model.class_variable_get(:@@range_index_attributes).to_a,
-          hash_tag: hash_tag,
+          index_attrs: model._script_arg_index_attrs,
+          range_index_attrs: model._script_arg_range_index_attrs,
+          hash_tag: extract_hash_tag!,
         )
 
         res_hash.map do |id, args|
@@ -192,9 +192,9 @@ class Redcord::Relation
         res_hash = redis.find_by_attr(
           model.model_key,
           query_conditions,
-          index_attrs: model.class_variable_get(:@@index_attributes).to_a,
-          range_index_attrs: model.class_variable_get(:@@range_index_attributes).to_a,
-          hash_tag: hash_tag,
+          index_attrs: model._script_arg_index_attrs,
+          range_index_attrs: model._script_arg_range_index_attrs,
+          hash_tag: extract_hash_tag!,
         )
 
         res_hash.map { |id, args| model.coerce_and_set_id(args, id) }

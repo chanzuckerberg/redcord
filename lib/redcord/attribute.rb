@@ -60,7 +60,27 @@ module Redcord::Attribute
 
     def shard_by_attribute(attr)
       # attr must be an index attribute (index: true)
+      if !class_variable_get(:@@index_attributes).include?(attr) &&
+          !class_variable_get(:@@range_index_attributes).include?(attr)
+        raise "Cannot shard by a non-index attribute '#{attr}'"
+      end
+
       class_variable_set(:@@shard_by_attribute, attr)
+    end
+
+    sig { returns(Integer) }
+    def _script_arg_ttl
+      class_variable_get(:@@ttl)&.to_i || -1
+    end
+
+    sig { returns(T::Array[Symbol]) }
+    def _script_arg_index_attrs
+      class_variable_get(:@@index_attributes).to_a
+    end
+
+    sig { returns(T::Array[Symbol]) }
+    def _script_arg_range_index_attrs
+      class_variable_get(:@@range_index_attributes).to_a
     end
 
     private
@@ -84,7 +104,14 @@ module Redcord::Attribute
       return nil if attr.nil?
 
       # A blank hash tag would cause MOVED error in cluster mode
-      "{#{send(attr) || '__redcord_hash_tag_null__'}}"
+      tag = send(attr)
+      default_tag = '__redcord_hash_tag_null__'
+
+      if tag == default_tag
+        raise "#{attr}=#{default_tag} conflict with default hash_tag value"
+      end
+
+      "{#{tag || default_tag}}"
     end
   end
 
