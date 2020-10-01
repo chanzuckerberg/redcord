@@ -16,8 +16,9 @@ A hash of id:model of all the ids that match the query conditions given.
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 --
 --   KEYS[1] = hash_tag
---   ARGV = Model.name num_index_attr num_range_index_attr num_query_conditions ...
---
+--   ARGV = Model.name num_index_attr num_range_index_attr num_query_conditions [index_attrs ...] [range_index_attrs ...] [query_conidtions ...] [attr_selections ...]
+--          [query_conidtions ...]: [attr_key1 attr_val1 attr_key2 attr_val2 ...]
+--          [attr_selections ...]: [attr_key1 attr_key2 ...]
 --   For equality query conditions, key value pairs are expected to appear in
 --   the KEYS array as [attr_key, attr_val]
 --   For range query conditions, key value pairs are expected to appear in the

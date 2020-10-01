@@ -152,10 +152,13 @@ class Redcord::Redis < Redis
     # Use EVAL when a redis shard has not loaded the script before
     hash_var_name = :"@script_sha_#{script_name}"
     hash = instance_variable_get(hash_var_name)
-    evalsha(hash, *args)
-  rescue Redis::CommandError => e
-    if e.message != 'NOSCRIPT No matching script. Please use EVAL.'
-      raise e
+
+    begin
+      return evalsha(hash, *args) if hash
+    rescue Redis::CommandError => e
+      if e.message != 'NOSCRIPT No matching script. Please use EVAL.'
+        raise e
+      end
     end
 
     script_content = Redcord::LuaScriptReader.read_lua_script(script_name.to_s)
