@@ -43,3 +43,4 @@
 
 /log
 /sorbet/rbi/hidden-definitions/errors.txt
+redcord_spec_redis_cluster.config
