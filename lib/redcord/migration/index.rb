@@ -7,13 +7,13 @@ module Redcord::Migration::Index
 
   sig { params(model: T.class_of(Redcord::Base), index_name: Symbol).void }
   def remove_index(model, index_name)
-    model.redis.scan_each(match: "#{model.model_key}:#{index_name}:*") { |key| _del_set(model, key) }
+    model.redis.scan_each_shard("#{model.model_key}:#{index_name}:*") { |key| _del_set(model, key) }
 
     attr_set = "#{model.model_key}:#{index_name}"
     nil_attr_set = "#{attr_set}:"
 
-    _del_set(model, nil_attr_set)
-    _del_zset(model, attr_set)
+    model.redis.scan_each_shard("#{nil_attr_set}*") { |key| _del_set(model, key) }
+    model.redis.scan_each_shard("#{attr_set}*") { |key| _del_zset(model, key) }
   end
 
   sig {

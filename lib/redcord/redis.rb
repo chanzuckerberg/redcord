@@ -126,6 +126,26 @@ class Redcord::Redis < Redis
     end
   end
 
+  def scan_each_shard(key, &blk)
+    clients = instance_variable_get(:@client)
+      &.instance_variable_get(:@node)
+      &.instance_variable_get(:@clients)
+      &.values
+
+    if clients.nil?
+      scan_each(match: key, &blk)
+    else
+      clients.each do |client|
+        cursor = 0
+        loop do
+          cursor, keys = client.call([:scan, cursor, 'match', key])
+          keys.each(&blk)
+          break if cursor == "0"
+        end
+      end
+    end
+  end
+
   private
 
   def run_script(script_name, *args)

@@ -12,32 +12,45 @@ describe Redcord::Relation do
       attribute :c, Integer
       attribute :d, T.nilable(Time), index: true
 
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        shard_by_attribute :a
+      end
+
       def self.name
         'RedcordSpecModel'
       end
     end
   end
 
-  before(:each) do
-    klass.establish_connection
-  end
-
   it 'maintains index id sets after an update operation' do
     instance = klass.create!(a: 3, b: '3', c: 3)
-    instance.update!(a: 4)
 
-    # query for previous value of a should be empty, and new value should be
-    # updated.
-    expect(klass.where(a: 3).count).to eq 0
+    if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+      # Cannot update shard_by attribute
+      expect {
+        instance.update!(a: 4)
+      }.to raise_error(RuntimeError)
 
-    queried_instances = klass.where(a: 4)
-    expect(queried_instances.size).to eq 1
-    expect(queried_instances.first.id).to eq instance.id
+      # Cannot query without shard_by attribute
+      expect {
+        klass.where(b: '3').count
+      }.to raise_error(RuntimeError)
+    else
+      instance.update!(a: 4)
 
-    # other index attributes not changed should be untouched
-    queried_instances = klass.where(b: '3')
-    expect(queried_instances.count).to eq 1
-    expect(queried_instances.first.id).to eq instance.id
+      # query for previous value of a should be empty, and new value should be
+      # updated.
+      expect(klass.where(a: 3).count).to eq 0
+
+      queried_instances = klass.where(a: 4)
+      expect(queried_instances.size).to eq 1
+      expect(queried_instances.first.id).to eq instance.id
+
+      # other index attributes not changed should be untouched
+      queried_instances = klass.where(b: '3')
+      expect(queried_instances.count).to eq 1
+      expect(queried_instances.first.id).to eq instance.id
+    end
   end
 
   it 'maintains index id sets after delete operation' do

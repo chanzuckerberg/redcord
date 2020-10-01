@@ -149,10 +149,22 @@ class Redcord::Relation
     return '' if attr.nil?
 
     if !query_conditions.keys.include?(attr)
-      raise "Queries must contain #{attr} attribute since model #{model.name} is shared by #{attr}"
+      raise "Queries must contain attribute '#{attr}' since model #{model.name} is shared by this attribute"
     end
 
-    "{#{query_conditions[attr]}}"
+    condition = query_conditions[attr]
+    case condition
+    when Integer, String
+      "{#{condition}}"
+    when Array
+      if condition.size != 2 || condition.first != condition.last
+        raise 'Must query for equality on the shared attribute'
+      end
+
+      "{#{condition.first}}"
+    else
+      raise "Does not support query condition #{condition} on a Redis Cluster"
+    end
   end
 
   sig { returns(T::Array[T.untyped]) }

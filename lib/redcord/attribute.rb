@@ -83,7 +83,8 @@ module Redcord::Attribute
 
       return nil if attr.nil?
 
-      "{#{send(attr)}}"
+      # A blank hash tag would cause MOVED error in cluster mode
+      "{#{send(attr) || '__redcord_hash_tag_null__'}}"
     end
   end
 

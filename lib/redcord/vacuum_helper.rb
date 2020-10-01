@@ -21,7 +21,7 @@ module Redcord::VacuumHelper
   sig { params(model: T.class_of(Redcord::Base), index_attr: Symbol).void }
   def self._vacuum_index_attribute(model, index_attr)
     # Scan through all index attribute values by matching on Redcord:Model:index_attr:*
-    model.redis.scan_each(match: "#{model.model_key}:#{index_attr}:*") do |key|
+    model.redis.scan_each_shard("#{model.model_key}:#{index_attr}:*") do |key|
       _remove_stale_ids_from_set(model, key)
     end
   end
@@ -29,12 +29,17 @@ module Redcord::VacuumHelper
   sig { params(model: T.class_of(Redcord::Base), range_index_attr: Symbol).void }
   def self._vacuum_range_index_attribute(model, range_index_attr)
     range_index_set_key = "#{model.model_key}:#{range_index_attr}"
-    _remove_stale_ids_from_sorted_set(model, range_index_set_key)
+    range_index_set_nil_key = "#{range_index_set_key}:"
 
     # Handle nil values for range index attributes, which are stored in a normal
     # set at Redcord:Model:range_index_attr:
-    range_index_set_nil_key = "#{range_index_set_key}:"
-    _remove_stale_ids_from_set(model, range_index_set_nil_key)
+    model.redis.scan_each_shard("#{range_index_set_nil_key}*") do |key|
+      _remove_stale_ids_from_set(model, key)
+    end
+
+    model.redis.scan_each_shard("#{range_index_set_key}*") do |key|
+      _remove_stale_ids_from_sorted_set(model, key)
+    end
   end
 
   sig { params(model: T.class_of(Redcord::Base), set_key: String).void }
