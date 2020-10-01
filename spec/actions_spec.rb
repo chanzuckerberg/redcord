@@ -136,7 +136,16 @@ describe Redcord::Actions do
       non_existing_id = 1
 
       expect {
-        klass.find(non_existing_id)
+        begin
+          klass.find(non_existing_id)
+        rescue Redis::CommandError => e
+          if e.message != 'CLUSTERDOWN The cluster is down'
+            raise e
+          end
+
+          sleep(0.5)
+          retry
+        end
       }.to raise_error(Redcord::RecordNotFound)
 
       instance = klass.create!(value: 1)
