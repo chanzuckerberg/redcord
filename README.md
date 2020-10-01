@@ -82,17 +82,15 @@ Learn more: [Querying interface](docs/querying_interface.md)
 ### 5. Migrations
 Redcord provides a domain-specific language for updating model schemas on Redis called migrations. Migrations are stored in files which are executed against each Redis database used in the current Rails environment.
 
-Here's a migration that adds an index on user_id and adds a TTL on each user session:
-`db/redcord/migrate/20200504000000_create_user_session.rb`:
+Here's a migration that adds an new index on user_id:
+`db/redcord/migrate/20200504000000_add_index_user_id.rb`:
 ```ruby
-class CreateUserSession < Redcord::Migration
+class AddIndexUserId < Redcord::Migration
   def up
-    change_ttl_passive(UserSession)
     add_index(UserSession, :user_id)
   end
 
   def down
-    change_ttl_passive(UserSession, nil)
     remove_index(UserSession, :user_id)
   end
 end
@@ -102,14 +100,55 @@ Use the following rake command to run this migration
 ```bash
 $ rake redis:migrate
 redis                           direction                       version                         migration                       duration
-redis://127.0.0.1:6379/0        UP                              20200504000000                  Create user session           18.03934400959406 ms
+redis://127.0.0.1:6379/0        UP                              20200504000000                  Add index user id               18.03934400959406 ms
 
 Finished in 0.024 second
 ```
+Note: Redcord starts to maintain new indices as soon as `index :true` is set on a model (new ttl is also applied immediately). Migrations are only needed for syncing existing records.
 
 Learn more: [Migrations](docs/migrations.md)
 
-### 6. Monitoring
+### 6. Redis Cluster
+Redcord supports data sharding on a Redis cluster by using [hast tag](https://redis.io/topics/cluster-spec) to partition data on different redis nodes.
+
+When queries have to search through millions of records, the ZSET commands the queries use become CPU-intensive and might cause a spike in Redis server process CPU usage. Since Redis is mostly single-threaded,  scaling up the server to a larger instance won’t effectively absorb the load and relief the CPU. Under this circumstance, scaling out the server is the way to go!
+
+Here is an example, an example of sharding by an index attribute `region`.
+
+`user_session.rb`:
+```ruby
+class UserSession < T::Struct
+  include Redcord::Base
+
+  ttl 2.hours
+
+  attribute :user_id, Integer, index: true
+  attribute :session_id, String
+
+  attribute :region, String, index: true
+  shard_by_attribute :region
+end
+```
+
+`config/redcord.yml`:
+```ruby
+...
+production:
+  # See also https://github.com/redis/redis-rb#cluster-support
+  user_session:
+    cluster:
+    - redis://127.0.0.1:7000
+    - redis://127.0.0.1:7001
+    - redis://127.0.0.1:7002
+```
+
+Constraints:
+1. The sharded attribute cannot be updated
+2. All queries must have the sharded attribute as a query condition
+3. Only equality query conditions are allowed on the sharded attribute: `UserSession.where(region: 'u.s.', ...)`
+4. Operations cannot be atomic if they operate on different shards
+
+### 7. Monitoring
 Redcord reports metrics to a tracer (for example, [Datadog APM](https://docs.datadoghq.com/tracing/setup/ruby/#manual-instrumentation)) if it is configured.
 
 In `config/initializers/redcord.rb`, provide a block with a Ruby object that responds to  `.trace(<span_name>, <options hash>)`.
@@ -157,7 +196,6 @@ We recommend using Redcord on a Redis PaaS which has built-in failover support. 
 **Note:**
 - Set the Redis server to noevict
 - (optional) Take screenshots of the server regularly
-- Do not use Redis Cluster
 - Rely on fail-over instead of AOF persistency
 
 ## Contributing
