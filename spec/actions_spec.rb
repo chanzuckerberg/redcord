@@ -61,6 +61,14 @@ describe Redcord::Actions do
         instance.update!(value: '4')
       }.to raise_error(TypeError)
 
+
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        # Cannot update shard_by attribute
+        expect {
+          instance.update!(indexed_value: 4)
+        }.to raise_error(RuntimeError)
+      end
+
       instance.update!(value: 4)
       expect(instance.value).to eq 4
 
@@ -136,6 +144,9 @@ describe Redcord::Actions do
       non_existing_id = 1
 
       expect {
+        # CLUSTERDOWN is thrown occasionally on CI when a key does not exist.
+        # The cause of this behavior is currently unknown but likely due to the
+        # CI envrionment.
         begin
           klass.find(non_existing_id)
         rescue Redis::CommandError => e

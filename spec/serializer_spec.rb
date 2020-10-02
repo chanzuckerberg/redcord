@@ -92,7 +92,7 @@ describe Redcord::Serializer do
         klass.where(
           a: Redcord::RangeInterval.new(max: 3, max_exclusive: true),
         ).count
-      }.to raise_error(RuntimeError)
+      }.to raise_error(Redcord::WrongAttributeType)
     else
       queried_instances = klass.where(
         a: Redcord::RangeInterval.new(max: 3, max_exclusive: true),

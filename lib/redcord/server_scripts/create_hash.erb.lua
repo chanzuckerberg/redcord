@@ -26,8 +26,7 @@ if #KEYS ~= 2 then
 end
 
 local id, hash_tag = unpack(KEYS)
-local model = ARGV[1]
-local ttl = ARGV[2]
+local model, ttl = unpack(ARGV)
 local key = model .. ':id:' .. id
 
 local index_attr_pos = 5

@@ -156,12 +156,6 @@ class Redcord::Relation
     case condition
     when Integer, String
       "{#{condition}}"
-    when Array
-      if condition.size != 2 || condition.first != condition.last
-        raise 'Must query for equality on the sharded attribute'
-      end
-
-      "{#{condition.first}}"
     else
       raise "Does not support query condition #{condition} on a Redis Cluster"
     end
