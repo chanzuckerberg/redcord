@@ -65,6 +65,10 @@ module Redcord::Attribute
         raise "Cannot shard by a non-index attribute '#{attr}'"
       end
 
+      # shard_by_attribute is treated as a regular index attribute
+      class_variable_get(:@@index_attributes).add(attr)
+      class_variable_get(:@@range_index_attributes).delete(attr)
+
       class_variable_set(:@@shard_by_attribute, attr)
     end
 
@@ -108,7 +112,7 @@ module Redcord::Attribute
       default_tag = '__redcord_hash_tag_null__'
 
       if tag == default_tag
-        raise "#{attr}=#{default_tag} conflict with default hash_tag value"
+        raise "#{attr}=#{default_tag} conflicts with default hash_tag value"
       end
 
       "{#{tag || default_tag}}"

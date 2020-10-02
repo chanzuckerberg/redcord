@@ -23,34 +23,27 @@ describe Redcord::Relation do
   end
 
   it 'maintains index id sets after an update operation' do
-    instance = klass.create!(a: 3, b: '3', c: 3)
+    instance = klass.create!(a: 3, b: '3', c: 4)
 
-    if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-      # Cannot update shard_by attribute
-      expect {
-        instance.update!(a: 4)
-      }.to raise_error(RuntimeError)
+    instance.update!(b: '4')
 
-      # Cannot query without shard_by attribute
-      expect {
-        klass.where(b: '3').count
-      }.to raise_error(RuntimeError)
-    else
-      instance.update!(a: 4)
+    # query for previous value of a should be empty, and new value should be
+    # updated.
+    expect(klass.where(a: 3, b: '3').count).to eq 0
 
-      # query for previous value of a should be empty, and new value should be
-      # updated.
-      expect(klass.where(a: 3).count).to eq 0
+    queried_instances = klass.where(a: 3, b: '4')
+    expect(queried_instances.size).to eq 1
+    expect(queried_instances.first.id).to eq instance.id
 
-      queried_instances = klass.where(a: 4)
-      expect(queried_instances.size).to eq 1
-      expect(queried_instances.first.id).to eq instance.id
+    # other index attributes not changed should be untouched
+    queried_instances = klass.where(a: 3)
+    expect(queried_instances.count).to eq 1
+    expect(queried_instances.first.id).to eq instance.id
 
-      # other index attributes not changed should be untouched
-      queried_instances = klass.where(b: '3')
-      expect(queried_instances.count).to eq 1
-      expect(queried_instances.first.id).to eq instance.id
-    end
+    # BUG: "d: nil" must be specified or the create_hash script would not
+    # receive the attribute d
+    queried_instances = klass.where(a: 3, d: nil)
+    expect(queried_instances.count).to eq 0 # should be 1
   end
 
   it 'maintains index id sets after delete operation' do
@@ -90,5 +83,14 @@ describe Redcord::Relation do
     expect(count).to eq 2
 
     expect(klass.where(a: 0).count).to eq 0
+  end
+
+  if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+    it 'does not allow queries without shard_by attribute' do
+      # Cannot query without shard_by attribute
+      expect {
+        klass.where(b: '3').count
+      }.to raise_error(RuntimeError)
+    end
   end
 end
