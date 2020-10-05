@@ -24,6 +24,18 @@ module Redcord::Actions
   module ClassMethods
     extend T::Sig
 
+    sig { returns(Integer) }
+    def count
+      Redcord::Base.trace(
+       'redcord_actions_class_methods_count',
+        model_name: name,
+      ) do
+        res = 0
+        redis.scan_each_shard("#{model_key}:id:*") { res += 1 }
+        res
+      end
+    end
+
     sig { params(args: T::Hash[Symbol, T.untyped]).returns(T.untyped) }
     def create!(args)
       Redcord::Base.trace(
