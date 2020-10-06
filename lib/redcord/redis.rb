@@ -13,19 +13,26 @@ class Redcord::Redis < Redis
       ttl: T.nilable(Integer),
       index_attrs: T::Array[Symbol],
       range_index_attrs: T::Array[Symbol],
+      custom_index_attrs: T::Hash[Symbol, T::Array],
       hash_tag: T.nilable(String),
     ).returns(String)
   end
-  def create_hash_returning_id(key, args, ttl:, index_attrs:, range_index_attrs:, hash_tag: nil)
+  def create_hash_returning_id(key, args, ttl:, index_attrs:, range_index_attrs:, custom_index_attrs:, hash_tag: nil)
     Redcord::Base.trace(
       'redcord_redis_create_hash_returning_id',
       model_name: key,
     ) do
       id = "#{SecureRandom.uuid}#{hash_tag}"
+      custom_index_attrs_flat = custom_index_attrs.inject([]) do |result, (index_name, attrs)|
+        result << index_name
+        result << attrs.size
+        result + attrs
+      end
       run_script(
         :create_hash,
         keys: [id, hash_tag],
-        argv: [key, ttl, index_attrs.size, range_index_attrs.size] + index_attrs + range_index_attrs + args.to_a.flatten,
+        argv: [key, ttl, index_attrs.size, range_index_attrs.size, custom_index_attrs_flat.size] + 
+          index_attrs + range_index_attrs + custom_index_attrs_flat + args.to_a.flatten,
       )
       id
     end
@@ -80,22 +87,35 @@ class Redcord::Redis < Redis
     params(
       model: String,
       query_conditions: T::Hash[T.untyped, T.untyped],
-      select_attrs: T::Set[Symbol],
       index_attrs: T::Array[Symbol],
       range_index_attrs: T::Array[Symbol],
+      select_attrs: T::Set[Symbol],
+      custom_index_attrs: T::Array[Symbol],
       hash_tag: T.nilable(String),
+      index_name: T.nilable(Symbol),
     ).returns(T::Hash[Integer, T::Hash[T.untyped, T.untyped]])
   end
-  def find_by_attr(model, query_conditions, select_attrs=Set.new, index_attrs:, range_index_attrs:, hash_tag: nil)
+  def find_by_attr(
+        model,
+        query_conditions,
+        index_attrs:,
+        range_index_attrs:,
+        select_attrs: Set.new,
+        custom_index_attrs: Array.new,
+        hash_tag: nil,
+        index_name: nil
+      )
     Redcord::Base.trace(
       'redcord_redis_find_by_attr',
       model_name: model,
     ) do
+      index_name = index_name || :default
       conditions = query_conditions.to_a.flatten
       res = run_script(
         :find_by_attr,
         keys: [hash_tag],
-        argv: [model, index_attrs.size, range_index_attrs.size, conditions.size] + index_attrs + range_index_attrs + conditions + select_attrs.to_a.flatten
+        argv: [model, index_name, index_attrs.size, range_index_attrs.size, custom_index_attrs.size, conditions.size] + 
+          index_attrs + range_index_attrs + custom_index_attrs + conditions + select_attrs.to_a.flatten
       )
       # The Lua script will return this as a flattened array.
       # Convert the result into a hash of {id -> model hash}
@@ -110,18 +130,30 @@ class Redcord::Redis < Redis
       query_conditions: T::Hash[T.untyped, T.untyped],
       index_attrs: T::Array[Symbol],
       range_index_attrs: T::Array[Symbol],
+      custom_index_attrs: T::Array[Symbol],
       hash_tag: T.nilable(String),
+      index_name: T.nilable(Symbol),
     ).returns(Integer)
   end
-  def find_by_attr_count(model, query_conditions, index_attrs:, range_index_attrs:, hash_tag: nil)
+  def find_by_attr_count(
+        model,
+        query_conditions,
+        index_attrs:,
+        range_index_attrs:,
+        custom_index_attrs: Array.new,
+        hash_tag: nil,
+        index_name: nil
+      )
     Redcord::Base.trace(
       'redcord_redis_find_by_attr_count',
       model_name: model,
     ) do
+      index_name = index_name || :default
       run_script(
         :find_by_attr_count,
         keys: [hash_tag],
-        argv: [model, index_attrs.size, range_index_attrs.size] + index_attrs + range_index_attrs + query_conditions.to_a.flatten,
+        argv: [model, index_name, index_attrs.size, range_index_attrs.size, custom_index_attrs.size] +
+          index_attrs + range_index_attrs + custom_index_attrs + query_conditions.to_a.flatten
       )
     end
   end

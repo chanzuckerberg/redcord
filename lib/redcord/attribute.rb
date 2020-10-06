@@ -24,6 +24,7 @@ module Redcord::Attribute
     klass.include(InstanceMethods)
     klass.class_variable_set(:@@index_attributes, Set.new)
     klass.class_variable_set(:@@range_index_attributes, Set.new)
+    klass.class_variable_set(:@@custom_index_attributes, Hash.new)
     klass.class_variable_set(:@@ttl, nil)
     klass.class_variable_set(:@@shard_by_attribute, nil)
   end
@@ -53,6 +54,11 @@ module Redcord::Attribute
       else
         class_variable_get(:@@index_attributes) << attr
       end
+    end
+    
+    sig { params(index_name: Symbol, attrs: T::Array[Symbol]).void }
+    def custom_index(index_name, attrs)
+      class_variable_get(:@@custom_index_attributes)[index_name] = attrs
     end
 
     sig { params(duration: T.nilable(ActiveSupport::Duration)).void }
@@ -87,6 +93,11 @@ module Redcord::Attribute
     sig { returns(T::Array[Symbol]) }
     def _script_arg_range_index_attrs
       class_variable_get(:@@range_index_attributes).to_a
+    end
+
+    sig { returns(T::Hash[Symbol, T::Array]) }
+    def _script_arg_custom_index_attrs
+      class_variable_get(:@@custom_index_attributes)
     end
 
     private

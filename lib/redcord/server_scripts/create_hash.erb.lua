@@ -29,10 +29,12 @@ local id, hash_tag = unpack(KEYS)
 local model, ttl = unpack(ARGV)
 local key = model .. ':id:' .. id
 
-local index_attr_pos = 5
+local index_attr_pos = 6
 local range_attr_pos = index_attr_pos + ARGV[3]
+local custom_attr_pos = range_attr_pos + ARGV[4]
 -- Starting position of the attr_key-attr_val pairs
-local attr_pos = range_attr_pos + ARGV[4]
+local attr_pos = custom_attr_pos + ARGV[5]
+
 
 if redis.call('exists', key) ~= 0 then
   error(key .. ' already exists')
@@ -55,10 +57,23 @@ if #index_attr_keys > 0 then
     add_id_to_index_attr(hash_tag, model, attr_key, attrs_hash[attr_key], id)
   end
 end
-local range_index_attr_keys = {unpack(ARGV, range_attr_pos, attr_pos - 1)}
+local range_index_attr_keys = {unpack(ARGV, range_attr_pos, custom_attr_pos - 1)}
 if #range_index_attr_keys > 0 then
   for _, attr_key in ipairs(range_index_attr_keys) do
     add_id_to_range_index_attr(hash_tag, model, attr_key, attrs_hash[attr_key], id)
   end
 end
+local custom_index_attr_keys = {unpack(ARGV, custom_attr_pos, attr_pos - 1)}
+
+local i = 1
+while i < #custom_index_attr_keys do
+  local index_name, attrs_num = custom_index_attr_keys[i], custom_index_attr_keys[i+1]
+  local attr_values = {}
+  for j, attr_key in ipairs({unpack(custom_index_attr_keys, i + 2, i + attrs_num + 1)}) do
+    attr_values[j] = attrs_hash[attr_key]
+  end
+  add_record_to_custom_index(hash_tag, model, index_name, attr_values, id)
+  i = i + 2 + attrs_num
+end
+
 return nil
