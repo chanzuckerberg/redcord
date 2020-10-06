@@ -36,30 +36,48 @@ end
 
 local model = ARGV[1]
 
-local index_attr_pos = 5
-local range_attr_pos = index_attr_pos + ARGV[2]
-local query_cond_pos = range_attr_pos + ARGV[3]
-local attr_selection_pos = query_cond_pos + ARGV[4]
-
-
-local index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(
-  KEYS[1],
-  model,
-  to_set({unpack(ARGV, index_attr_pos, range_attr_pos - 1)}),
-  to_set({unpack(ARGV, range_attr_pos, query_cond_pos - 1)}),
-  unpack(ARGV, query_cond_pos, attr_selection_pos - 1)
-))
+local index_name = ARGV[2]
+local index_attr_pos = 7
+local range_attr_pos = index_attr_pos + ARGV[3]
+local custom_attr_pos = range_attr_pos + ARGV[4]
+local query_cond_pos = custom_attr_pos + ARGV[5]
+local attr_selection_pos = query_cond_pos + ARGV[6]
 
 -- Get all ids which have the corresponding attribute values.
 local ids_set = nil
--- For normal sets, Redis has SINTER built in to return the set intersection
-if #index_sets > 0 then
-   ids_set = to_set(redis.call('sinter', unpack(index_sets)))
-end
--- For sorted sets, call helper function zinter_zrangebyscore, which calls
--- ZRANGEBYSCORE for each {redis_key, min, max} tuple and returns the set intersection
-if #range_index_sets > 0 then
-  ids_set = intersect_range_index_sets(ids_set, range_index_sets)
+
+if index_name == 'default' then
+  local index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(
+    KEYS[1],
+    model,
+    to_set({unpack(ARGV, index_attr_pos, range_attr_pos - 1)}),
+    to_set({unpack(ARGV, range_attr_pos, custom_attr_pos - 1)}),
+    unpack(ARGV, query_cond_pos, attr_selection_pos - 1)
+  ))
+
+  -- For normal sets, Redis has SINTER built in to return the set intersection
+  if #index_sets > 0 then
+    ids_set = to_set(redis.call('sinter', unpack(index_sets)))
+  end
+  -- For sorted sets, call helper function zinter_zrangebyscore, which calls
+  -- ZRANGEBYSCORE for each {redis_key, min, max} tuple and returns the set intersection
+  if #range_index_sets > 0 then
+    ids_set = intersect_range_index_sets(ids_set, range_index_sets)
+  end
+else
+  local custom_index_attrs = {unpack(ARGV, custom_attr_pos, query_cond_pos - 1)}
+  local custom_index_query = validate_and_parse_query_conditions_custom(
+    KEYS[1],
+    model,
+    index_name,
+    custom_index_attrs,
+    {unpack(ARGV, query_cond_pos, attr_selection_pos - 1)}
+  )
+  if #custom_index_query > 0 then
+    ids_set = get_custom_index_set(ids_set, custom_index_query)
+  else
+    ids_set = {}
+  end
 end
 
 -- Query for the hashes for all ids in the set intersection

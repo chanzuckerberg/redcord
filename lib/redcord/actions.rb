@@ -50,6 +50,7 @@ module Redcord::Actions
           ttl: _script_arg_ttl,
           index_attrs: _script_arg_index_attrs,
           range_index_attrs: _script_arg_range_index_attrs,
+          custom_index_attrs: _script_arg_custom_index_attrs,
           hash_tag: instance.hash_tag,
         )
         instance.send(:id=, id)
@@ -85,7 +86,8 @@ module Redcord::Actions
 
     sig { params(args: T::Hash[Symbol, T.untyped]).returns(Redcord::Relation) }
     def where(args)
-      Redcord::Relation.new(T.let(self, T.untyped)).where(args)
+      index_name = args.delete(:index)
+      Redcord::Relation.new(T.let(self, T.untyped), index_name: index_name).where(args)
     end
 
     sig { params(id: T.untyped).returns(T::Boolean) }

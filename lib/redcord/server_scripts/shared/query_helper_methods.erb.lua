@@ -10,6 +10,24 @@ local function intersect_range_index_sets(set, tuples)
   return set
 end
 
+local function get_custom_index_set(set, query)
+  local ids = {}
+  local index_strings = {}
+  local sep = ':'
+  local id = ''
+  local key, min, max = unpack(query)
+  index_strings = redis.call('zrangebylex', key, min, max)
+  for _, index_string in ipairs(index_strings) do
+    for str in string.gmatch(index_string, "([^"..sep.."]+)") do
+      id = str
+    end
+    table.insert(ids, id)
+  end
+  set = set_list_intersect(set, ids)
+  
+  return set
+end
+
 -- Gets the hash of all the ids given. Returns the results in a
 -- table, as well as any ids not found in Redis as a separate table
 local function batch_hget(model, ids_set, ...)
@@ -105,4 +123,57 @@ local function validate_and_parse_query_conditions(hash_tag, model, index_attrs,
     end
   end
   return {index_sets, range_index_sets}
+end
+
+local function validate_and_parse_query_conditions_custom(hash_tag, model, index_name, custom_index_attrs, args)
+  if #custom_index_attrs == 0 then
+    error('Index ' .. index_name .. ' does not exist')
+  end
+  local sep = ':'
+  local i = 1
+  local j = 1
+  local min, value_string_min, query_string_min = '', '', ''
+  local max, value_string_max, query_string_max = '', '', ''
+  local is_prev_attr_query_range = false
+  while i <= #args do
+    if is_prev_attr_query_range then
+      error('Range can be applied to the last attribute of query only')
+    end  
+    local attr_key = args[i]
+    if custom_index_attrs[j] == attr_key then
+      min, max = args[i+1], args[i+2]
+      if min then
+        string.gsub (min, '(', '')
+      end
+      if max then
+        string.gsub (max, '(', '')
+      end
+      if j > 1 then
+        query_string_min = query_string_min .. sep
+        query_string_max = query_string_max .. sep
+      else
+        query_string_min = query_string_min .. '['
+        query_string_max = query_string_max .. '['
+      end
+      if min ~= '-inf' then
+        value_string_min = adjust_string_length(min)
+        query_string_min = query_string_min .. value_string_min
+      end
+      if max ~= '+inf' then
+        value_string_max = adjust_string_length(max)
+        query_string_max = query_string_max .. value_string_max
+      else
+        query_string_max = query_string_max .. '~'
+      end
+      if min ~= max then
+        is_prev_attr_query_range = true
+      end
+      j = j + 1
+      i = i + 3
+    else
+      error(attr_key .. ' in position ' .. j .. ' is not supported by index ' .. index_name)
+    end
+  end
+  query_string_max = query_string_max .. sep .. '~'
+  return {model .. ':' .. 'custom_index_' .. index_name .. hash_tag, query_string_min, query_string_max}
 end
