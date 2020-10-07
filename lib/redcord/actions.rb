@@ -101,6 +101,7 @@ module Redcord::Actions
           id,
           index_attrs: _script_arg_index_attrs,
           range_index_attrs: _script_arg_range_index_attrs,
+          custom_index_attrs: _script_arg_custom_index_attrs,
         ) == 1
       end
     end
@@ -148,6 +149,7 @@ module Redcord::Actions
             ttl: self.class._script_arg_ttl,
             index_attrs: self.class._script_arg_index_attrs,
             range_index_attrs: self.class._script_arg_range_index_attrs,
+            custom_index_attrs: self.class._script_arg_custom_index_attrs,
             hash_tag: hash_tag,
           )
           send(:id=, _id)
@@ -159,6 +161,7 @@ module Redcord::Actions
             ttl: self.class._script_arg_ttl,
             index_attrs: self.class._script_arg_index_attrs,
             range_index_attrs: self.class._script_arg_range_index_attrs,
+            custom_index_attrs: self.class._script_arg_custom_index_attrs,
             hash_tag: hash_tag,
           )
         end
@@ -190,6 +193,7 @@ module Redcord::Actions
             ttl: self.class._script_arg_ttl,
             index_attrs: self.class._script_arg_index_attrs,
             range_index_attrs: self.class._script_arg_range_index_attrs,
+            custom_index_attrs: self.class._script_arg_custom_index_attrs,
             hash_tag: hash_tag,
           )
         end

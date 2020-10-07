@@ -46,18 +46,29 @@ class Redcord::Redis < Redis
       ttl: T.nilable(Integer),
       index_attrs: T::Array[Symbol],
       range_index_attrs: T::Array[Symbol],
+      custom_index_attrs: T::Hash[Symbol, T::Array],
       hash_tag: T.nilable(String),
     ).void
   end
-  def update_hash(model, id, args, ttl:, index_attrs:, range_index_attrs:, hash_tag:)
+  def update_hash(model, id, args, ttl:, index_attrs:, range_index_attrs:, custom_index_attrs:, hash_tag:)
     Redcord::Base.trace(
       'redcord_redis_update_hash',
       model_name: model,
     ) do
+      custom_index_attrs_flat = custom_index_attrs.inject([]) do |result, (index_name, attrs)|
+        if !(args.keys.to_set & attrs.to_set).empty?
+          result << index_name
+          result << attrs.size
+          result + attrs
+        else
+          result
+        end
+      end
       run_script(
         :update_hash,
         keys: [id, hash_tag],
-        argv: [model, ttl, index_attrs.size, range_index_attrs.size] + index_attrs + range_index_attrs + args.to_a.flatten,
+        argv: [model, ttl, index_attrs.size, range_index_attrs.size, custom_index_attrs_flat.size] +
+          index_attrs + range_index_attrs + custom_index_attrs_flat + args.to_a.flatten,
       )
     end
   end
@@ -68,17 +79,19 @@ class Redcord::Redis < Redis
       id: String,
       index_attrs: T::Array[Symbol],
       range_index_attrs: T::Array[Symbol],
+      custom_index_attrs: T::Hash[Symbol, T::Array],
     ).returns(Integer)
   end
-  def delete_hash(model, id, index_attrs:, range_index_attrs:)
+  def delete_hash(model, id, index_attrs:, range_index_attrs:, custom_index_attrs:)
     Redcord::Base.trace(
       'redcord_redis_delete_hash',
       model_name: model,
     ) do
+      custom_index_names = custom_index_attrs.keys
       run_script(
         :delete_hash,
         keys: [id, id.match(/\{.*\}$/)&.send(:[], 0)],
-        argv: [model, index_attrs.size, range_index_attrs.size] + index_attrs + range_index_attrs,
+        argv: [model, index_attrs.size, range_index_attrs.size] + index_attrs + range_index_attrs + custom_index_names,
       )
     end
   end

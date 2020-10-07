@@ -249,6 +249,11 @@ describe Redcord::Actions do
     let!(:instance) { klass.create!(value: 1, time_value: time_now) }
     let!(:instance_2) { klass.create!(value: 2, time_value: nil) }
 
+    it 'creates an attribute in index content hash for custom index' do
+      index_string = klass.redis.hget("#{klass.model_key}:custom_index_first_content", instance.id)
+      expect(index_string).to_not be(nil)
+    end
+
     it 'returns instance by int attribute query' do
       expect(klass.where(value: 1, index: :first).to_a.first.id).to eq(instance.id)
     end
@@ -297,6 +302,23 @@ describe Redcord::Actions do
       expect {
         klass.where(indexed_value: nil, index: :first).to_a
       }.to raise_error(Redcord::AttributeNotIndexed)
+    end
+
+    it 'cleans up custom index after deleting record' do
+      instance_id = instance.id
+      instance.destroy
+      expect(klass.where(value: 1, index: :first).count).to eq(0)
+      index_string = klass.redis.hget("#{klass.model_key}:custom_index_first_content", instance_id)
+      expect(index_string).to be(nil)
+    end
+
+    it 'updates custom index on record update' do
+      interval = Redcord::RangeInterval.new(min: time_now - 10.seconds)
+      expect(klass.where(value: 2, time_value: interval, index: :first).count).to eq(0)
+      expect(klass.where(time_value: interval, index: :second).count).to eq(1)
+      instance_2.update!(time_value: time_now)
+      expect(klass.where(value: 2, time_value: interval, index: :first).count).to eq(1)
+      expect(klass.where(time_value: interval, index: :second).count).to eq(2)
     end
   end
 end
