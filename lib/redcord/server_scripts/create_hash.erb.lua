@@ -63,8 +63,8 @@ if #range_index_attr_keys > 0 then
     add_id_to_range_index_attr(hash_tag, model, attr_key, attrs_hash[attr_key], id)
   end
 end
-local custom_index_attr_keys = {unpack(ARGV, custom_attr_pos, attr_pos - 1)}
 
+local custom_index_attr_keys = {unpack(ARGV, custom_attr_pos, attr_pos - 1)}
 local i = 1
 while i < #custom_index_attr_keys do
   local index_name, attrs_num = custom_index_attr_keys[i], custom_index_attr_keys[i+1]
