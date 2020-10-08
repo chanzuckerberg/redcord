@@ -56,7 +56,7 @@ describe Redcord::Attribute do
     ).to eq(2.hour)
   end
 
-  it 'validates attribute presence in custom index: order A' do
+  it 'validates shard_by attribute presence in custom index: order A' do
     expect {
       Class.new(T::Struct) do
         include Redcord::Base
@@ -78,7 +78,7 @@ describe Redcord::Attribute do
     }.to_not raise_error()
   end
 
-  it 'validates attribute presence in custom index: order B' do
+  it 'validates shard_by attribute presence in custom index: order B' do
     expect {
       Class.new(T::Struct) do
         include Redcord::Base

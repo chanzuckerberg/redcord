@@ -31,6 +31,7 @@ local function set_list_intersect(set, list)
   return set_intersect
 end
 
+-- Helper function to transform attribute values so that they become comparable as strings
 local function adjust_string_length(value)
   if value == '' or value == nil then
     return '!'

@@ -16,7 +16,8 @@ The id of the created hash as a string.
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 
 --   KEYS = id hash_tag
---   ARGV = Model.name ttl index_attr_size range_index_attr_size [index_attr_key ...] [range_index_attr_key ...] attr_key attr_val [attr_key attr_val ..]
+--   ARGV = Model.name ttl index_attr_size range_index_attr_size custom_index_attrs_flat_size [index_attr_key ...] [range_index_attr_key ...]
+--          [custom_index_name attrs_size [custom_index_attr_key ...] ...] attr_key attr_val [attr_key attr_val ..]
 <%= include_lua 'shared/lua_helper_methods' %>
 <%= include_lua 'shared/index_helper_methods' %>
 
@@ -64,6 +65,7 @@ if #range_index_attr_keys > 0 then
   end
 end
 
+-- Add a record to every custom index
 local custom_index_attr_keys = {unpack(ARGV, custom_attr_pos, attr_pos - 1)}
 local i = 1
 while i < #custom_index_attr_keys do
