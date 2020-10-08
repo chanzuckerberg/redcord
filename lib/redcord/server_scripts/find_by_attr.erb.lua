@@ -16,7 +16,8 @@ A hash of id:model of all the ids that match the query conditions given.
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 --
 --   KEYS[1] = hash_tag
---   ARGV = Model.name num_index_attr num_range_index_attr num_query_conditions [index_attrs ...] [range_index_attrs ...] [query_conidtions ...] [attr_selections ...]
+--   ARGV = Model.name custom_index_name num_index_attr num_range_index_attr num_custom_index_attr num_query_conditions 
+--          [index_attrs ...] [range_index_attrs ...] [custom_index_attrs ...] [query_conidtions ...] [attr_selections ...]
 --          [query_conidtions ...]: [attr_key1 attr_val1 attr_key2 attr_val2 ...]
 --          [attr_selections ...]: [attr_key1 attr_key2 ...]
 --   For equality query conditions, key value pairs are expected to appear in
@@ -46,6 +47,7 @@ local attr_selection_pos = query_cond_pos + ARGV[6]
 -- Get all ids which have the corresponding attribute values.
 local ids_set = nil
 
+-- If custom index name is empty -> use single-attribute indices
 if index_name == '' then
   local index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(
     KEYS[1],

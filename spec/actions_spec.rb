@@ -313,10 +313,11 @@ describe Redcord::Actions do
       }.to raise_error(Redis::CommandError)
     end
 
-    it 'raises error when range query conditions are used not on trhe last attribute in a query' do
+    it 'raises error when range query conditions are used not on the last attribute in a query' do
       interval = Redcord::RangeInterval.new(min: 0)
       if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         expect {
+          # Range query used on shard_by attribute
           klass.where(indexed_value: interval, time_value: nil, index: :first).to_a
         }.to raise_error(RuntimeError)
       else
@@ -328,7 +329,7 @@ describe Redcord::Actions do
 
     it 'raises error when attributes are not part of specified index' do
       expect {
-        klass.where(other_value: nil, index: :first).to_a
+        klass.where(index_value: 1, time_value: nil, other_value: nil, index: :first).to_a
       }.to raise_error(Redcord::AttributeNotIndexed)
     end
 

@@ -17,7 +17,8 @@ nil
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 --
 --   KEYS = redcord_instance.id hash_tag
---   ARGV = Model.name ttl index_attr_size range_index_attr_size [index_attr_key ...] [range_index_attr_key ...] attr_key attr_val [attr_key attr_val ..]
+--   ARGV = Model.name ttl index_attr_size range_index_attr_size custom_index_attrs_flat_size [index_attr_key ...] [range_index_attr_key ...]
+--          [custom_index_name attrs_size [custom_index_attr_key ...] ...] attr_key attr_val [attr_key attr_val ..]
 <%= include_lua 'shared/lua_helper_methods' %>
 <%= include_lua 'shared/index_helper_methods' %>
 

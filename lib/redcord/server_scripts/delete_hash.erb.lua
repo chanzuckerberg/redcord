@@ -13,7 +13,7 @@ The number of keys deleted from Redis
 -- form of a one-based array (so KEYS[1], KEYS[2], ...).
 --
 --   KEYS = id, hash_tag
---   ARGV = Model.name index_attr_size [index_attr_key ...] [range_index_attr_key ...]
+--   ARGV = Model.name index_attr_size range_index_attr_size [index_attr_key ...] [range_index_attr_key ...] [custom_index_name ...]
 <%= include_lua 'shared/index_helper_methods' %>
 
 -- Validate input to script before making Redis db calls
@@ -47,6 +47,7 @@ if #range_index_attr_keys > 0 then
     delete_id_from_range_index_attr(hash_tag, model, range_index_attr_keys[i], attr_vals[i], id)
   end
 end
+-- Delete record from custom indexes
 local custom_index_names = {unpack(ARGV, custom_index_pos)}
 for _, index_name in ipairs(custom_index_names) do
   delete_record_from_custom_index(hash_tag, model, index_name, id)

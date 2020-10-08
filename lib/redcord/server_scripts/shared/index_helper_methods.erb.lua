@@ -78,7 +78,7 @@ local function add_record_to_custom_index(hash_tag, model, index_name, attr_valu
   end
 end
 
--- Remove an id from the sorted id set of the custom index
+-- Remove a record from the sorted set of the custom index
 local function delete_record_from_custom_index(hash_tag, model, index_name, id)
   local sep = ':'
   local index_key = model .. sep .. 'custom_index_' .. index_name .. hash_tag

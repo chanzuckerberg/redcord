@@ -10,6 +10,7 @@ local function intersect_range_index_sets(set, tuples)
   return set
 end
 
+-- Runs a query against a sorted set, extracts ids. Returns a set of ids.
 local function get_custom_index_set(set, query)
   local ids = {}
   local index_strings = {}
@@ -125,6 +126,8 @@ local function validate_and_parse_query_conditions(hash_tag, model, index_attrs,
   return {index_sets, range_index_sets}
 end
 
+-- Validates that attributes in query are in correct order and range condition is applied only on the last attribute.
+-- Returns a table {index_key, min_string, max_string} to be used for index query.
 local function validate_and_parse_query_conditions_custom(hash_tag, model, index_name, custom_index_attrs, args)
   if #custom_index_attrs == 0 then
     error('Index ' .. index_name .. ' does not exist')

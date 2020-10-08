@@ -16,7 +16,8 @@ An integer number of records that match the query conditions given.
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 --
 --   KEYS[1] = hash_tag
---   ARGV = Model.name num_index_attr num_range_index_attr num_query_conditions ...
+--   ARGV = Model.name custom_index_name num_index_attr num_range_index_attr num_custom_index_attr
+--          [index_attrs ...] [range_index_attrs ...] [custom_index_attrs ...] [query_conidtions ...]
 --
 --   For equality query conditions, key value pairs are expected to appear in
 --   the KEYS array as [attr_key, attr_val]
