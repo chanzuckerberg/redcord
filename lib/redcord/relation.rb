@@ -161,6 +161,9 @@ class Redcord::Relation
     end
 
     condition = query_conditions[attr]
+    if index_name and condition.first == condition.last
+      condition = condition.first
+    end
     case condition
     when Integer, String
       "{#{condition}}"
