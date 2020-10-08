@@ -24,7 +24,7 @@ local function get_custom_index_set(set, query)
     end
     table.insert(ids, id)
   end
-  set = set_list_intersect(set, ids)
+  set = to_set(ids)
   
   return set
 end
