@@ -6,7 +6,7 @@ describe Redcord::VacuumHelper do
   class RedcordVacuumSpecModel < T::Struct
     include Redcord::Base
 
-    attribute :a, T.nilable(String), index: true
+    attribute :a, String, index: true
     attribute :b, T.nilable(Integer), index: true
 
     if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
@@ -37,7 +37,7 @@ describe Redcord::VacuumHelper do
     end
 
     it 'vacuums range index attributes with nil values' do
-      instance = RedcordVacuumSpecModel.create!(b: nil)
+      instance = RedcordVacuumSpecModel.create!(a: 'x', b: nil)
       # The nil range index set should contain the id
       expect(RedcordVacuumSpecModel.redis.sismember("#{model_key}:b:#{instance.hash_tag}", instance.id)).to be true
 
