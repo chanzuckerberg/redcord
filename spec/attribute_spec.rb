@@ -55,4 +55,48 @@ describe Redcord::Attribute do
       another_klass.class_variable_get(:@@ttl),
     ).to eq(2.hour)
   end
+
+  it 'validates attribute presence in custom index: order A' do
+    expect {
+      Class.new(T::Struct) do
+        include Redcord::Base
+        attribute :a, Integer
+        attribute :b, Integer, index: true
+        custom_index :main, [:a, :b]
+        shard_by_attribute :b
+      end
+    # shard_by attribute 'b' must be placed first
+    }.to raise_error(RuntimeError)
+    expect {
+      Class.new(T::Struct) do
+        include Redcord::Base
+        attribute :a, Integer
+        attribute :b, Integer, index: true
+        custom_index :main, [:b, :a]
+        shard_by_attribute :b
+      end
+    }.to_not raise_error()
+  end
+
+  it 'validates attribute presence in custom index: order B' do
+    expect {
+      Class.new(T::Struct) do
+        include Redcord::Base
+        attribute :a, Integer
+        attribute :b, Integer, index: true
+        shard_by_attribute :b
+        custom_index :main, [:a, :b]
+      end
+    # shard_by attribute 'b' must be placed first
+    }.to raise_error(RuntimeError)
+    expect {
+      Class.new(T::Struct) do
+        include Redcord::Base
+        attribute :a, Integer
+        attribute :b, Integer, index: true
+        shard_by_attribute :b
+        custom_index :main, [:b, :a]
+      end
+    }.to_not raise_error()
+  end
 end

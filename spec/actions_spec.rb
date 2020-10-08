@@ -10,11 +10,13 @@ describe Redcord::Actions do
       attribute :value, T.nilable(Integer)
       attribute :time_value, T.nilable(Time)
       attribute :indexed_value, T.nilable(Integer), index: true
-      custom_index :first, [:value, :time_value]
-      custom_index :second, [:time_value]
+      attribute :other_value, T.nilable(Integer), index: true
+      custom_index :first, [:indexed_value, :time_value]
 
       if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         shard_by_attribute :indexed_value
+      else
+        custom_index :second, [:time_value]
       end
 
       def self.name
@@ -252,79 +254,101 @@ describe Redcord::Actions do
 
   context 'custom indexes: ' do
     let!(:time_now) { Time.zone.now}
-    let!(:instance) { klass.create!(value: 1, time_value: time_now) }
-    let!(:instance_2) { klass.create!(value: 2, time_value: nil) }
+    let!(:instance) { klass.create!(indexed_value: 1, time_value: time_now) }
+    let!(:instance_2) { klass.create!(indexed_value: 2, time_value: nil) }
 
     it 'creates an attribute in index content hash for custom index' do
-      index_string = klass.redis.hget("#{klass.model_key}:custom_index_first_content", instance.id)
-      expect(index_string).to_not be(nil)
+      unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        index_string = klass.redis.hget("#{klass.model_key}:custom_index_first_content", instance.id)
+        expect(index_string).to_not be(nil)
+      end
     end
 
     it 'returns instance by int attribute query' do
-      expect(klass.where(value: 1, index: :first).to_a.first.id).to eq(instance.id)
+      expect(klass.where(indexed_value: 1, index: :first).to_a.first.id).to eq(instance.id)
     end
 
     it 'returns count by int attribute query' do
-      expect(klass.where(value: 1, index: :first).count).to eq(1)
-      expect(klass.where(value: 3, index: :first).count).to eq(0)
+      expect(klass.where(indexed_value: 1, index: :first).count).to eq(1)
+      expect(klass.where(indexed_value: 3, index: :first).count).to eq(0)
     end
 
     it 'returns instance by time attribute range query' do
       interval = Redcord::RangeInterval.new(min: time_now - 10.seconds)
-      expect(klass.where(time_value: interval, index: :second).to_a.first.id).to eq(instance.id)
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        expect {
+          klass.where(time_value: interval, index: :second).to_a
+        }.to raise_error(Redcord::AttributeNotIndexed)
+      else
+        expect(klass.where(time_value: interval, index: :second).to_a.first.id).to eq(instance.id)
+      end
     end
 
     it 'returns instance by attribute is nil query' do
-      expect(klass.where(time_value: nil, index: :second).to_a.first.id).to eq(instance_2.id)
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        expect {
+          klass.where(time_value: nil, index: :second).to_a
+        }.to raise_error(Redcord::AttributeNotIndexed)
+      else
+        expect(klass.where(time_value: nil, index: :second).to_a.first.id).to eq(instance_2.id)
+      end
     end
 
     it 'returns instance by int and time attributes range query' do
       interval = Redcord::RangeInterval.new(min: time_now - 10.seconds)
-      expect(klass.where(value: 1, time_value: interval, index: :first).to_a.first.id).to eq(instance.id)
+      expect(klass.where(indexed_value: 1, time_value: interval, index: :first).to_a.first.id).to eq(instance.id)
     end
 
     it 'returns instance by int and time attributes is nil query' do
-      expect(klass.where(value: 2, time_value: nil, index: :first).to_a.first.id).to eq(instance_2.id)
+      expect(klass.where(indexed_value: 2, time_value: nil, index: :first).to_a.first.id).to eq(instance_2.id)
     end
 
     it 'returns selected attributes' do
-      expect(klass.where(value: 1, index: :first).select(:time_value).first[:time_value].to_i).to eq(instance.time_value.to_i)
+      expect(klass.where(indexed_value: 1, index: :first).select(:time_value).first[:time_value].to_i).to eq(instance.time_value.to_i)
     end
 
     it 'raises error when attributes are in incorrect order' do
       expect {
-        klass.where(time_value: nil, index: :first).to_a
+        klass.where(time_value: nil, indexed_value: 1, index: :first).to_a
       }.to raise_error(Redis::CommandError)
     end
 
     it 'raises error when range query conditions are used not on trhe last attribute in a query' do
       interval = Redcord::RangeInterval.new(min: 0)
-      expect {
-        klass.where(value: interval, time_value: nil, index: :first).to_a
-      }.to raise_error(Redis::CommandError)
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        expect {
+          klass.where(indexed_value: interval, time_value: nil, index: :first).to_a
+        }.to raise_error(RuntimeError)
+      else
+        expect {
+          klass.where(indexed_value: interval, time_value: nil, index: :first).to_a
+        }.to raise_error(Redis::CommandError)
+      end
     end
 
     it 'raises error when attributes are not part of specified index' do
       expect {
-        klass.where(indexed_value: nil, index: :first).to_a
+        klass.where(other_value: nil, index: :first).to_a
       }.to raise_error(Redcord::AttributeNotIndexed)
     end
 
     it 'cleans up custom index after deleting record' do
       instance_id = instance.id
       instance.destroy
-      expect(klass.where(value: 1, index: :first).count).to eq(0)
-      index_string = klass.redis.hget("#{klass.model_key}:custom_index_first_content", instance_id)
-      expect(index_string).to be(nil)
+      expect(klass.where(indexed_value: 1, index: :first).count).to eq(0)
+      unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        index_string = klass.redis.hget("#{klass.model_key}:custom_index_first_content", instance_id)
+        expect(index_string).to be(nil)
+      end
     end
 
     it 'updates custom index on record update' do
       interval = Redcord::RangeInterval.new(min: time_now - 10.seconds)
-      expect(klass.where(value: 2, time_value: interval, index: :first).count).to eq(0)
-      expect(klass.where(time_value: interval, index: :second).count).to eq(1)
+      expect(klass.where(indexed_value: 2, time_value: interval, index: :first).count).to eq(0)
+      expect(klass.where(time_value: interval, index: :second).count).to eq(1) unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
       instance_2.update!(time_value: time_now)
-      expect(klass.where(value: 2, time_value: interval, index: :first).count).to eq(1)
-      expect(klass.where(time_value: interval, index: :second).count).to eq(2)
+      expect(klass.where(indexed_value: 2, time_value: interval, index: :first).count).to eq(1)
+      expect(klass.where(time_value: interval, index: :second).count).to eq(2) unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
     end
   end
 end
