@@ -33,7 +33,15 @@ describe Redcord::Actions do
 
   context 'create' do
     it '#create!' do
-      instance = klass.create!(value: 3, indexed_value: 3)
+      begin
+        instance = klass.create!(value: 3, indexed_value: 3)
+      rescue Redis::CommandError => e
+        if e.message != 'CLUSTERDOWN The cluster is down'
+          raise e
+        end
+        sleep(0.5)
+        retry
+      end
       another_instance = klass.find(instance.id)
       expect(instance.value).to eq another_instance.value
       expect(klass.count).to eq 1
@@ -142,7 +150,15 @@ describe Redcord::Actions do
     end
 
     it 'resets ttl actively' do
-      instance = klass.create!(value: 3, indexed_value: 1)
+      begin
+        instance = klass.create!(value: 3, indexed_value: 1)
+      rescue Redis::CommandError => e
+        if e.message != 'CLUSTERDOWN The cluster is down'
+          raise e
+        end
+        sleep(0.5)
+        retry
+      end
 
       klass.ttl(2.days)
       expect(klass.redis.ttl(instance.instance_key)).to eq(-1)
