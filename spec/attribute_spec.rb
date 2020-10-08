@@ -110,4 +110,15 @@ describe Redcord::Attribute do
     # Cannot shard by a nilable attribute 'a'
     }.to raise_error(RuntimeError)
   end
+
+  it 'validates custom index attributes have allowed type' do
+    expect {
+      Class.new(T::Struct) do
+        include Redcord::Base
+        attribute :a, String, index: true
+        custom_index :main, [:a]
+      end
+    # Custom index doesn't support 'String' attributes.
+    }.to raise_error(RuntimeError)
+  end
 end

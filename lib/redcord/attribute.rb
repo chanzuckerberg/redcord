@@ -18,6 +18,15 @@ module Redcord::Attribute
     )
   }
 
+  # Implicitly determine what data type can be a used in custom index on Redis based on Ruby type.
+  CustomIndexType = T.type_alias {
+    T.any(
+      Float,
+      Integer,
+      Time,
+    )
+  }
+  
   sig { params(klass: T.class_of(T::Struct)).void }
   def self.included(klass)
     klass.extend(ClassMethods)
@@ -58,6 +67,12 @@ module Redcord::Attribute
     
     sig { params(index_name: Symbol, attrs: T::Array[Symbol]).void }
     def custom_index(index_name, attrs)
+      attrs.each do |attr|
+        type = props[attr][:type]
+        if !can_custom_index?(type)
+          raise "Custom index doesn't support '#{type}' attributes."
+        end
+      end
       shard_by_attr = class_variable_get(:@@shard_by_attribute)
       if shard_by_attr and shard_by_attr != attrs.first
         raise "shard_by attribute '#{shard_by_attr}' must be placed first in '#{index_name}' index"
@@ -119,6 +134,13 @@ module Redcord::Attribute
       type = T::Types::Simple.new(type) if type.is_a?(Class)
 
       type.subtype_of?(RangeIndexType)
+    end
+  
+    sig { params(type: T.any(Class, T::Types::Base)).returns(T::Boolean) }
+    def can_custom_index?(type)
+      # Change Ruby raw type to Sorbet type in order to call subtype_of?
+      type = T::Types::Simple.new(type) if type.is_a?(Class)
+      type.subtype_of?(CustomIndexType)
     end
   end
 
