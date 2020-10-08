@@ -58,6 +58,10 @@ module Redcord::Attribute
     
     sig { params(index_name: Symbol, attrs: T::Array[Symbol]).void }
     def custom_index(index_name, attrs)
+      shard_by_attr = class_variable_get(:@@shard_by_attribute)
+      if shard_by_attr and shard_by_attr != attrs.first
+        raise "shard_by attribute '#{shard_by_attr}' must be placed first in '#{index_name}' index"
+      end 
       class_variable_get(:@@custom_index_attributes)[index_name] = attrs
     end
 
@@ -72,7 +76,11 @@ module Redcord::Attribute
           !class_variable_get(:@@range_index_attributes).include?(attr)
         raise "Cannot shard by a non-index attribute '#{attr}'"
       end
-
+      class_variable_get(:@@custom_index_attributes).each do |index_name, attrs|
+        if attr != attrs.first
+          raise "shard_by attribute '#{attr}' must be placed first in '#{index_name}' index"
+        end
+      end
       # shard_by_attribute is treated as a regular index attribute
       class_variable_get(:@@index_attributes).add(attr)
       class_variable_get(:@@range_index_attributes).delete(attr)
