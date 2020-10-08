@@ -9,7 +9,7 @@ describe Redcord::Actions do
 
       attribute :value, T.nilable(Integer)
       attribute :time_value, T.nilable(Time)
-      attribute :indexed_value, T.nilable(Integer), index: true
+      attribute :indexed_value, Integer, index: true
       attribute :other_value, T.nilable(Integer), index: true
       custom_index :first, [:indexed_value, :time_value]
 
@@ -33,7 +33,7 @@ describe Redcord::Actions do
 
   context 'create' do
     it '#create!' do
-      instance = klass.create!(value: 3)
+      instance = klass.create!(value: 3, indexed_value: 3)
       another_instance = klass.find(instance.id)
       expect(instance.value).to eq another_instance.value
       expect(klass.count).to eq 1
@@ -41,22 +41,22 @@ describe Redcord::Actions do
 
     it 'validates types' do
       # TODO: this should raise an error
-      klass.create!(value: '1')
+      klass.create!(indexed_value: '1')
     end
 
     it 'errors when uuids collide' do
       allow(SecureRandom).to receive(:uuid).and_return('fixed')
-      klass.create!(value: '1')
+      klass.create!(indexed_value: '1')
 
       expect {
-        klass.create!(value: '1')
+        klass.create!(indexed_value: '1')
       }.to raise_error(Redis::CommandError)
     end
   end
 
   context 'update' do
     it '#update!' do
-      instance = klass.create!(value: 3)
+      instance = klass.create!(value: 3, indexed_value: 1)
       expect(instance.value).to eq 3
 
       expect {
@@ -81,14 +81,14 @@ describe Redcord::Actions do
       another_instance = klass.find(instance.id)
       expect(instance.value).to eq another_instance.value
 
-      instance = klass.new(value: 3)
+      instance = klass.new(value: 3, indexed_value: 1)
       instance.update!(value: 4)
       another_instance = klass.find(instance.id)
       expect(instance.value).to eq another_instance.value
     end
 
     it '#save!' do
-      instance = klass.new(value: 3)
+      instance = klass.new(value: 3, indexed_value: 1)
       expect(instance.value).to eq 3
       expect(instance.updated_at).to be_nil
       expect(instance.id).to be_nil
@@ -114,7 +114,7 @@ describe Redcord::Actions do
     end
 
     it 'doesn\'t update redis until save!/update! is called' do
-      instance = klass.create!(value: 3)
+      instance = klass.create!(value: 3, indexed_value: 1)
       instance.value = 4
       expect(klass.count).to eq 1
 
@@ -128,7 +128,7 @@ describe Redcord::Actions do
     end
 
     it 'resets ttl' do
-      instance = klass.create!(value: 3)
+      instance = klass.create!(value: 3, indexed_value: 1)
 
       klass.ttl(2.days)
       expect(klass.redis.ttl(instance.instance_key)).to eq(-1)
@@ -142,7 +142,7 @@ describe Redcord::Actions do
     end
 
     it 'resets ttl actively' do
-      instance = klass.create!(value: 3)
+      instance = klass.create!(value: 3, indexed_value: 1)
 
       klass.ttl(2.days)
       expect(klass.redis.ttl(instance.instance_key)).to eq(-1)
@@ -150,7 +150,7 @@ describe Redcord::Actions do
       migrator.change_ttl_active(klass)
       expect(klass.redis.ttl(instance.instance_key) > 0).to be true
 
-      instance = klass.create!(value: 3)
+      instance = klass.create!(value: 3, indexed_value: 3)
       expect(klass.redis.ttl(instance.instance_key) > 0).to be true
     end
   end
@@ -175,7 +175,7 @@ describe Redcord::Actions do
         end
       }.to raise_error(Redcord::RecordNotFound)
 
-      instance = klass.create!(value: 1)
+      instance = klass.create!(value: 1, indexed_value: 1)
 
       another_instance = klass.find(instance.id)
 
@@ -207,7 +207,7 @@ describe Redcord::Actions do
   context 'delete' do
     it '#destroy' do
       expect(klass.count).to eq 0
-      instance = klass.create!(value: 1)
+      instance = klass.create!(value: 1, indexed_value: 1)
       expect(klass.count).to eq 1
 
       another_instance = klass.find(instance.id)
@@ -226,7 +226,7 @@ describe Redcord::Actions do
     end
 
     it 'does not save/update a destroyed record' do
-      instance = klass.create!(value: 1)
+      instance = klass.create!(value: 1, indexed_value: 1)
       expect(klass.count).to eq 1
       instance.destroy
       expect(klass.count).to eq 0
@@ -243,7 +243,7 @@ describe Redcord::Actions do
     end
 
     it 'deletes a non-existing record' do
-      instance = klass.new(value: 1)
+      instance = klass.new(value: 1, indexed_value: 1)
       expect(instance.id).to be_nil
       expect {
         instance.destroy
