@@ -122,7 +122,6 @@ class Redcord::Redis < Redis
       'redcord_redis_find_by_attr',
       model_name: model,
     ) do
-      index_name = index_name || :default
       conditions = query_conditions.to_a.flatten
       res = run_script(
         :find_by_attr,
@@ -161,7 +160,6 @@ class Redcord::Redis < Redis
       'redcord_redis_find_by_attr_count',
       model_name: model,
     ) do
-      index_name = index_name || :default
       run_script(
         :find_by_attr_count,
         keys: [hash_tag],

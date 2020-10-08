@@ -41,7 +41,7 @@ local query_cond_pos = custom_attr_pos + ARGV[5]
 -- Get all ids which have the corresponding attribute values.
 local ids_set = nil
 
-if index_name == 'default' then
+if index_name == '' then
   local index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(
     KEYS[1],
     model,
