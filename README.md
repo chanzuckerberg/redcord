@@ -67,7 +67,7 @@ user_session.save
 
 A shorthand for this is to use a hash mapping attribute names to the desired value:
 ```ruby
-user_session.update(updated_at: Time.zone.now) # TODO: support this
+user_session.update(updated_at: Time.zone.now)
 ```
 
 #### Delete
