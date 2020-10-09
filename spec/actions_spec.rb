@@ -202,8 +202,8 @@ describe Redcord::Actions do
       another_instance = klass.find(instance.id)
       expect(another_instance.id).to eq instance.id
       expect(another_instance.value).to eq instance.value
-      expect(another_instance.created_at.to_i).to eq instance.created_at.to_i
-      expect(another_instance.updated_at.to_i).to eq instance.updated_at.to_i
+      expect(another_instance.created_at).to eq instance.created_at
+      expect(another_instance.updated_at).to eq instance.updated_at
 
       instance.destroy
 

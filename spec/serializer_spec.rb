@@ -33,10 +33,10 @@ describe Redcord::Serializer do
     another_instance = klass.find_by(a: 3)
 
     expect(instance.d).to be_nil
-    expect(instance.created_at.to_i).to eq(now.to_i)
-    expect(instance.updated_at.to_i).to eq(now.to_i)
-    expect(instance.created_at.to_i).to eq(another_instance.created_at.to_i)
-    expect(instance.updated_at.to_i).to eq(another_instance.updated_at.to_i)
+    expect(instance.created_at).to eq(now)
+    expect(instance.updated_at).to eq(now)
+    expect(instance.created_at).to eq(another_instance.created_at)
+    expect(instance.updated_at).to eq(another_instance.updated_at)
   end
 
   it 'works with boolean types' do
