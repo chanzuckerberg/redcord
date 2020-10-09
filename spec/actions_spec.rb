@@ -102,6 +102,12 @@ describe Redcord::Actions do
       expect(instance.value).to eq another_instance.value
     end
 
+    it '#save' do
+      instance = klass.create!(value: 3, indexed_value: 1)
+      instance.destroy # e.g. the record is destroyed by another process
+      expect(instance.save).to be false
+    end
+
     it 'doesn\'t update redis until save!/update! is called' do
       instance = klass.create!(value: 3)
       instance.value = 4
