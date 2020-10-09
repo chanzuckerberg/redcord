@@ -31,10 +31,9 @@ module Redcord::Serializer
     sig { params(attribute: Symbol, val: T.untyped).returns(T.untyped) }
     def encode_attr_value(attribute, val)
       if !val.blank? && TIME_TYPES.include?(props[attribute][:type])
-        val = val.to_f
-      end
-
-      if val.is_a?(Float)
+        time_in_nano_sec = val.to_i * 1_000_000_000
+        time_in_nano_sec >= 0 ? time_in_nano_sec + val.nsec : time_in_nano_sec - val.nsec
+      elsif val.is_a?(Float)
         # Encode as round-trippable float64
         '%1.16e' % [val]
       else
@@ -45,10 +44,13 @@ module Redcord::Serializer
     sig { params(attribute: Symbol, val: T.untyped).returns(T.untyped) }
     def decode_attr_value(attribute, val)
       if !val.blank? && TIME_TYPES.include?(props[attribute][:type])
-        val = Time.zone.at(val.to_f)
-      end
+        val = val.to_i
+        nsec = val >= 0 ? val % 1_000_000_000 : -val % 1_000_000_000
 
-      val
+        Time.zone.at(val / 1_000_000_000, nsec, :nsec)
+      else
+        val
+      end
     end
 
     sig { params(attr_key: Symbol, attr_val: T.untyped).returns(T.untyped)}
