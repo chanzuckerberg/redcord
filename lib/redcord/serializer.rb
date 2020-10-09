@@ -34,7 +34,12 @@ module Redcord::Serializer
         val = val.to_f
       end
 
-      val
+      if val.is_a?(Float)
+        # Encode as round-trippable float64
+        '%1.16e' % [val]
+      else
+        val
+      end
     end
 
     sig { params(attribute: Symbol, val: T.untyped).returns(T.untyped) }

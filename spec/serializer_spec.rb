@@ -62,6 +62,13 @@ describe Redcord::Serializer do
       a: 3,
       float: Redcord::RangeInterval.new(min: 4.0)),
     ).to be_nil
+
+    # round trip
+    klass.create!(a: 3, b: '3', c: 3, float: 1.0 / 3.0)
+    expect(klass.find_by(
+      a: 3,
+      float: 1.0 / 3.0,
+    )).to_not be_nil
   end
 
   context 'when query is invalid' do
