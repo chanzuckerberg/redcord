@@ -57,7 +57,7 @@ module Redcord::Serializer
     def validate_and_encode_query(attr_key, attr_val, index_name)
       # Validate that attributes queried for are index attributes
       if index_name
-        custom_index_attributes = class_variable_get(:@@custom_index_attributes)[index_name] || Array.new  
+        custom_index_attributes = class_variable_get(:@@custom_index_attributes)[index_name]
         if !custom_index_attributes.include?(attr_key)
           raise(
             Redcord::AttributeNotIndexed,

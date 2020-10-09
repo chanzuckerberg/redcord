@@ -79,7 +79,7 @@ class Redcord::Relation
       query_conditions,
       index_attrs: model._script_arg_index_attrs,
       range_index_attrs: model._script_arg_range_index_attrs,
-      custom_index_attrs: model._script_arg_custom_index_attrs[index_name] || Array.new,
+      custom_index_attrs: model._script_arg_custom_index_attrs[index_name],
       hash_tag: extract_hash_tag!,
       index_name: index_name
     )
@@ -185,7 +185,7 @@ class Redcord::Relation
           select_attrs: select_attrs,
           index_attrs: model._script_arg_index_attrs,
           range_index_attrs: model._script_arg_range_index_attrs,
-          custom_index_attrs: model._script_arg_custom_index_attrs[index_name] || Array.new,
+          custom_index_attrs: model._script_arg_custom_index_attrs[index_name],
           hash_tag: extract_hash_tag!,
           index_name: index_name
         )
@@ -201,7 +201,7 @@ class Redcord::Relation
           query_conditions,
           index_attrs: model._script_arg_index_attrs,
           range_index_attrs: model._script_arg_range_index_attrs,
-          custom_index_attrs: model._script_arg_custom_index_attrs[index_name] || Array.new,
+          custom_index_attrs: model._script_arg_custom_index_attrs[index_name],
           hash_tag: extract_hash_tag!,
           index_name: index_name
         )
