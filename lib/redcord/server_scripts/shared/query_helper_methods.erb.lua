@@ -178,5 +178,5 @@ local function validate_and_parse_query_conditions_custom(hash_tag, model, index
     end
   end
   query_string_max = query_string_max .. sep .. '~'
-  return {model .. ':' .. 'custom_index_' .. index_name .. hash_tag, query_string_min, query_string_max}
+  return {model .. sep .. 'custom_index' .. sep .. index_name .. hash_tag, query_string_min, query_string_max}
 end

@@ -275,7 +275,7 @@ describe Redcord::Actions do
 
     it 'creates an attribute in index content hash for custom index' do
       unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        index_string = klass.redis.hget("#{klass.model_key}:custom_index_first_content", instance.id)
+        index_string = klass.redis.hget("#{klass.model_key}:custom_index:first_content", instance.id)
         expect(index_string).to_not be(nil)
       end
     end

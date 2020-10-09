@@ -73,15 +73,15 @@ local function add_record_to_custom_index(hash_tag, model, index_name, attr_valu
       attr_value_string = adjust_string_length(attr_value)
       index_string = index_string .. attr_value_string
     end
-    redis.call('zadd', model .. sep .. 'custom_index_' .. index_name .. hash_tag, 0, index_string .. sep .. id)
-    redis.call('hset', model .. sep .. 'custom_index_' .. index_name .. hash_tag .. '_content', id, index_string .. sep .. id)
+    redis.call('zadd', model .. sep .. 'custom_index' .. sep .. index_name .. hash_tag, 0, index_string .. sep .. id)
+    redis.call('hset', model .. sep .. 'custom_index' .. sep .. index_name .. hash_tag .. '_content', id, index_string .. sep .. id)
   end
 end
 
 -- Remove a record from the sorted set of the custom index
 local function delete_record_from_custom_index(hash_tag, model, index_name, id)
   local sep = ':'
-  local index_key = model .. sep .. 'custom_index_' .. index_name .. hash_tag
+  local index_key = model .. sep .. 'custom_index' .. sep .. index_name .. hash_tag
   local index_string = redis.call('hget', index_key .. '_content', id)
   if index_string then
     redis.call('zremrangebylex', index_key, '[' .. index_string, '[' .. index_string)
