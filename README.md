@@ -62,7 +62,7 @@ Once a Redcord object has been retrieved, its attributes can be modified and it 
 ```ruby
 user_session = UserSession.find_by(user_id: user.id)
 user_session.updated_at = Time.zone.now
-user_session.save # TODO: support this
+user_session.save
 ```
 
 A shorthand for this is to use a hash mapping attribute names to the desired value:

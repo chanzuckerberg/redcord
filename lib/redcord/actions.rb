@@ -163,6 +163,16 @@ module Redcord::Actions
       end
     end
 
+    sig { returns(T::Boolean) }
+    def save
+      save!
+
+      true
+    rescue Redis::CommandError
+      # TODO: break down Redis::CommandError by parsing the error message
+      false
+    end
+
     sig { params(args: T::Hash[Symbol, T.untyped]).void }
     def update!(args = {})
       Redcord::Base.trace(
