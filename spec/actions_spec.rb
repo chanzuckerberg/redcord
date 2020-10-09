@@ -82,6 +82,12 @@ describe Redcord::Actions do
       expect(instance.value).to eq another_instance.value
     end
 
+    it '#update' do
+      instance = klass.create!(value: 3, indexed_value: 1)
+      instance.destroy # e.g. the record is destroyed by another process
+      expect(instance.update(value: 4)).to be false
+    end
+
     it '#save!' do
       instance = klass.new(value: 3)
       expect(instance.value).to eq 3
