@@ -64,6 +64,10 @@ module Redcord::Serializer
             "#{attr_key} is not a part of #{index_name} index.",
           )
         end
+        # Validate that no exclusive ranges are present
+        if attr_val.is_a?(Redcord::RangeInterval) and (attr_val.min_exclusive or attr_val.max_exclusive)
+          raise("Custom index doesn't support exclusive range queries")
+        end
         attr_type = get_attr_type(attr_key)
         validate_range_attr_types(attr_val, attr_type)
         attr_val = encode_range_index_attr_val(attr_key, attr_val)

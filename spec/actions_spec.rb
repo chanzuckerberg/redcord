@@ -310,6 +310,13 @@ describe Redcord::Actions do
       end
     end
 
+    it 'raises error if exclusive ranges are used in a query' do
+      expect {
+        klass.where(indexed_value: Redcord::RangeInterval.new(min: 1, max: 1, max_exclusive: true), index: :first)
+      # Custom index doesn't support exclusive range queries
+      }.to raise_error(RuntimeError)
+    end
+
     it 'returns instance by int and time attributes range query' do
       interval = Redcord::RangeInterval.new(min: time_now - 10.seconds)
       expect(klass.where(indexed_value: 1, time_value: interval, index: :first).to_a.first.id).to eq(instance.id)
