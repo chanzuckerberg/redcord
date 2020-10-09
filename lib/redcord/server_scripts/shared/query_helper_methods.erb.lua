@@ -10,8 +10,10 @@ local function intersect_range_index_sets(set, tuples)
   return set
 end
 
--- Runs a query against a sorted set, extracts ids. Returns a set of ids.
-local function get_custom_index_set(set, query)
+-- Runs a query against a sorted set, extracts ids.
+-- Response from redis: attr_value:[attr_value ...]:id
+-- Returns a set of ids.
+local function get_id_set_from_custom_index(set, query)
   local ids = {}
   local index_strings = {}
   local sep = ':'
@@ -19,9 +21,7 @@ local function get_custom_index_set(set, query)
   local key, min, max = unpack(query)
   index_strings = redis.call('zrangebylex', key, min, max)
   for _, index_string in ipairs(index_strings) do
-    for str in string.gmatch(index_string, "([^"..sep.."]+)") do
-      id = str
-    end
+    id = string.match(index_string, '[^' .. sep .. ']+$')
     table.insert(ids, id)
   end
   set = to_set(ids)

@@ -76,7 +76,7 @@ else
     {unpack(ARGV, query_cond_pos, attr_selection_pos - 1)}
   )
   if #custom_index_query > 0 then
-    ids_set = get_custom_index_set(ids_set, custom_index_query)
+    ids_set = get_id_set_from_custom_index(ids_set, custom_index_query)
   else
     ids_set = {}
   end
