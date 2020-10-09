@@ -174,7 +174,7 @@ module Redcord::Actions
     end
 
     sig { params(args: T::Hash[Symbol, T.untyped]).void }
-    def update!(args = {})
+    def update!(args)
       Redcord::Base.trace(
        'redcord_actions_instance_methods_update!',
         model_name: self.class.name,
@@ -202,6 +202,16 @@ module Redcord::Actions
           )
         end
       end
+    end
+
+    sig { params(args: T::Hash[Symbol, T.untyped]).returns(T::Boolean) }
+    def update(args)
+      update!(args)
+
+      true
+    rescue Redis::CommandError
+      # TODO: break down Redis::CommandError by parsing the error message
+      false
     end
 
     sig { returns(T::Boolean) }
