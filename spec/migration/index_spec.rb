@@ -9,7 +9,7 @@ describe Redcord::Migration::Index do
     klass = Class.new(T::Struct) do
       include Redcord::Base
 
-      attribute :regular_index, String, index: true
+      attribute :regular_index, T.nilable(String), index: true
       attribute :range_index, T.nilable(Integer), index: true
 
       if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
@@ -31,9 +31,10 @@ describe Redcord::Migration::Index do
 
       attribute :regular_index, T.nilable(String)
       attribute :range_index, T.nilable(Integer)
-      attribute :new_index, String, index: true
-      
+
       if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        attribute :new_index, T.nilable(String), index: true
+
         shard_by_attribute :new_index
       end
 
@@ -53,7 +54,7 @@ describe Redcord::Migration::Index do
 
     remove_index(klass, :regular_index)
     remove_index(klass, :range_index)
-    klass.create!(range_index: 2, regular_index: '456', new_index: 'x')
+    klass.create!(range_index: 2, regular_index: '456')
     expect(klass.redis.keys("#{klass.model_key}:regular_index:*")).to eq([])
     expect(klass.redis.keys("#{klass.model_key}:range_index")).to eq([])
     expect(klass.redis.keys("#{klass.model_key}:range_index:*")).to eq([])

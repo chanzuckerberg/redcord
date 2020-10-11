@@ -100,17 +100,6 @@ describe Redcord::Attribute do
     }.to_not raise_error()
   end
 
-  it 'validates shard_by attribute is not nilable' do
-    expect {
-      Class.new(T::Struct) do
-        include Redcord::Base
-        attribute :a, T.nilable(Integer), index: true
-        shard_by_attribute :a
-      end
-    # Cannot shard by a nilable attribute 'a'
-    }.to raise_error(RuntimeError)
-  end
-
   it 'validates custom index attributes have allowed type' do
     expect {
       Class.new(T::Struct) do

@@ -91,9 +91,6 @@ module Redcord::Attribute
           !class_variable_get(:@@range_index_attributes).include?(attr)
         raise "Cannot shard by a non-index attribute '#{attr}'"
       end
-      if props[attr][:_tnilable]
-        raise "Cannot shard by a nilable attribute '#{attr}'"
-      end
       class_variable_get(:@@custom_index_attributes).each do |index_name, attrs|
         if attr != attrs.first
           raise "shard_by attribute '#{attr}' must be placed first in '#{index_name}' index"
