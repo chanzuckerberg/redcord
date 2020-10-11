@@ -127,6 +127,7 @@ local function validate_and_parse_query_conditions(hash_tag, model, index_attrs,
 end
 
 -- Validates that attributes in query are in correct order and range condition is applied only on the last attribute.
+-- '~' is used as a character that is lexicographically greater than any alphanumerical. '['  makes range inclusive (exclusive are not yet supported)
 -- Returns a table {index_key, min_string, max_string} to be used for index query.
 local function validate_and_parse_query_conditions_custom(hash_tag, model, index_name, custom_index_attrs, args)
   if #custom_index_attrs == 0 then
@@ -145,12 +146,6 @@ local function validate_and_parse_query_conditions_custom(hash_tag, model, index
     local attr_key = args[i]
     if custom_index_attrs[j] == attr_key then
       min, max = args[i+1], args[i+2]
-      if min then
-        string.gsub (min, '(', '')
-      end
-      if max then
-        string.gsub (max, '(', '')
-      end
       if j > 1 then
         query_string_min = query_string_min .. sep
         query_string_max = query_string_max .. sep

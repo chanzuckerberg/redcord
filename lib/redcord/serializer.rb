@@ -53,48 +53,60 @@ module Redcord::Serializer
       end
     end
 
-    sig { params(attr_key: Symbol, attr_val: T.untyped, index_name: T.nilable(Symbol)).returns(T.untyped)}
-    def validate_and_encode_query(attr_key, attr_val, index_name)
-      # Validate that attributes queried for are index attributes
-      if index_name
-        custom_index_attributes = class_variable_get(:@@custom_index_attributes)[index_name]
-        if !custom_index_attributes.include?(attr_key)
-          raise(
-            Redcord::AttributeNotIndexed,
-            "#{attr_key} is not a part of #{index_name} index.",
-          )
-        end
-        # Validate that no exclusive ranges are present
-        if attr_val.is_a?(Redcord::RangeInterval) and (attr_val.min_exclusive or attr_val.max_exclusive)
-          raise("Custom index doesn't support exclusive range queries")
-        end
-        attr_type = get_attr_type(attr_key)
-        validate_range_attr_types(attr_val, attr_type)
-        attr_val = encode_range_index_attr_val(attr_key, attr_val)
+    sig { params(attr_key: Symbol, attr_val: T.untyped).returns(T.untyped)}
+    def validate_types_and_encode_query(attr_key, attr_val)
+      # Validate attribute types for index attributes
+      attr_type = get_attr_type(attr_key)
+      if class_variable_get(:@@index_attributes).include?(attr_key)
+        validate_attr_type(attr_val, attr_type)
       else
-        if !class_variable_get(:@@index_attributes).include?(attr_key) &&
-          !class_variable_get(:@@range_index_attributes).include?(attr_key)
-          raise(
-            Redcord::AttributeNotIndexed,
-            "#{attr_key} is not an indexed attribute.",
-          )
-        end
-        # Validate attribute types for normal index attributes
-        attr_type = get_attr_type(attr_key)
-        if class_variable_get(:@@index_attributes).include?(attr_key)
-          validate_attr_type(attr_val, attr_type)
-        else
-          validate_range_attr_types(attr_val, attr_type)
+        validate_range_attr_types(attr_val, attr_type)
 
-          # Range index attributes need to be further encoded into a format
-          # understood by the Lua script.
-          unless attr_val.nil?
-            attr_val = encode_range_index_attr_val(attr_key, attr_val)
+        # Range index attributes need to be further encoded into a format
+        # understood by the Lua script.
+        unless attr_val.nil?
+          attr_val = encode_range_index_attr_val(attr_key, attr_val)
+        end
+      end
+      attr_val
+    end
+
+    # Validate that attributes queried for are index attributes
+    # For custom index: validate that attributes are present in specified index
+    sig { params(attr_keys: T::Array[Symbol], index_name: T.nilable(Symbol)).void}
+    def validate_index_attributes(attr_keys, index_name: nil)
+      custom_index_attributes = class_variable_get(:@@custom_index_attributes)[index_name]
+      attr_keys.each do |attr_key|
+        if !custom_index_attributes.empty?
+          if !custom_index_attributes.include?(attr_key)
+            raise(
+              Redcord::AttributeNotIndexed,
+              "#{attr_key} is not a part of #{index_name} index.",
+            )
+          end
+        else
+          if !class_variable_get(:@@index_attributes).include?(attr_key) &&
+            !class_variable_get(:@@range_index_attributes).include?(attr_key)
+            raise(
+              Redcord::AttributeNotIndexed,
+              "#{attr_key} is not an indexed attribute.",
+            )
           end
         end
       end
+    end
 
-      attr_val
+    # Validate exclusive ranges not used; Change all query conditions to range form;
+    # The position of the attribute and type of query is validated on Lua side
+    sig { params(query_conditions: T::Hash[Symbol, T.untyped]).void}
+    def validate_and_adjust_custom_index_query_conditions(query_conditions)
+      query_conditions.each do |attr_key, condition|
+        if !condition.is_a?(Array)
+          query_conditions[attr_key] = [condition, condition]
+        elsif condition[0].to_s[0] == '(' or condition[1].to_s[0] == '('
+          raise("Custom index doesn't support exclusive ranges")
+        end
+      end
     end
 
     sig {

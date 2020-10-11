@@ -43,7 +43,7 @@ class Redcord::Relation
   sig { params(args: T::Hash[Symbol, T.untyped]).returns(Redcord::Relation) }
   def where(args)
     encoded_args = args.map do |attr_key, attr_val|
-      encoded_val = model.validate_and_encode_query(attr_key, attr_val, index_name)
+      encoded_val = model.validate_types_and_encode_query(attr_key, attr_val)
       [attr_key, encoded_val]
     end
     query_conditions.merge!(encoded_args.to_h)
@@ -74,6 +74,7 @@ class Redcord::Relation
 
   sig { returns(Integer) }
   def count
+    model.validate_index_attributes(query_conditions.keys, index_name: index_name)
     redis.find_by_attr_count(
       model.model_key,
       query_conditions,
@@ -83,6 +84,13 @@ class Redcord::Relation
       hash_tag: extract_hash_tag!,
       index_name: index_name
     )
+  end
+
+  sig { params(custom_index_name: Symbol).returns(Redcord::Relation) }
+  def with_index(custom_index_name)
+    @index_name = custom_index_name
+    model.validate_and_adjust_custom_index_query_conditions(query_conditions)
+    self
   end
 
   delegate(
@@ -178,6 +186,7 @@ class Redcord::Relation
      'redcord_relation_execute_query',
      model_name: model.name,
     ) do
+      model.validate_index_attributes(query_conditions.keys, index_name: index_name)
       if !select_attrs.empty?
         res_hash = redis.find_by_attr(
           model.model_key,
