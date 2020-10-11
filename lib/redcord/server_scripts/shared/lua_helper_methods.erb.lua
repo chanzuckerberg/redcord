@@ -36,7 +36,7 @@ local function adjust_string_length(value)
   if value == '' or value == nil then
     return '!'
   end
-  local whole_digits_count = 10
+  local whole_digits_count = 19
   local decimal_digits_count = 4
   local sep = '.'
   local parts = {}
