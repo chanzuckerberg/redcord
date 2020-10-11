@@ -42,6 +42,7 @@ module Redcord::Actions
        'redcord_actions_class_methods_create!',
         model_name: name,
       ) do
+        self.props.keys.each { |attr_key| args[attr_key] ||= nil }
         args[:created_at] = args[:updated_at] = Time.zone.now
         instance = TypeCoerce[self].new.from(args)
         id = redis.create_hash_returning_id(
@@ -142,10 +143,12 @@ module Redcord::Actions
         self.updated_at = Time.zone.now
         _id = id
         if _id.nil?
+          serialized_instance = serialize
+          self.class.props.keys.each { |attr_key| serialized_instance[attr_key.to_s] ||= nil }
           self.created_at = T.must(self.updated_at)
           _id = redis.create_hash_returning_id(
             self.class.model_key,
-            self.class.to_redis_hash(serialize),
+            self.class.to_redis_hash(serialized_instance),
             ttl: self.class._script_arg_ttl,
             index_attrs: self.class._script_arg_index_attrs,
             range_index_attrs: self.class._script_arg_range_index_attrs,
