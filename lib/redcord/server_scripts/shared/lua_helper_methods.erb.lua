@@ -36,22 +36,14 @@ local function adjust_string_length(value)
   if value == '' or value == nil then
     return '!'
   end
-  local whole_digits_count = 19
-  local decimal_digits_count = 4
-  local sep = '.'
-  local parts = {}
-  for part in string.gmatch(value, "([^"..sep.."]+)") do
-    table.insert(parts, part)
+  if string.sub(value, 1, 1) == '-' then
+    error("Custom index currently doesn't support negative values")
   end
-  local res = string.rep('0', whole_digits_count - string.len(parts[1])) .. parts[1]
+  local whole_digits_count = 19
+  local res = string.rep('0', whole_digits_count - string.len(value)) .. value
   if string.len(res) > whole_digits_count then
     error("Custom index can't be used if string representation of whole part of attribute value is longer than " .. 
            whole_digits_count .. ' characters')
-  end
-  if parts[2] then
-    local decimal_part = string.sub(parts[2], 1, decimal_digits_count) .. 
-      string.rep('0', decimal_digits_count - string.len(parts[2]))
-    res = res .. sep .. decimal_part
   end
   return res
 end

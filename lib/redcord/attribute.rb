@@ -19,9 +19,10 @@ module Redcord::Attribute
   }
 
   # Implicitly determine what data type can be a used in custom index on Redis based on Ruby type.
+  # Custom index currently supports positive integers with up to 19 characters in decimal notation, 
+  # will raise error in Lua if bigger numbers are used.
   CustomIndexType = T.type_alias {
     T.any(
-      Float,
       Integer,
       Time,
     )

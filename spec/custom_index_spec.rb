@@ -37,6 +37,15 @@ describe "Custom index" do
       end
     end
 
+    it 'raises an error when negative value is used for custom index attr' do
+      expect { klass.create!(indexed_value: -1) }.to raise_error(Redis::CommandError)
+    end
+
+    it 'raises an error when large numbers (more than 19 digits in decimal notation) used in custom index' do
+      expect { klass.create!(indexed_value: 10**19) }.to raise_error(Redis::CommandError)
+      expect { klass.create!(indexed_value: 10**19 - 1) }.to_not raise_error()
+    end
+
     it 'returns instance by int attribute query' do
       expect(klass.where(indexed_value: 1).with_index(:first).to_a.first.id).to eq(instance.id)
     end
