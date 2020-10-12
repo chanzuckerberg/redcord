@@ -8,6 +8,8 @@ module Redcord
   # Raised by Model.where
   class AttributeNotIndexed < StandardError; end
   class WrongAttributeType < TypeError; end
+  class CustomIndexInvalidQuery < StandardError; end
+  class CustomIndexInvalidDesign < StandardError; end
 end
 
 # This module defines various helper methods on Redcord for serialization
@@ -104,7 +106,7 @@ module Redcord::Serializer
         if !condition.is_a?(Array)
           query_conditions[attr_key] = [condition, condition]
         elsif condition[0].to_s[0] == '(' or condition[1].to_s[0] == '('
-          raise("Custom index doesn't support exclusive ranges")
+          raise(Redcord::CustomIndexInvalidQuery, "Custom index doesn't support exclusive ranges")
         end
       end
     end

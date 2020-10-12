@@ -11,7 +11,7 @@ describe "Custom index" do
       attribute :time_value, T.nilable(Time)
       attribute :indexed_value, T.nilable(Integer), index: true
       attribute :other_value, T.nilable(Integer), index: true
-      custom_index :first, [:indexed_value, :time_value]
+      custom_index :first, [:indexed_value, :time_value, :value]
 
       if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         shard_by_attribute :indexed_value
@@ -30,22 +30,57 @@ describe "Custom index" do
     let!(:instance) { klass.create!(indexed_value: 1, time_value: time_now) }
     let!(:instance_2) { klass.create!(indexed_value: 2, time_value: nil) }
 
+    it 'raises an error when negative value is used for custom index attr' do
+      # shared/lua_helper_methods.erb.lua: adjust_string_length
+      expect { klass.create!(indexed_value: -1) }.to raise_error(Redis::CommandError)
+    end
+
+    it 'raises an error when large numbers (more than 19 digits in decimal notation) used in custom index' do
+      # shared/lua_helper_methods.erb.lua: adjust_string_length
+      expect { klass.create!(indexed_value: 10**19) }.to raise_error(Redis::CommandError)
+      expect { klass.create!(indexed_value: 10**19 - 1) }.to_not raise_error()
+    end
+
+    it 'raises an error when inexisting custom index is queried' do
+      # shared/query_helper_methods.erb.lua: validate_and_parse_query_conditions_custom
+      expect { klass.where(indexed_value: 1).with_index(:third).to_a }.to raise_error(Redis::CommandError)
+    end
+
+    it 'raises error when range query conditions are used not on the last attribute in a query' do
+      # shared/query_helper_methods.erb.lua: validate_and_parse_query_conditions_custom
+      interval = Redcord::RangeInterval.new(min: Time.zone.now)
+      expect {
+        klass.where(indexed_value: 1, time_value: interval, value: 1).with_index(:first).to_a
+      }.to raise_error(Redis::CommandError)
+    end
+
+    it 'raises error when attributes are in incorrect order' do
+      # shared/query_helper_methods.erb.lua: validate_and_parse_query_conditions_custom
+      expect {
+        klass.where(time_value: nil, indexed_value: 1).with_index(:first).to_a
+      }.to raise_error(Redis::CommandError)
+    end
+
+    it 'raises error if exclusive ranges are used in a query' do
+      expect {
+        klass.where(indexed_value: 1, time_value: Redcord::RangeInterval.new(min: Time.zone.at(2020), min_exclusive: true)).with_index(:first)
+      # Custom index doesn't support exclusive range queries
+      }.to raise_error(Redcord::CustomIndexInvalidQuery)
+    end
+
+    it 'raises error when attributes are not part of specified index' do
+      expect {
+        klass.where(indexed_value: 1, time_value: nil, other_value: nil).with_index(:first).to_a
+      }.to raise_error(Redcord::AttributeNotIndexed)
+    end
+
     it 'creates an attribute in index content hash for custom index' do
       unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         index_string = klass.redis.hget("#{klass.model_key}:custom_index:first_content", instance.id)
         expect(index_string).to_not be(nil)
       end
     end
-
-    it 'raises an error when negative value is used for custom index attr' do
-      expect { klass.create!(indexed_value: -1) }.to raise_error(Redis::CommandError)
-    end
-
-    it 'raises an error when large numbers (more than 19 digits in decimal notation) used in custom index' do
-      expect { klass.create!(indexed_value: 10**19) }.to raise_error(Redis::CommandError)
-      expect { klass.create!(indexed_value: 10**19 - 1) }.to_not raise_error()
-    end
-
+    
     it 'returns instance by int attribute query' do
       expect(klass.where(indexed_value: 1).with_index(:first).to_a.first.id).to eq(instance.id)
     end
@@ -57,11 +92,7 @@ describe "Custom index" do
 
     it 'returns instance by time attribute range query' do
       interval = Redcord::RangeInterval.new(min: time_now - 10.seconds)
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        expect {
-          klass.where(time_value: interval).with_index(:second).to_a
-        }.to raise_error(Redcord::AttributeNotIndexed)
-      else
+      unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         expect(klass.where(time_value: interval).with_index(:second).to_a.first.id).to eq(instance.id)
       end
     end
@@ -76,13 +107,6 @@ describe "Custom index" do
       end
     end
 
-    it 'raises error if exclusive ranges are used in a query' do
-      expect {
-        klass.where(indexed_value: 1, time_value: Redcord::RangeInterval.new(min: Time.zone.at(2020), min_exclusive: true)).with_index(:first)
-      # Custom index doesn't support exclusive range queries
-      }.to raise_error(RuntimeError)
-    end
-
     it 'returns instance by int and time attributes range query' do
       interval = Redcord::RangeInterval.new(min: time_now - 10.seconds)
       expect(klass.where(indexed_value: 1, time_value: interval).with_index(:first).to_a.first.id).to eq(instance.id)
@@ -94,32 +118,6 @@ describe "Custom index" do
 
     it 'returns selected attributes' do
       expect(klass.where(indexed_value: 1).with_index(:first).select(:time_value).first[:time_value].to_i).to eq(instance.time_value.to_i)
-    end
-
-    it 'raises error when attributes are in incorrect order' do
-      expect {
-        klass.where(time_value: nil, indexed_value: 1).with_index(:first).to_a
-      }.to raise_error(Redis::CommandError)
-    end
-
-    it 'raises error when range query conditions are used not on the last attribute in a query' do
-      interval = Redcord::RangeInterval.new(min: 0)
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        expect {
-          # Range query used on shard_by attribute
-          klass.where(indexed_value: interval, time_value: nil).with_index(:first).to_a
-        }.to raise_error(TypeError)
-      else
-        expect {
-          klass.where(indexed_value: interval, time_value: nil).with_index(:first).to_a
-        }.to raise_error(Redis::CommandError)
-      end
-    end
-
-    it 'raises error when attributes are not part of specified index' do
-      expect {
-        klass.where(indexed_value: 1, time_value: nil, other_value: nil).with_index(:first).to_a
-      }.to raise_error(Redcord::AttributeNotIndexed)
     end
 
     it 'cleans up custom index after deleting record' do

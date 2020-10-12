@@ -111,9 +111,9 @@ class Redcord::Redis < Redis
   def find_by_attr(
         model,
         query_conditions,
+        select_attrs: Set.new,
         index_attrs:,
         range_index_attrs:,
-        select_attrs: Set.new,
         custom_index_attrs: Array.new,
         hash_tag: nil,
         index_name: nil

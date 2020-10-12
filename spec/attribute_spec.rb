@@ -66,7 +66,7 @@ describe Redcord::Attribute do
         shard_by_attribute :b
       end
     # shard_by attribute 'b' must be placed first
-    }.to raise_error(RuntimeError)
+    }.to raise_error(Redcord::CustomIndexInvalidDesign)
     expect {
       Class.new(T::Struct) do
         include Redcord::Base
@@ -88,7 +88,7 @@ describe Redcord::Attribute do
         custom_index :main, [:a, :b]
       end
     # shard_by attribute 'b' must be placed first
-    }.to raise_error(RuntimeError)
+    }.to raise_error(Redcord::CustomIndexInvalidDesign)
     expect {
       Class.new(T::Struct) do
         include Redcord::Base
@@ -108,6 +108,6 @@ describe Redcord::Attribute do
         custom_index :main, [:a]
       end
     # Custom index doesn't support 'String' attributes.
-    }.to raise_error(RuntimeError)
+    }.to raise_error(Redcord::WrongAttributeType)
   end
 end

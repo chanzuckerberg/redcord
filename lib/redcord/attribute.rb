@@ -71,12 +71,15 @@ module Redcord::Attribute
       attrs.each do |attr|
         type = props[attr][:type]
         if !can_custom_index?(type)
-          raise "Custom index doesn't support '#{type}' attributes."
+          raise(Redcord::WrongAttributeType, "Custom index doesn't support '#{type}' attributes.")
         end
       end
       shard_by_attr = class_variable_get(:@@shard_by_attribute)
       if shard_by_attr and shard_by_attr != attrs.first
-        raise "shard_by attribute '#{shard_by_attr}' must be placed first in '#{index_name}' index"
+        raise(
+          Redcord::CustomIndexInvalidDesign,
+          "shard_by attribute '#{shard_by_attr}' must be placed first in '#{index_name}' index"
+        )
       end
       class_variable_get(:@@custom_index_attributes)[index_name] = attrs
     end
@@ -94,7 +97,10 @@ module Redcord::Attribute
       end
       class_variable_get(:@@custom_index_attributes).each do |index_name, attrs|
         if attr != attrs.first
-          raise "shard_by attribute '#{attr}' must be placed first in '#{index_name}' index"
+          raise(
+            Redcord::CustomIndexInvalidDesign,
+            "shard_by attribute '#{attr}' must be placed first in '#{index_name}' index"
+          )
         end
       end
       # shard_by_attribute is treated as a regular index attribute
