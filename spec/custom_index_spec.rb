@@ -16,7 +16,7 @@ describe "Custom index" do
       if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         shard_by_attribute :indexed_value
       else
-        custom_index :second, [:time_value]
+        custom_index :non_cluster_index, [:time_value]
       end
 
       def self.name
@@ -29,6 +29,8 @@ describe "Custom index" do
     let!(:time_now) { Time.zone.now}
     let!(:instance) { klass.create!(indexed_value: 1, time_value: time_now) }
     let!(:instance_2) { klass.create!(indexed_value: 2, time_value: nil) }
+    let!(:instance_3) { klass.create!(indexed_value: 5, time_value: time_now - 2.hours) }
+    let!(:instance_4) { klass.create!(indexed_value: 5, time_value: time_now - 5.hours) }
 
     it 'raises an error when negative value is used for custom index attr' do
       # shared/lua_helper_methods.erb.lua: adjust_string_length
@@ -59,6 +61,9 @@ describe "Custom index" do
       expect {
         klass.where(time_value: nil, indexed_value: 1).with_index(:first).to_a
       }.to raise_error(Redis::CommandError)
+      expect {
+        klass.where(indexed_value: 1, value: 1).with_index(:first).to_a
+      }.to raise_error(Redis::CommandError)
     end
 
     it 'raises error if exclusive ranges are used in a query' do
@@ -75,10 +80,11 @@ describe "Custom index" do
     end
 
     it 'creates an attribute in index content hash for custom index' do
-      unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        index_string = klass.redis.hget("#{klass.model_key}:custom_index:first_content", instance.id)
-        expect(index_string).to_not be(nil)
+      index_string_exists = false
+      klass.redis.scan_each_shard("#{klass.model_key}:custom_index:first_content*") do |key|
+        index_string_exists ||= klass.redis.hget(key, instance.id).is_a?(String)
       end
+      expect(index_string_exists).to be(true)
     end
     
     it 'returns instance by int attribute query' do
@@ -93,17 +99,17 @@ describe "Custom index" do
     it 'returns instance by time attribute range query' do
       interval = Redcord::RangeInterval.new(min: time_now - 10.seconds)
       unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        expect(klass.where(time_value: interval).with_index(:second).to_a.first.id).to eq(instance.id)
+        expect(klass.where(time_value: interval).with_index(:non_cluster_index).to_a.first.id).to eq(instance.id)
       end
     end
 
     it 'returns instance by attribute is nil query' do
       if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         expect {
-          klass.where(time_value: nil).with_index(:second).to_a
+          klass.where(time_value: nil).with_index(:non_cluster_index).to_a
         }.to raise_error(Redcord::AttributeNotIndexed)
       else
-        expect(klass.where(time_value: nil).with_index(:second).to_a.first.id).to eq(instance_2.id)
+        expect(klass.where(time_value: nil).with_index(:non_cluster_index).to_a.first.id).to eq(instance_2.id)
       end
     end
 
@@ -124,19 +130,28 @@ describe "Custom index" do
       instance_id = instance.id
       instance.destroy
       expect(klass.where(indexed_value: 1).with_index(:first).count).to eq(0)
-      unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        index_string = klass.redis.hget("#{klass.model_key}:custom_index_first_content", instance_id)
-        expect(index_string).to be(nil)
+      index_string_exists = false
+      klass.redis.scan_each_shard("#{klass.model_key}:custom_index:first_content*") do |key|
+        index_string_exists ||= klass.redis.hget(key, instance.id).is_a?(String)
       end
+      expect(index_string_exists).to be(false)
     end
 
     it 'updates custom index on record update' do
       interval = Redcord::RangeInterval.new(min: time_now - 10.seconds)
       expect(klass.where(indexed_value: 2, time_value: interval).with_index(:first).count).to eq(0)
-      expect(klass.where(time_value: interval).with_index(:second).count).to eq(1) unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+      expect(klass.where(time_value: interval).with_index(:non_cluster_index).count).to eq(1) unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
       instance_2.update!(time_value: time_now)
       expect(klass.where(indexed_value: 2, time_value: interval).with_index(:first).count).to eq(1)
-      expect(klass.where(time_value: interval).with_index(:second).count).to eq(2) unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+      expect(klass.where(time_value: interval).with_index(:non_cluster_index).count).to eq(2) unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+    end
+
+    it 'retrives results when using query building' do
+      rel1 = klass.where(indexed_value: 5)
+      expect(rel1.with_index(:first).to_a.size).to eq(2)
+      interval = Redcord::RangeInterval.new(min: time_now - 3.hours)
+      rel2 = rel1.where(time_value: interval)
+      expect(rel2.with_index(:first).to_a.size).to eq(1)
     end
 
     context 'all attributes are nilable' do

@@ -11,12 +11,9 @@ describe Redcord::Actions do
       attribute :time_value, T.nilable(Time)
       attribute :indexed_value, T.nilable(Integer), index: true
       attribute :other_value, T.nilable(Integer), index: true
-      custom_index :first, [:indexed_value, :time_value]
 
       if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         shard_by_attribute :indexed_value
-      else
-        custom_index :second, [:time_value]
       end
 
       def self.name
