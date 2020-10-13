@@ -59,13 +59,17 @@ describe "Custom index" do
     it 'raises error when attributes are in incorrect order' do
       # shared/query_helper_methods.erb.lua: validate_and_parse_query_conditions_custom
       expect {
-        klass.where(time_value: nil, indexed_value: 1).with_index(:first).to_a
-      }.to raise_error(Redis::CommandError)
-      expect {
         klass.where(indexed_value: 1, value: 1).with_index(:first).to_a
       }.to raise_error(Redis::CommandError)
     end
 
+    it 'sorts conditions in correct order for custom index' do
+      interval = Redcord::RangeInterval.new(min: time_now - 10.seconds)
+      rel = klass.where(time_value: interval, indexed_value: 1).with_index(:first)
+      expect(rel.count).to eq(1)
+      expect(rel.to_a.size).to eq(1)
+    end
+    
     it 'raises error if exclusive ranges are used in a query' do
       expect {
         klass.where(indexed_value: 1, time_value: Redcord::RangeInterval.new(min: Time.zone.at(2020), min_exclusive: true)).with_index(:first)
@@ -107,7 +111,8 @@ describe "Custom index" do
       if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         expect {
           klass.where(time_value: nil).with_index(:non_cluster_index).to_a
-        }.to raise_error(Redcord::AttributeNotIndexed)
+        # Queries must contain attribute 'indexed_value' since model RedcordSpecModel is sharded by this attribute
+        }.to raise_error(RuntimeError)
       else
         expect(klass.where(time_value: nil).with_index(:non_cluster_index).to_a.first.id).to eq(instance_2.id)
       end

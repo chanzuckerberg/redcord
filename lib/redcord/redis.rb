@@ -122,7 +122,7 @@ class Redcord::Redis < Redis
       'redcord_redis_find_by_attr',
       model_name: model,
     ) do
-      conditions = query_conditions.to_a.flatten
+      conditions = flatten_with_partial_sort(query_conditions.clone, custom_index_attrs)
       res = run_script(
         :find_by_attr,
         keys: [hash_tag],
@@ -160,11 +160,12 @@ class Redcord::Redis < Redis
       'redcord_redis_find_by_attr_count',
       model_name: model,
     ) do
+      conditions = flatten_with_partial_sort(query_conditions.clone, custom_index_attrs)
       run_script(
         :find_by_attr_count,
         keys: [hash_tag],
         argv: [model, index_name, index_attrs.size, range_index_attrs.size, custom_index_attrs.size] +
-          index_attrs + range_index_attrs + custom_index_attrs + query_conditions.to_a.flatten
+          index_attrs + range_index_attrs + custom_index_attrs + conditions
       )
     end
   end
@@ -207,5 +208,16 @@ class Redcord::Redis < Redis
     script_content = Redcord::LuaScriptReader.read_lua_script(script_name.to_s)
     instance_variable_set(hash_var_name, Digest::SHA1.hexdigest(script_content))
     self.eval(script_content, *args)
+  end
+
+  sig { params(query_conditions: T::Hash[T.untyped, T.untyped], partial_order: T::Array[Symbol]).returns(T::Array[T.untyped]) }
+  def flatten_with_partial_sort(query_conditions, partial_order)
+    conditions = partial_order.inject([]) do |result, attr|
+      if !query_conditions[attr].nil?
+        result << attr << query_conditions.delete(attr)
+      end
+      result.flatten
+    end
+    conditions += query_conditions.to_a.flatten
   end
 end
