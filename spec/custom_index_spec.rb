@@ -108,12 +108,7 @@ describe "Custom index" do
     end
 
     it 'returns instance by attribute is nil query' do
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        expect {
-          klass.where(time_value: nil).with_index(:non_cluster_index).to_a
-        # Queries must contain attribute 'indexed_value' since model RedcordSpecModel is sharded by this attribute
-        }.to raise_error(RuntimeError)
-      else
+      unless ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         expect(klass.where(time_value: nil).with_index(:non_cluster_index).to_a.first.id).to eq(instance_2.id)
       end
     end
