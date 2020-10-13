@@ -59,4 +59,46 @@ describe Redcord::Migration::Index do
     expect(klass.redis.keys("#{klass.model_key}:range_index")).to eq([])
     expect(klass.redis.keys("#{klass.model_key}:range_index:*")).to eq([])
   end
+
+  it "drops custom index" do
+    klass = Class.new(T::Struct) do
+      include Redcord::Base
+      attribute :a, T.nilable(Integer), index: true
+      attribute :b, T.nilable(Integer)
+      custom_index :first, [:a, :b]
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        shard_by_attribute :a
+      end
+      def self.name
+        'RedcordSpecModelCustom'
+      end
+    end
+    instance = klass.create!(a: 1, b: 1)
+    expect(klass.where(a: 1, b: 1).with_index(:first).first.id).to eq instance.id
+    index_key = "#{klass.model_key}:custom_index:first#{instance.hash_tag}"
+    index_content_key = "#{klass.model_key}:custom_index:first_content#{instance.hash_tag}"
+    index_string = klass.redis.hget(index_content_key, instance.id)
+    expect(index_string).to be_kind_of(String)
+    expect(klass.redis.zrangebylex(index_key, "[#{index_string}", "[#{index_string}").size).to eq(1)
+
+    klass = Class.new(T::Struct) do
+      include Redcord::Base
+      attribute :a, T.nilable(Integer), index: true
+      attribute :b, T.nilable(Integer)
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        shard_by_attribute :a
+      end
+      def self.name
+        'RedcordSpecModelCustom'
+      end
+    end
+
+    expect {
+      klass.where(a: 1, b: 1).with_index(:first).first.id
+    }.to raise_error(Redcord::AttributeNotIndexed)
+
+    remove_custom_index(klass, :first)
+    expect(klass.redis.exists?(index_key)).to be(false)
+    expect(klass.redis.exists?(index_content_key)).to be(false)
+  end
 end

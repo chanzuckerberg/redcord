@@ -16,6 +16,14 @@ module Redcord::Migration::Index
     model.redis.scan_each_shard("#{attr_set}*") { |key| _del_zset(model, key) }
   end
 
+  sig { params(model: T.class_of(Redcord::Base), index_name: Symbol).void }
+  def remove_custom_index(model, index_name)
+    index_key = "#{model.model_key}:custom_index:#{index_name}"
+    index_content_key = "#{model.model_key}:custom_index:#{index_name}_content"
+    model.redis.scan_each_shard("#{index_key}*") { |key| model.redis.unlink(key) }
+    model.redis.scan_each_shard("#{index_content_key}*") { |key| model.redis.unlink(key) }
+  end
+
   sig {
     params(
       model: T.class_of(Redcord::Base),
