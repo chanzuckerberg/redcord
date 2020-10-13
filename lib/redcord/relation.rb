@@ -11,31 +11,37 @@ class Redcord::Relation
   sig { returns(T.class_of(Redcord::Base)) }
   attr_reader :model
 
-  sig { returns(T::Hash[Symbol, T.untyped]) }
-  attr_reader :query_conditions
-
   sig { returns(T::Set[Symbol]) }
   attr_reader :select_attrs
 
   sig { returns(T.nilable(Symbol)) }
   attr_reader :index_name
 
+  sig { returns(T::Hash[Symbol, T.untyped]) }
+  attr_reader :regular_index_query_conditions
+
+  sig { returns(T::Hash[Symbol, T.untyped]) }
+  attr_reader :custom_index_query_conditions
+
   sig do
     params(
       model: T.class_of(Redcord::Base),
-      query_conditions: T::Hash[Symbol, T.untyped],
+      regular_index_query_conditions: T::Hash[Symbol, T.untyped],
+      custom_index_query_conditions: T::Hash[Symbol, T.untyped],
       select_attrs: T::Set[Symbol],
       index_name: T.nilable(Symbol)
     ).void
   end
   def initialize(
     model,
-    query_conditions = {},
+    regular_index_query_conditions = {},
+    custom_index_query_conditions = {},
     select_attrs = Set.new,
     index_name: nil
   )
     @model = model
-    @query_conditions = query_conditions
+    @regular_index_query_conditions = regular_index_query_conditions
+    @custom_index_query_conditions = custom_index_query_conditions
     @select_attrs = select_attrs
     @index_name = index_name
   end
@@ -46,7 +52,7 @@ class Redcord::Relation
       encoded_val = model.validate_types_and_encode_query(attr_key, attr_val)
       [attr_key, encoded_val]
     end
-    query_conditions.merge!(encoded_args.to_h)
+    regular_index_query_conditions.merge!(encoded_args.to_h)
     self
   end
 
@@ -86,10 +92,11 @@ class Redcord::Relation
     )
   end
 
-  sig { params(custom_index_name: Symbol).returns(Redcord::Relation) }
+  sig { params(custom_index_name: T.nilable(Symbol)).returns(Redcord::Relation) }
   def with_index(custom_index_name)
     @index_name = custom_index_name
-    model.validate_and_adjust_custom_index_query_conditions(query_conditions)
+    adjusted_query_conditions = model.validate_and_adjust_custom_index_query_conditions(regular_index_query_conditions)
+    custom_index_query_conditions.merge!(adjusted_query_conditions)
     self
   end
 
@@ -223,5 +230,10 @@ class Redcord::Relation
   sig { returns(Redcord::Redis) }
   def redis
     model.redis
+  end
+
+  T::Hash[Symbol, T.untyped]
+  def query_conditions
+    index_name ? custom_index_query_conditions : regular_index_query_conditions
   end
 end

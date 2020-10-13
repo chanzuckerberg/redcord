@@ -100,15 +100,17 @@ module Redcord::Serializer
 
     # Validate exclusive ranges not used; Change all query conditions to range form;
     # The position of the attribute and type of query is validated on Lua side
-    sig { params(query_conditions: T::Hash[Symbol, T.untyped]).void}
+    sig { params(query_conditions: T::Hash[Symbol, T.untyped]).returns(T::Hash[Symbol, T.untyped])}
     def validate_and_adjust_custom_index_query_conditions(query_conditions)
+      adjusted_query_conditions = query_conditions.clone
       query_conditions.each do |attr_key, condition|
         if !condition.is_a?(Array)
-          query_conditions[attr_key] = [condition, condition]
+          adjusted_query_conditions[attr_key] = [condition, condition]
         elsif condition[0].to_s[0] == '(' or condition[1].to_s[0] == '('
           raise(Redcord::CustomIndexInvalidQuery, "Custom index doesn't support exclusive ranges")
         end
       end
+      adjusted_query_conditions
     end
 
     sig {

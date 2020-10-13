@@ -12,7 +12,7 @@ describe "Custom index" do
       attribute :indexed_value, T.nilable(Integer), index: true
       attribute :other_value, T.nilable(Integer), index: true
       custom_index :first, [:indexed_value, :time_value, :value]
-
+      custom_index :second, [:indexed_value, :other_value]
       if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         shard_by_attribute :indexed_value
       else
@@ -152,6 +152,18 @@ describe "Custom index" do
       interval = Redcord::RangeInterval.new(min: time_now - 3.hours)
       rel2 = rel1.where(time_value: interval)
       expect(rel2.with_index(:first).to_a.size).to eq(1)
+    end
+
+    it 'allows changing index in relation' do
+      rel = klass.where(indexed_value: 5, other_value: nil)
+      rel.with_index(:first)
+      expect { rel.to_a.size }.to raise_error(Redcord::AttributeNotIndexed)
+      rel.with_index(:second)
+      expect(rel.index_name).to eq(:second)
+      expect(rel.to_a.size).to eq(2)
+      rel.with_index(nil)
+      expect(rel.index_name).to be(nil)
+      expect(rel.to_a.size).to eq(2)
     end
 
     context 'all attributes are nilable' do
