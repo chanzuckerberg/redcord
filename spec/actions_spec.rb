@@ -22,6 +22,22 @@ describe Redcord::Actions do
     end
   end
 
+  let!(:klass_with_boolean) do
+    Class.new(T::Struct) do
+      include Redcord::Base
+
+      attribute :value, T::Boolean, index: true
+
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        shard_by_attribute :value
+      end
+
+      def self.name
+        'RedcordSpecModelOther'
+      end
+    end
+  end
+
   let!(:migrator) do
     Class.new do
       extend Redcord::Migration::TTL
@@ -42,6 +58,20 @@ describe Redcord::Actions do
       another_instance = klass.find(instance.id)
       expect(instance.value).to eq another_instance.value
       expect(klass.count).to eq 1
+    end
+
+    it 'creates an instance with boolean attribute' do
+      begin
+        instance = klass_with_boolean.create!(value: true)
+      rescue Redis::CommandError => e
+        if e.message != 'CLUSTERDOWN The cluster is down'
+          raise e
+        end
+        sleep(0.5)
+        retry
+      end
+      another_instance = klass_with_boolean.find(instance.id)
+      expect(instance.value).to eq another_instance.value
     end
 
     it 'validates types' do
@@ -109,6 +139,21 @@ describe Redcord::Actions do
       expect(instance.updated_at).not_to be_nil
 
       another_instance = klass.find(instance.id)
+      expect(instance.value).to eq another_instance.value
+    end
+
+    it 'uses save to create an instance with boolean attribute' do
+      begin
+        instance = klass_with_boolean.new(value: false)
+      rescue Redis::CommandError => e
+        if e.message != 'CLUSTERDOWN The cluster is down'
+          raise e
+        end
+        sleep(0.5)
+        retry
+      end
+      instance.save!
+      another_instance = klass_with_boolean.find(instance.id)
       expect(instance.value).to eq another_instance.value
     end
 
