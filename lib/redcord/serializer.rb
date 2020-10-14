@@ -49,7 +49,7 @@ module Redcord::Serializer
         val = val.to_i
         nsec = val >= 0 ? val % 1_000_000_000 : -val % 1_000_000_000
 
-        Time.zone.at(val / 1_000_000_000, nsec, :nsec)
+        Time.zone.at(val / 1_000_000_000).change(nsec: nsec)
       else
         val
       end
