@@ -77,7 +77,7 @@ module Redcord::VacuumHelper
   def self._remove_stale_records_from_custom_index(model, hash_tag, index_name)
     index_key = "#{model.model_key}:custom_index:#{index_name}#{hash_tag}"
     index_content_key = "#{model.model_key}:custom_index:#{index_name}_content#{hash_tag}"
-    model.redis.hgetall(index_content_key).each do |id, index_string|
+    model.redis.hscan_each(index_content_key).each do |id, index_string|
       if !model.redis.exists?("#{model.model_key}:id:#{id}")
         model.redis.hdel(index_content_key, id)
         model.redis.zremrangebylex(index_key, "[#{index_string}", "[#{index_string}")
