@@ -178,6 +178,8 @@ class Redcord::Relation
       raise "Queries must contain attribute '#{attr}' since model #{model.name} is sharded by this attribute"
     end
 
+    # Query conditions on custom index are always in form of range, even when query is by value condition is [value_x, value_x]
+    # When in fact query is by value, range is trasformed to a single value to pass the validation.
     condition = query_conditions[attr]
     if custom_index_name and condition.first == condition.last
       condition = condition.first

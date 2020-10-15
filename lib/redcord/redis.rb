@@ -210,6 +210,8 @@ class Redcord::Redis < Redis
     self.eval(script_content, *args)
   end
 
+  # When using custom index: On Lua side script expects query conditions sorted 
+  # in the order of appearance of attributes in specified index
   sig { params(query_conditions: T::Hash[T.untyped, T.untyped], partial_order: T::Array[Symbol]).returns(T::Array[T.untyped]) }
   def flatten_with_partial_sort(query_conditions, partial_order)
     conditions = partial_order.inject([]) do |result, attr|
