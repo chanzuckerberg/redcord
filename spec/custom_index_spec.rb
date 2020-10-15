@@ -159,10 +159,10 @@ describe "Custom index" do
       rel.with_index(:first)
       expect { rel.to_a.size }.to raise_error(Redcord::AttributeNotIndexed)
       rel.with_index(:second)
-      expect(rel.index_name).to eq(:second)
+      expect(rel.custom_index_name).to eq(:second)
       expect(rel.to_a.size).to eq(2)
       rel.with_index(nil)
-      expect(rel.index_name).to be(nil)
+      expect(rel.custom_index_name).to be(nil)
       expect(rel.to_a.size).to eq(2)
     end
 

@@ -75,15 +75,15 @@ module Redcord::Serializer
 
     # Validate that attributes queried for are index attributes
     # For custom index: validate that attributes are present in specified index
-    sig { params(attr_keys: T::Array[Symbol], index_name: T.nilable(Symbol)).void}
-    def validate_index_attributes(attr_keys, index_name: nil)
-      custom_index_attributes = class_variable_get(:@@custom_index_attributes)[index_name]
+    sig { params(attr_keys: T::Array[Symbol], custom_index_name: T.nilable(Symbol)).void}
+    def validate_index_attributes(attr_keys, custom_index_name: nil)
+      custom_index_attributes = class_variable_get(:@@custom_index_attributes)[custom_index_name]
       attr_keys.each do |attr_key|
         if !custom_index_attributes.empty?
           if !custom_index_attributes.include?(attr_key)
             raise(
               Redcord::AttributeNotIndexed,
-              "#{attr_key} is not a part of #{index_name} index.",
+              "#{attr_key} is not a part of #{custom_index_name} index.",
             )
           end
         else

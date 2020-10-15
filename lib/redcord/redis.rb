@@ -105,7 +105,7 @@ class Redcord::Redis < Redis
       select_attrs: T::Set[Symbol],
       custom_index_attrs: T::Array[Symbol],
       hash_tag: T.nilable(String),
-      index_name: T.nilable(Symbol),
+      custom_index_name: T.nilable(Symbol),
     ).returns(T::Hash[Integer, T::Hash[T.untyped, T.untyped]])
   end
   def find_by_attr(
@@ -116,7 +116,7 @@ class Redcord::Redis < Redis
         range_index_attrs:,
         custom_index_attrs: Array.new,
         hash_tag: nil,
-        index_name: nil
+        custom_index_name: nil
       )
     Redcord::Base.trace(
       'redcord_redis_find_by_attr',
@@ -126,7 +126,7 @@ class Redcord::Redis < Redis
       res = run_script(
         :find_by_attr,
         keys: [hash_tag],
-        argv: [model, index_name, index_attrs.size, range_index_attrs.size, custom_index_attrs.size, conditions.size] + 
+        argv: [model, custom_index_name, index_attrs.size, range_index_attrs.size, custom_index_attrs.size, conditions.size] + 
           index_attrs + range_index_attrs + custom_index_attrs + conditions + select_attrs.to_a.flatten
       )
       # The Lua script will return this as a flattened array.
@@ -144,7 +144,7 @@ class Redcord::Redis < Redis
       range_index_attrs: T::Array[Symbol],
       custom_index_attrs: T::Array[Symbol],
       hash_tag: T.nilable(String),
-      index_name: T.nilable(Symbol),
+      custom_index_name: T.nilable(Symbol),
     ).returns(Integer)
   end
   def find_by_attr_count(
@@ -154,7 +154,7 @@ class Redcord::Redis < Redis
         range_index_attrs:,
         custom_index_attrs: Array.new,
         hash_tag: nil,
-        index_name: nil
+        custom_index_name: nil
       )
     Redcord::Base.trace(
       'redcord_redis_find_by_attr_count',
@@ -164,7 +164,7 @@ class Redcord::Redis < Redis
       run_script(
         :find_by_attr_count,
         keys: [hash_tag],
-        argv: [model, index_name, index_attrs.size, range_index_attrs.size, custom_index_attrs.size] +
+        argv: [model, custom_index_name, index_attrs.size, range_index_attrs.size, custom_index_attrs.size] +
           index_attrs + range_index_attrs + custom_index_attrs + conditions
       )
     end
