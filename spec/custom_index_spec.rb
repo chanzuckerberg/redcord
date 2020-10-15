@@ -154,6 +154,14 @@ describe "Custom index" do
       expect(rel2.with_index(:first).to_a.size).to eq(1)
     end
 
+    it 'allows adding conditions to relations after setting index' do
+      rel1 = klass.where(indexed_value: 5).with_index(:first)
+      expect(rel1.count).to eq(2)
+      interval = Redcord::RangeInterval.new(min: time_now - 3.hours)
+      rel2 = rel1.where(time_value: interval)
+      expect(rel2.count).to eq(1)
+    end
+
     it 'allows changing index in relation' do
       rel = klass.where(indexed_value: 5, other_value: nil)
       rel.with_index(:first)

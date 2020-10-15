@@ -53,6 +53,9 @@ class Redcord::Relation
       [attr_key, encoded_val]
     end
     regular_index_query_conditions.merge!(encoded_args.to_h)
+    if custom_index_name
+      with_index(custom_index_name)
+    end
     self
   end
 
