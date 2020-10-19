@@ -8,6 +8,8 @@ module Redcord
   # Raised by Model.where
   class AttributeNotIndexed < StandardError; end
   class WrongAttributeType < TypeError; end
+  class CustomIndexInvalidQuery < StandardError; end
+  class CustomIndexInvalidDesign < StandardError; end
 end
 
 # This module defines various helper methods on Redcord for serialization
@@ -47,41 +49,20 @@ module Redcord::Serializer
         val = val.to_i
         nsec = val >= 0 ? val % 1_000_000_000 : -val % 1_000_000_000
 
-        Time.zone.at(val / 1_000_000_000, nsec, :nsec)
+        Time.zone.at(val / 1_000_000_000).change(nsec: nsec)
       else
         val
       end
     end
 
     sig { params(attr_key: Symbol, attr_val: T.untyped).returns(T.untyped)}
-    def validate_and_encode_query(attr_key, attr_val)
-      # Validate that attributes queried for are index attributes
-      if !class_variable_get(:@@index_attributes).include?(attr_key) &&
-         !class_variable_get(:@@range_index_attributes).include?(attr_key)
-        raise(
-          Redcord::AttributeNotIndexed,
-          "#{attr_key} is not an indexed attribute.",
-        )
-      end
-
-      # Validate attribute types for normal index attributes
+    def validate_types_and_encode_query(attr_key, attr_val)
+      # Validate attribute types for index attributes
       attr_type = get_attr_type(attr_key)
       if class_variable_get(:@@index_attributes).include?(attr_key)
         validate_attr_type(attr_val, attr_type)
       else
-        # Validate attribute types for range index attributes
-        if attr_val.is_a?(Redcord::RangeInterval)
-          validate_attr_type(
-            attr_val.min,
-            T.cast(T.nilable(attr_type), T::Types::Base),
-          )
-          validate_attr_type(
-            attr_val.max,
-            T.cast(T.nilable(attr_type), T::Types::Base),
-          )
-        else
-          validate_attr_type(attr_val, attr_type)
-        end
+        validate_range_attr_types(attr_val, attr_type)
 
         # Range index attributes need to be further encoded into a format
         # understood by the Lua script.
@@ -89,8 +70,69 @@ module Redcord::Serializer
           attr_val = encode_range_index_attr_val(attr_key, attr_val)
         end
       end
-
       attr_val
+    end
+
+    # Validate that attributes queried for are index attributes
+    # For custom index: validate that attributes are present in specified index
+    sig { params(attr_keys: T::Array[Symbol], custom_index_name: T.nilable(Symbol)).void}
+    def validate_index_attributes(attr_keys, custom_index_name: nil)
+      custom_index_attributes = class_variable_get(:@@custom_index_attributes)[custom_index_name]
+      attr_keys.each do |attr_key|
+        if !custom_index_attributes.empty?
+          if !custom_index_attributes.include?(attr_key)
+            raise(
+              Redcord::AttributeNotIndexed,
+              "#{attr_key} is not a part of #{custom_index_name} index.",
+            )
+          end
+        else
+          if !class_variable_get(:@@index_attributes).include?(attr_key) &&
+            !class_variable_get(:@@range_index_attributes).include?(attr_key)
+            raise(
+              Redcord::AttributeNotIndexed,
+              "#{attr_key} is not an indexed attribute.",
+            )
+          end
+        end
+      end
+    end
+
+    # Validate exclusive ranges not used; Change all query conditions to range form;
+    # The position of the attribute and type of query is validated on Lua side
+    sig { params(query_conditions: T::Hash[Symbol, T.untyped]).returns(T::Hash[Symbol, T.untyped])}
+    def validate_and_adjust_custom_index_query_conditions(query_conditions)
+      adjusted_query_conditions = query_conditions.clone
+      query_conditions.each do |attr_key, condition|
+        if !condition.is_a?(Array)
+          adjusted_query_conditions[attr_key] = [condition, condition]
+        elsif condition[0].to_s[0] == '(' or condition[1].to_s[0] == '('
+          raise(Redcord::CustomIndexInvalidQuery, "Custom index doesn't support exclusive ranges")
+        end
+      end
+      adjusted_query_conditions
+    end
+
+    sig {
+      params(
+        attr_val: T.untyped,
+        attr_type: T.any(Class, T::Types::Base),
+      ).void
+    }
+    def validate_range_attr_types(attr_val, attr_type)
+      # Validate attribute types for range index attributes
+      if attr_val.is_a?(Redcord::RangeInterval)
+        validate_attr_type(
+          attr_val.min,
+          T.cast(T.nilable(attr_type), T::Types::Base),
+        )
+        validate_attr_type(
+          attr_val.max,
+          T.cast(T.nilable(attr_type), T::Types::Base),
+        )
+      else
+        validate_attr_type(attr_val, attr_type)
+      end
     end
 
     sig {

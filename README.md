@@ -79,7 +79,36 @@ user_session.destroy
 
 Learn more: [Querying interface](docs/querying_interface.md)
 
-### 5. Migrations
+### 5. Custom (composite) indices
+Redcord supports creating custom multi-attribute indices that improve performance of particular queries. 
+The biggest performance gain is reached on multi-attribute queries with low expected cardinality, where sub queries yield high cardinality sets of results. For example: expected result size of query by attributes :a and :b is 20, but a query by :a alone or :b alone would yield a result set of size ~1,000.
+```ruby
+class UserSession < T::Struct
+  include Redcord::Base
+
+  attribute :user_id, Integer
+  attribute :session_id, Integer
+  custom_index :myindex, [:user_id, :session_id]
+end
+```
+query example:
+```ruby
+interval = Redcord::RangeInterval.new(min: session.min, max: session.max)
+UserSession.where(user_id: user.id, session_id: interval).with_index(:myindex)
+```
+Query rules:
+1. A query must include conditions on any contiguous subsequence of attributes from custom index that starts with the first attribute:
+e.g. for index `[:a, :b, :c]` correct queries: `where(a: val1)`, `where(a: val1, b: val2)`, incorrect queries: `where(b: val2)`, `where(a: val1, c: val3)`
+2. Last condition in a query may be range, all preceding must be equality:
+e.g. for index `[:a, :b, :c]` correct query: `where(a: val1, b: val2, c: interval)`, incorrect query: `where(a: val1, b: interval, c: val2)`
+
+Limitations:
+- Support only Integer and Time
+- Positive values only
+- Decimal form of Integer should have less than 20 digits
+- Exclusive ranges are not supported
+
+### 6. Migrations
 Redcord provides a domain-specific language for updating model schemas on Redis called migrations. Migrations are stored in files which are executed against each Redis database used in the current Rails environment.
 
 Here's a migration that adds an new index on user_id:
@@ -108,7 +137,7 @@ Note: Redcord starts to maintain new indices as soon as `index :true` is set on 
 
 Learn more: [Migrations](docs/migrations.md)
 
-### 6. Redis Cluster
+### 7. Redis Cluster
 Redcord supports data sharding on a Redis cluster by using [hast tag](https://redis.io/topics/cluster-spec) to partition data on different redis nodes.
 
 When queries have to search through millions of records, the ZSET commands the queries use become CPU-intensive and might cause a spike in Redis server process CPU usage. Since Redis is mostly single-threaded,  scaling up the server to a larger instance won’t effectively absorb the load and relief the CPU. Under this circumstance, scaling out the server is the way to go!
@@ -148,7 +177,7 @@ Constraints:
 3. Only equality query conditions are allowed on the sharded attribute: `UserSession.where(region: 'u.s.', ...)`
 4. Operations cannot be atomic if they operate on different shards
 
-### 7. Monitoring
+### 8. Monitoring
 Redcord reports metrics to a tracer (for example, [Datadog APM](https://docs.datadoghq.com/tracing/setup/ruby/#manual-instrumentation)) if it is configured.
 
 In `config/initializers/redcord.rb`, provide a block with a Ruby object that responds to  `.trace(<span_name>, <options hash>)`.

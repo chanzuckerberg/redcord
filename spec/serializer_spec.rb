@@ -95,7 +95,7 @@ describe Redcord::Serializer do
 
     it 'throws an error when given an attribute that is not indexed' do
       expect {
-        klass.where(c: 3)
+        klass.where(c: 3).to_a
       }.to raise_error(Redcord::AttributeNotIndexed)
     end
   end

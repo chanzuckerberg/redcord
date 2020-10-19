@@ -48,5 +48,43 @@ describe Redcord::VacuumHelper do
       Redcord::VacuumHelper.vacuum(RedcordVacuumSpecModel)
       expect(RedcordVacuumSpecModel.redis.sismember("#{model_key}:b:#{instance.hash_tag}", instance.id)).to be false
     end
+
+    context 'custom index' do
+      let!(:klass) do
+        Class.new(T::Struct) do
+          include Redcord::Base
+          attribute :a, T.nilable(Integer), index: true
+          attribute :b, T.nilable(Integer)
+          custom_index :first, [:a, :b]
+
+          if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+            shard_by_attribute :a
+          end
+
+          def self.name
+            'RedcordVacuumSpecModelCustom'
+          end
+        end
+      end
+
+      it 'vacuums custom index for non existing records' do
+        instance = klass.create!(a: 1, b: 2)
+        # Creates records in custom index and in custom index content hash
+        index_key = "#{klass.model_key}:custom_index:first#{instance.hash_tag}"
+        index_content_key = "#{klass.model_key}:custom_index:first_content#{instance.hash_tag}"
+        index_string = klass.redis.hget(index_content_key, instance.id)
+        expect(index_string).to be_kind_of(String)
+        expect(klass.redis.zrangebylex(index_key, "[#{index_string}", "[#{index_string}").size).to eq(1)
+
+        # An expired record due to TTL
+        klass.redis.del("#{klass.model_key}:id:#{instance.id}")
+
+        # After vacuuming, custom indices should be updated
+        Redcord::VacuumHelper.vacuum(klass)
+        index_string_new = klass.redis.hget(index_content_key, instance.id)
+        expect(index_string_new).to be(nil)
+        expect(klass.redis.zrangebylex(index_key, "[#{index_string}", "[#{index_string}").size).to eq(0)
+      end
+    end
   end
 end

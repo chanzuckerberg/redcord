@@ -59,3 +59,32 @@ local function replace_id_in_range_index_attr(hash_tag, model, attr_key, prev_at
     add_id_to_range_index_attr(hash_tag, model, attr_key, curr_attr_val, id)
   end
 end
+
+-- Add an index record to the sorted set of the custom index
+local function add_record_to_custom_index(hash_tag, model, index_name, attr_values, id)
+  local sep = ':'
+  if attr_values then
+    local index_string = ''
+    local attr_value_string = ''
+    for i, attr_value in ipairs(attr_values) do
+      if i > 1 then
+        index_string = index_string .. sep
+      end
+      attr_value_string = adjust_string_length(attr_value)
+      index_string = index_string .. attr_value_string
+    end
+    redis.call('zadd', model .. sep .. 'custom_index' .. sep .. index_name .. hash_tag, 0, index_string .. sep .. id)
+    redis.call('hset', model .. sep .. 'custom_index' .. sep .. index_name .. '_content' .. hash_tag, id, index_string .. sep .. id)
+  end
+end
+
+-- Remove a record from the sorted set of the custom index
+local function delete_record_from_custom_index(hash_tag, model, index_name, id)
+  local sep = ':'
+  local index_key = model .. sep .. 'custom_index' .. sep .. index_name
+  local index_string = redis.call('hget', index_key .. '_content' .. hash_tag, id)
+  if index_string then
+    redis.call('zremrangebylex', index_key .. hash_tag, '[' .. index_string, '[' .. index_string)
+    redis.call('hdel', index_key .. '_content' .. hash_tag, id)
+  end
+end

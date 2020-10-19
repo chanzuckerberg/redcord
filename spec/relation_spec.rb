@@ -40,10 +40,8 @@ describe Redcord::Relation do
     expect(queried_instances.count).to eq 1
     expect(queried_instances.first.id).to eq instance.id
 
-    # BUG: "d: nil" must be specified or the create_hash script would not
-    # receive the attribute d
     queried_instances = klass.where(a: 3, d: nil)
-    expect(queried_instances.count).to eq 0 # should be 1
+    expect(queried_instances.count).to eq 1
   end
 
   it 'maintains index id sets after delete operation' do

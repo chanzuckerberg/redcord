@@ -17,7 +17,8 @@ nil
 -- happens with keys (so ARGV[1], ARGV[2], ...).
 --
 --   KEYS = redcord_instance.id hash_tag
---   ARGV = Model.name ttl index_attr_size range_index_attr_size [index_attr_key ...] [range_index_attr_key ...] attr_key attr_val [attr_key attr_val ..]
+--   ARGV = Model.name ttl index_attr_size range_index_attr_size custom_index_attrs_flat_size [index_attr_key ...] [range_index_attr_key ...]
+--          [custom_index_name attrs_size [custom_index_attr_key ...] ...] attr_key attr_val [attr_key attr_val ..]
 <%= include_lua 'shared/lua_helper_methods' %>
 <%= include_lua 'shared/index_helper_methods' %>
 
@@ -28,10 +29,11 @@ end
 local model, ttl = unpack(ARGV)
 local id, hash_tag = unpack(KEYS)
 
-local index_attr_pos = 5
+local index_attr_pos = 6
 local range_attr_pos = index_attr_pos + ARGV[3]
+local custom_attr_pos = range_attr_pos + ARGV[4]
 -- Starting position of the attr_key-attr_val pairs
-local attr_pos = range_attr_pos + ARGV[4]
+local attr_pos = custom_attr_pos + ARGV[5]
 
 -- key = "#{model}:id:{id}"
 local key = model .. ':id:' .. id
@@ -58,7 +60,7 @@ if #indexed_attr_keys > 0 then
     end
   end
 end
-local range_index_attr_keys = {unpack(ARGV, range_attr_pos, attr_pos - 1)}
+local range_index_attr_keys = {unpack(ARGV, range_attr_pos, custom_attr_pos - 1)}
 if #range_index_attr_keys > 0 then
   -- Get the previous and new values for indexed attributes
   local prev_attrs = redis.call('hmget', key, unpack(range_index_attr_keys))
@@ -74,6 +76,21 @@ end
 -- Forward the script arguments to the Redis command HSET and update the args.
 -- Call the Redis command: HSET key [field value ...]
 redis.call('hset', key, unpack(ARGV, attr_pos))
+
+-- Update custom indexes
+local updated_hash = to_hash(unpack(redis.call('hgetall', key)))
+local custom_index_attr_keys = {unpack(ARGV, custom_attr_pos, attr_pos - 1)}
+local i = 1
+while i < #custom_index_attr_keys do
+  local index_name, attrs_num = custom_index_attr_keys[i], custom_index_attr_keys[i+1]
+  local attr_values = {}
+  for j, attr_key in ipairs({unpack(custom_index_attr_keys, i + 2, i + attrs_num + 1)}) do
+    attr_values[j] = updated_hash[attr_key]
+  end
+  delete_record_from_custom_index(hash_tag, model, index_name, id)
+  add_record_to_custom_index(hash_tag, model, index_name, attr_values, id)
+  i = i + 2 + attrs_num
+end
 
 -- Call the Redis command: GET "#{Model.name}:ttl"
 if ttl == '-1' then

@@ -55,4 +55,59 @@ describe Redcord::Attribute do
       another_klass.class_variable_get(:@@ttl),
     ).to eq(2.hour)
   end
+
+  it 'validates shard_by attribute presence in custom index: order A' do
+    expect {
+      Class.new(T::Struct) do
+        include Redcord::Base
+        attribute :a, Integer
+        attribute :b, Integer, index: true
+        custom_index :main, [:a, :b]
+        shard_by_attribute :b
+      end
+    # shard_by attribute 'b' must be placed first
+    }.to raise_error(Redcord::CustomIndexInvalidDesign)
+    expect {
+      Class.new(T::Struct) do
+        include Redcord::Base
+        attribute :a, Integer
+        attribute :b, Integer, index: true
+        custom_index :main, [:b, :a]
+        shard_by_attribute :b
+      end
+    }.to_not raise_error()
+  end
+
+  it 'validates shard_by attribute presence in custom index: order B' do
+    expect {
+      Class.new(T::Struct) do
+        include Redcord::Base
+        attribute :a, Integer
+        attribute :b, Integer, index: true
+        shard_by_attribute :b
+        custom_index :main, [:a, :b]
+      end
+    # shard_by attribute 'b' must be placed first
+    }.to raise_error(Redcord::CustomIndexInvalidDesign)
+    expect {
+      Class.new(T::Struct) do
+        include Redcord::Base
+        attribute :a, Integer
+        attribute :b, Integer, index: true
+        shard_by_attribute :b
+        custom_index :main, [:b, :a]
+      end
+    }.to_not raise_error()
+  end
+
+  it 'validates custom index attributes have allowed type' do
+    expect {
+      Class.new(T::Struct) do
+        include Redcord::Base
+        attribute :a, String, index: true
+        custom_index :main, [:a]
+      end
+    # Custom index doesn't support 'String' attributes.
+    }.to raise_error(Redcord::WrongAttributeType)
+  end
 end

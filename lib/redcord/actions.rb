@@ -42,6 +42,7 @@ module Redcord::Actions
        'redcord_actions_class_methods_create!',
         model_name: name,
       ) do
+        self.props.keys.each { |attr_key| args[attr_key] = nil unless args.key?(attr_key) }
         args[:created_at] = args[:updated_at] = Time.zone.now
         instance = TypeCoerce[self].new.from(args)
         id = redis.create_hash_returning_id(
@@ -50,6 +51,7 @@ module Redcord::Actions
           ttl: _script_arg_ttl,
           index_attrs: _script_arg_index_attrs,
           range_index_attrs: _script_arg_range_index_attrs,
+          custom_index_attrs: _script_arg_custom_index_attrs,
           hash_tag: instance.hash_tag,
         )
         instance.send(:id=, id)
@@ -99,6 +101,7 @@ module Redcord::Actions
           id,
           index_attrs: _script_arg_index_attrs,
           range_index_attrs: _script_arg_range_index_attrs,
+          custom_index_attrs: _script_arg_custom_index_attrs,
         ) == 1
       end
     end
@@ -139,13 +142,18 @@ module Redcord::Actions
         self.updated_at = Time.zone.now
         _id = id
         if _id.nil?
+          serialized_instance = serialize
+          self.class.props.keys.each do |attr_key|
+            serialized_instance[attr_key.to_s] = nil unless serialized_instance.key?(attr_key.to_s) 
+          end
           self.created_at = T.must(self.updated_at)
           _id = redis.create_hash_returning_id(
             self.class.model_key,
-            self.class.to_redis_hash(serialize),
+            self.class.to_redis_hash(serialized_instance),
             ttl: self.class._script_arg_ttl,
             index_attrs: self.class._script_arg_index_attrs,
             range_index_attrs: self.class._script_arg_range_index_attrs,
+            custom_index_attrs: self.class._script_arg_custom_index_attrs,
             hash_tag: hash_tag,
           )
           send(:id=, _id)
@@ -157,6 +165,7 @@ module Redcord::Actions
             ttl: self.class._script_arg_ttl,
             index_attrs: self.class._script_arg_index_attrs,
             range_index_attrs: self.class._script_arg_range_index_attrs,
+            custom_index_attrs: self.class._script_arg_custom_index_attrs,
             hash_tag: hash_tag,
           )
         end
@@ -198,6 +207,7 @@ module Redcord::Actions
             ttl: self.class._script_arg_ttl,
             index_attrs: self.class._script_arg_index_attrs,
             range_index_attrs: self.class._script_arg_range_index_attrs,
+            custom_index_attrs: self.class._script_arg_custom_index_attrs,
             hash_tag: hash_tag,
           )
         end

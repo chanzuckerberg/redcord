@@ -8,7 +8,9 @@ describe Redcord::Actions do
       include Redcord::Base
 
       attribute :value, T.nilable(Integer)
+      attribute :time_value, T.nilable(Time)
       attribute :indexed_value, T.nilable(Integer), index: true
+      attribute :other_value, T.nilable(Integer), index: true
 
       if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
         shard_by_attribute :indexed_value
@@ -16,6 +18,22 @@ describe Redcord::Actions do
 
       def self.name
         'RedcordSpecModel'
+      end
+    end
+  end
+
+  let!(:klass_with_boolean) do
+    Class.new(T::Struct) do
+      include Redcord::Base
+
+      attribute :value, T::Boolean, index: true
+
+      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+        shard_by_attribute :value
+      end
+
+      def self.name
+        'RedcordSpecModelOther'
       end
     end
   end
@@ -28,10 +46,32 @@ describe Redcord::Actions do
 
   context 'create' do
     it '#create!' do
-      instance = klass.create!(value: 3)
+      begin
+        instance = klass.create!(value: 3)
+      rescue Redis::CommandError => e
+        if e.message != 'CLUSTERDOWN The cluster is down'
+          raise e
+        end
+        sleep(0.5)
+        retry
+      end
       another_instance = klass.find(instance.id)
       expect(instance.value).to eq another_instance.value
       expect(klass.count).to eq 1
+    end
+
+    it 'creates an instance with boolean attribute' do
+      begin
+        instance = klass_with_boolean.create!(value: true)
+      rescue Redis::CommandError => e
+        if e.message != 'CLUSTERDOWN The cluster is down'
+          raise e
+        end
+        sleep(0.5)
+        retry
+      end
+      another_instance = klass_with_boolean.find(instance.id)
+      expect(instance.value).to eq another_instance.value
     end
 
     it 'validates types' do
@@ -108,6 +148,21 @@ describe Redcord::Actions do
       expect(instance.value).to eq another_instance.value
     end
 
+    it 'uses save to create an instance with boolean attribute' do
+      begin
+        instance = klass_with_boolean.new(value: false)
+      rescue Redis::CommandError => e
+        if e.message != 'CLUSTERDOWN The cluster is down'
+          raise e
+        end
+        sleep(0.5)
+        retry
+      end
+      instance.save!
+      another_instance = klass_with_boolean.find(instance.id)
+      expect(instance.value).to eq another_instance.value
+    end
+
     it '#save' do
       instance = klass.create!(value: 3, indexed_value: 1)
       instance.destroy # e.g. the record is destroyed by another process
@@ -143,7 +198,15 @@ describe Redcord::Actions do
     end
 
     it 'resets ttl actively' do
-      instance = klass.create!(value: 3)
+      begin
+        instance = klass.create!(value: 3)
+      rescue Redis::CommandError => e
+        if e.message != 'CLUSTERDOWN The cluster is down'
+          raise e
+        end
+        sleep(0.5)
+        retry
+      end
 
       klass.ttl(2.days)
       expect(klass.redis.ttl(instance.instance_key)).to eq(-1)

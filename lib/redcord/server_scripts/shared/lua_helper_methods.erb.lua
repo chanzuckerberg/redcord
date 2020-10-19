@@ -30,3 +30,20 @@ local function set_list_intersect(set, list)
   end
   return set_intersect
 end
+
+-- Helper function to transform attribute values so that they become comparable as strings
+local function adjust_string_length(value)
+  if value == '' or value == nil then
+    return '!'
+  end
+  if string.sub(value, 1, 1) == '-' then
+    error("Custom index currently doesn't support negative values")
+  end
+  local whole_digits_count = 19
+  local res = string.rep('0', whole_digits_count - string.len(value)) .. value
+  if string.len(res) > whole_digits_count then
+    error("Custom index can't be used if string representation of whole part of attribute value is longer than " .. 
+           whole_digits_count .. ' characters')
+  end
+  return res
+end

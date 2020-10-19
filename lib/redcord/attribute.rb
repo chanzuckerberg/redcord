@@ -18,12 +18,23 @@ module Redcord::Attribute
     )
   }
 
+  # Implicitly determine what data type can be a used in custom index on Redis based on Ruby type.
+  # Custom index currently supports positive integers with up to 19 characters in decimal notation, 
+  # will raise error in Lua if bigger numbers are used.
+  CustomIndexType = T.type_alias {
+    T.any(
+      Integer,
+      Time,
+    )
+  }
+  
   sig { params(klass: T.class_of(T::Struct)).void }
   def self.included(klass)
     klass.extend(ClassMethods)
     klass.include(InstanceMethods)
     klass.class_variable_set(:@@index_attributes, Set.new)
     klass.class_variable_set(:@@range_index_attributes, Set.new)
+    klass.class_variable_set(:@@custom_index_attributes, Hash.new { |h, k| h[k] = [] })
     klass.class_variable_set(:@@ttl, nil)
     klass.class_variable_set(:@@shard_by_attribute, nil)
   end
@@ -54,6 +65,24 @@ module Redcord::Attribute
         class_variable_get(:@@index_attributes) << attr
       end
     end
+    
+    sig { params(index_name: Symbol, attrs: T::Array[Symbol]).void }
+    def custom_index(index_name, attrs)
+      attrs.each do |attr|
+        type = props[attr][:type]
+        if !can_custom_index?(type)
+          raise(Redcord::WrongAttributeType, "Custom index doesn't support '#{type}' attributes.")
+        end
+      end
+      shard_by_attr = class_variable_get(:@@shard_by_attribute)
+      if shard_by_attr and shard_by_attr != attrs.first
+        raise(
+          Redcord::CustomIndexInvalidDesign,
+          "shard_by attribute '#{shard_by_attr}' must be placed first in '#{index_name}' index"
+        )
+      end
+      class_variable_get(:@@custom_index_attributes)[index_name] = attrs
+    end
 
     sig { params(duration: T.nilable(ActiveSupport::Duration)).void }
     def ttl(duration)
@@ -66,7 +95,14 @@ module Redcord::Attribute
           !class_variable_get(:@@range_index_attributes).include?(attr)
         raise "Cannot shard by a non-index attribute '#{attr}'"
       end
-
+      class_variable_get(:@@custom_index_attributes).each do |index_name, attrs|
+        if attr != attrs.first
+          raise(
+            Redcord::CustomIndexInvalidDesign,
+            "shard_by attribute '#{attr}' must be placed first in '#{index_name}' index"
+          )
+        end
+      end
       # shard_by_attribute is treated as a regular index attribute
       class_variable_get(:@@index_attributes).add(attr)
       class_variable_get(:@@range_index_attributes).delete(attr)
@@ -89,6 +125,11 @@ module Redcord::Attribute
       class_variable_get(:@@range_index_attributes).to_a
     end
 
+    sig { returns(T::Hash[Symbol, T::Array]) }
+    def _script_arg_custom_index_attrs
+      class_variable_get(:@@custom_index_attributes)
+    end
+
     private
 
     sig { params(type: T.any(Class, T::Types::Base)).returns(T::Boolean) }
@@ -97,6 +138,13 @@ module Redcord::Attribute
       type = T::Types::Simple.new(type) if type.is_a?(Class)
 
       type.subtype_of?(RangeIndexType)
+    end
+  
+    sig { params(type: T.any(Class, T::Types::Base)).returns(T::Boolean) }
+    def can_custom_index?(type)
+      # Change Ruby raw type to Sorbet type in order to call subtype_of?
+      type = T::Types::Simple.new(type) if type.is_a?(Class)
+      type.subtype_of?(CustomIndexType)
     end
   end
 
