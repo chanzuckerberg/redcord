@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 # typed: strict
+module Redcord
+  class InvalidAttribute < StandardError; end
+end
 
 module Redcord::Attribute
   extend T::Sig
@@ -89,12 +92,15 @@ module Redcord::Attribute
       class_variable_set(:@@ttl, duration)
     end
 
-    def shard_by_attribute(attr)
-      # attr must be an index attribute (index: true)
-      if !class_variable_get(:@@index_attributes).include?(attr) &&
-          !class_variable_get(:@@range_index_attributes).include?(attr)
-        raise "Cannot shard by a non-index attribute '#{attr}'"
+    def shard_by_attribute(attr=nil)
+      return class_variable_get(:@@shard_by_attribute) if attr.nil?
+
+      # attr must be an non-index attribute (index: false)
+      if class_variable_get(:@@index_attributes).include?(attr) ||
+          class_variable_get(:@@range_index_attributes).include?(attr)
+        raise Redcord::InvalidAttribute, "Cannot shard by an index attribute '#{attr}'"
       end
+
       class_variable_get(:@@custom_index_attributes).each do |index_name, attrs|
         if attr != attrs.first
           raise(
@@ -102,10 +108,11 @@ module Redcord::Attribute
             "shard_by attribute '#{attr}' must be placed first in '#{index_name}' index"
           )
         end
+
+        # Delete the shard_by_attribute since it would be a constant in the
+        # custom index set
+        attrs.shift
       end
-      # shard_by_attribute is treated as a regular index attribute
-      class_variable_get(:@@index_attributes).add(attr)
-      class_variable_get(:@@range_index_attributes).delete(attr)
 
       class_variable_set(:@@shard_by_attribute, attr)
     end
@@ -139,7 +146,7 @@ module Redcord::Attribute
 
       type.subtype_of?(RangeIndexType)
     end
-  
+
     sig { params(type: T.any(Class, T::Types::Base)).returns(T::Boolean) }
     def can_custom_index?(type)
       # Change Ruby raw type to Sorbet type in order to call subtype_of?
@@ -162,7 +169,7 @@ module Redcord::Attribute
       default_tag = '__redcord_hash_tag_null__'
 
       if tag == default_tag
-        raise "#{attr}=#{default_tag} conflicts with default hash_tag value"
+        raise Redcord::InvalidAttribute, "#{attr}=#{default_tag} conflicts with default hash_tag value"
       end
 
       "{#{tag || default_tag}}"

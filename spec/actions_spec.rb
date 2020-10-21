@@ -9,12 +9,10 @@ describe Redcord::Actions do
 
       attribute :value, T.nilable(Integer)
       attribute :time_value, T.nilable(Time)
-      attribute :indexed_value, T.nilable(Integer), index: true
+      attribute :indexed_value, T.nilable(Integer), index: !cluster_mode?
       attribute :other_value, T.nilable(Integer), index: true
 
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        shard_by_attribute :indexed_value
-      end
+      shard_by_attribute :indexed_value if cluster_mode?
 
       def self.name
         'RedcordSpecModel'
@@ -26,11 +24,9 @@ describe Redcord::Actions do
     Class.new(T::Struct) do
       include Redcord::Base
 
-      attribute :value, T::Boolean, index: true
+      attribute :value, T::Boolean, index: !cluster_mode?
 
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        shard_by_attribute :value
-      end
+      shard_by_attribute :value if cluster_mode?
 
       def self.name
         'RedcordSpecModelOther'
@@ -103,11 +99,11 @@ describe Redcord::Actions do
       }.to raise_error(TypeError)
 
 
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+      if cluster_mode?
         # Cannot update shard_by attribute
         expect {
           instance.update!(indexed_value: 4)
-        }.to raise_error(RuntimeError)
+        }.to raise_error(Redcord::InvalidAction)
       end
 
       instance.update!(value: 4)
@@ -249,22 +245,39 @@ describe Redcord::Actions do
 
     it '#where' do
       instance = klass.create!(indexed_value: 1)
-      another_instance = klass.where(
-        indexed_value: instance.indexed_value,
-      ).to_a.first
 
-      expect(another_instance.id).to eq instance.id
-      expect(another_instance.indexed_value).to eq instance.indexed_value
+      if cluster_mode?
+        expect {
+          klass.where(
+            indexed_value: instance.indexed_value,
+          ).to_a
+        }.to raise_error(Redcord::InvalidQuery)
+      else
+        another_instance = klass.where(
+          indexed_value: instance.indexed_value,
+        ).to_a.first
+
+        expect(another_instance.id).to eq instance.id
+        expect(another_instance.indexed_value).to eq instance.indexed_value
+      end
     end
 
     it '#find_by' do
       instance = klass.create!(indexed_value: 1)
-      another_instance = klass.find_by(indexed_value: instance.indexed_value)
 
-      expect(another_instance.id).to eq instance.id
-      expect(another_instance.indexed_value).to eq instance.indexed_value
+      if cluster_mode?
+        expect {
+          klass.find_by(indexed_value: instance.indexed_value)
+        }.to raise_error(Redcord::InvalidQuery)
+      else
+        another_instance = klass.find_by(indexed_value: instance.indexed_value)
 
-      expect(klass.find_by(indexed_value: 0)).to be_nil
+        expect(another_instance.id).to eq instance.id
+        expect(another_instance.indexed_value).to eq instance.indexed_value
+
+        expect(klass.find_by(indexed_value: 0)).to be_nil
+      end
+
     end
   end
 

@@ -6,12 +6,10 @@ describe Redcord::VacuumHelper do
   class RedcordVacuumSpecModel < T::Struct
     include Redcord::Base
 
-    attribute :a, T.nilable(String), index: true
+    attribute :a, T.nilable(String), index: !cluster_mode?
     attribute :b, T.nilable(Integer), index: true
 
-    if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-      shard_by_attribute :a
-    end
+    shard_by_attribute :a if cluster_mode?
   end
 
   let (:model_key) { RedcordVacuumSpecModel.model_key }
@@ -20,9 +18,11 @@ describe Redcord::VacuumHelper do
     it 'vacuums all index attributes' do
       instance = RedcordVacuumSpecModel.create!(a: "x", b: 1)
       # index sets should contain the id
-      expect(
-        RedcordVacuumSpecModel.redis.sismember("#{model_key}:a:#{instance.a}#{instance.hash_tag}", instance.id)
-      ).to be true
+      unless cluster_mode?
+        expect(
+          RedcordVacuumSpecModel.redis.sismember("#{model_key}:a:#{instance.a}#{instance.hash_tag}", instance.id)
+        ).to be true
+      end
       expect(
         RedcordVacuumSpecModel.redis.zscore("#{model_key}:b#{instance.hash_tag}", instance.id)
       ).to eq 1
@@ -53,13 +53,11 @@ describe Redcord::VacuumHelper do
       let!(:klass) do
         Class.new(T::Struct) do
           include Redcord::Base
-          attribute :a, T.nilable(Integer), index: true
+          attribute :a, T.nilable(Integer), index: !cluster_mode?
           attribute :b, T.nilable(Integer)
           custom_index :first, [:a, :b]
 
-          if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-            shard_by_attribute :a
-          end
+          shard_by_attribute :a if cluster_mode?
 
           def self.name
             'RedcordVacuumSpecModelCustom'

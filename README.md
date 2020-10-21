@@ -154,7 +154,7 @@ class UserSession < T::Struct
   attribute :user_id, Integer, index: true
   attribute :session_id, String
 
-  attribute :region, String, index: true
+  attribute :region, String
   shard_by_attribute :region
 end
 ```
@@ -174,8 +174,9 @@ production:
 Constraints:
 1. The sharded attribute cannot be updated
 2. All queries must have the sharded attribute as a query condition
-3. Only equality query conditions are allowed on the sharded attribute: `UserSession.where(region: 'u.s.', ...)`
-4. Operations cannot be atomic if they operate on different shards
+3. The sharded attribute cannot be queried alone: `UserSession.where(region: 'u.s.') # error: Redcord::InvalidQuery`
+4. Only equality query conditions are allowed on the sharded attribute: `UserSession.where(region: 'u.s.', ...)`
+5. Operations cannot be atomic if they operate on different shards
 
 ### 8. Monitoring
 Redcord reports metrics to a tracer (for example, [Datadog APM](https://docs.datadoghq.com/tracing/setup/ruby/#manual-instrumentation)) if it is configured.
