@@ -7,16 +7,14 @@ describe Redcord::Serializer do
     Class.new(T::Struct) do
       include Redcord::Base
 
-      attribute :a, Integer, index: true
+      attribute :a, Integer, index: !cluster_mode?
       attribute :b, String, index: true
       attribute :c, Integer
       attribute :d, T.nilable(Time), index: true
       attribute :float, T.nilable(Float), index: true
       attribute :boolean, T.nilable(T::Boolean), index: true
 
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        shard_by_attribute :a
-      end
+      shard_by_attribute :a if cluster_mode?
 
       def self.name
         'RedcordSpecModel'
@@ -30,7 +28,7 @@ describe Redcord::Serializer do
     allow(Time).to receive(:now).and_return(now)
 
     instance = klass.create!(a: 3, b: '3', c: 3)
-    another_instance = klass.find_by(a: 3)
+    another_instance = klass.find_by(a: 3, b: '3')
 
     expect(instance.d).to be_nil
     expect(instance.created_at).to eq(now)
@@ -43,7 +41,7 @@ describe Redcord::Serializer do
     allow(Time).to receive(:now).and_return(now)
 
     instance = klass.create!(a: 4, b: '4', c: 4)
-    another_instance = klass.find_by(a: 4)
+    another_instance = klass.find_by(a: 4, b: '4')
     expect(instance.created_at).to eq(now)
     expect(instance.updated_at).to eq(now)
     expect(instance.created_at).to eq(another_instance.created_at)
@@ -85,11 +83,11 @@ describe Redcord::Serializer do
   context 'when query is invalid' do
     it 'throws an error when given an attribute of the wrong type' do
       expect {
-        klass.where(a: '3')
+        klass.where(a: '3', b: '4')
       }.to raise_error(Redcord::WrongAttributeType)
 
       expect {
-        klass.where(a: Redcord::RangeInterval.new(min: 1, max: 5.0))
+        klass.where(a: Redcord::RangeInterval.new(min: 1, max: 5.0), b: '4')
       }.to raise_error(Redcord::WrongAttributeType)
     end
 
@@ -104,11 +102,12 @@ describe Redcord::Serializer do
     first = klass.create!(a: 3, b: '3', c: 3)
     second = klass.create!(a: 2, b: '2', c: 3)
 
-    if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+    if cluster_mode?
       # Since we shard by a, we must use equality
       expect {
         klass.where(
           a: Redcord::RangeInterval.new(max: 3, max_exclusive: true),
+          b: '3',
         ).count
       }.to raise_error(Redcord::WrongAttributeType)
     else
@@ -178,7 +177,7 @@ describe Redcord::Serializer do
     second = klass.create!(a: 3, b: '4', c: 3)
 
     # query with one attribute should return both values
-    queried_instances = klass.where(a: 3)
+    queried_instances = klass.where(a: 3, d: nil)
     expect(queried_instances.size).to eq 2
     expect(queried_instances.map(&:id).sort).to eq([first.id, second.id].sort)
 

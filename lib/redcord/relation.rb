@@ -5,6 +5,10 @@
 require 'active_support/core_ext/array'
 require 'active_support/core_ext/module'
 
+module Redcord
+  class InvalidQuery < StandardError; end
+end
+
 class Redcord::Relation
   extend T::Sig
 
@@ -52,6 +56,7 @@ class Redcord::Relation
       encoded_val = model.validate_types_and_encode_query(attr_key, attr_val)
       [attr_key, encoded_val]
     end
+
     regular_index_query_conditions.merge!(encoded_args.to_h)
     if custom_index_name
       with_index(custom_index_name)
@@ -86,7 +91,7 @@ class Redcord::Relation
     model.validate_index_attributes(query_conditions.keys, custom_index_name: custom_index_name)
     redis.find_by_attr_count(
       model.model_key,
-      query_conditions,
+      extract_query_conditions!,
       index_attrs: model._script_arg_index_attrs,
       range_index_attrs: model._script_arg_range_index_attrs,
       custom_index_attrs: model._script_arg_custom_index_attrs[custom_index_name],
@@ -171,11 +176,14 @@ class Redcord::Relation
 
   sig { returns(T.nilable(String)) }
   def extract_hash_tag!
-    attr = model.class_variable_get(:@@shard_by_attribute)
+    attr = model.shard_by_attribute
     return nil if attr.nil?
 
     if !query_conditions.keys.include?(attr)
-      raise "Queries must contain attribute '#{attr}' since model #{model.name} is sharded by this attribute"
+      raise(
+        Redcord::InvalidQuery,
+        "Queries must contain attribute '#{attr}' since model #{model.name} is sharded by this attribute"
+      )
     end
 
     # Query conditions on custom index are always in form of range, even when query is by value condition is [value_x, value_x]
@@ -188,7 +196,10 @@ class Redcord::Relation
     when Integer, String
       "{#{condition}}"
     else
-      raise "Does not support query condition #{condition} on a Redis Cluster"
+      raise(
+        Redcord::InvalidQuery,
+        "Does not support query condition #{condition} on a Redis Cluster",
+      )
     end
   end
 
@@ -202,7 +213,7 @@ class Redcord::Relation
       if !select_attrs.empty?
         res_hash = redis.find_by_attr(
           model.model_key,
-          query_conditions,
+          extract_query_conditions!,
           select_attrs: select_attrs,
           index_attrs: model._script_arg_index_attrs,
           range_index_attrs: model._script_arg_range_index_attrs,
@@ -219,7 +230,7 @@ class Redcord::Relation
       else
         res_hash = redis.find_by_attr(
           model.model_key,
-          query_conditions,
+          extract_query_conditions!,
           index_attrs: model._script_arg_index_attrs,
           range_index_attrs: model._script_arg_range_index_attrs,
           custom_index_attrs: model._script_arg_custom_index_attrs[custom_index_name],
@@ -237,8 +248,19 @@ class Redcord::Relation
     model.redis
   end
 
-  T::Hash[Symbol, T.untyped]
+  sig { returns(T::Hash[Symbol, T.untyped]) }
   def query_conditions
     custom_index_name ? custom_index_query_conditions : regular_index_query_conditions
+  end
+
+  sig { returns(T::Hash[Symbol, T.untyped]) }
+  def extract_query_conditions!
+    attr = model.shard_by_attribute
+    return query_conditions if attr.nil?
+
+    cond = query_conditions.reject { |key| key == attr }
+    raise Redcord::InvalidQuery, "Cannot query only by shard_by_attribute: #{attr}" if cond.empty?
+
+    cond
   end
 end

@@ -61,7 +61,7 @@ describe Redcord::Attribute do
       Class.new(T::Struct) do
         include Redcord::Base
         attribute :a, Integer
-        attribute :b, Integer, index: true
+        attribute :b, Integer
         custom_index :main, [:a, :b]
         shard_by_attribute :b
       end
@@ -71,7 +71,7 @@ describe Redcord::Attribute do
       Class.new(T::Struct) do
         include Redcord::Base
         attribute :a, Integer
-        attribute :b, Integer, index: true
+        attribute :b, Integer
         custom_index :main, [:b, :a]
         shard_by_attribute :b
       end
@@ -83,7 +83,7 @@ describe Redcord::Attribute do
       Class.new(T::Struct) do
         include Redcord::Base
         attribute :a, Integer
-        attribute :b, Integer, index: true
+        attribute :b, Integer
         shard_by_attribute :b
         custom_index :main, [:a, :b]
       end
@@ -97,7 +97,7 @@ describe Redcord::Attribute do
         shard_by_attribute :b
         custom_index :main, [:b, :a]
       end
-    }.to_not raise_error()
+    }.to raise_error(Redcord::InvalidAttribute) # attr b should not be indexed
   end
 
   it 'validates custom index attributes have allowed type' do

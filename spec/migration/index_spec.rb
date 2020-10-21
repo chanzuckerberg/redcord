@@ -9,12 +9,10 @@ describe Redcord::Migration::Index do
     klass = Class.new(T::Struct) do
       include Redcord::Base
 
-      attribute :index, T.nilable(String), index: true
+      attribute :index, T.nilable(String), index: !cluster_mode?
       attribute :range_index, T.nilable(Integer), index: true
 
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        shard_by_attribute :index
-      end
+      shard_by_attribute :index if cluster_mode?
 
       def self.name
         'RedcordSpecModel'
@@ -24,7 +22,9 @@ describe Redcord::Migration::Index do
 
     k = klass.create!(range_index: 1, index: '123')
     expect(klass.find_by(index: '123', range_index: 1).id).to eq k.id
-    expect(klass.find_by(index: '123').id).to eq k.id
+    unless cluster_mode?
+      expect(klass.find_by(index: '123').id).to eq k.id
+    end
 
     klass = Class.new(T::Struct) do
       include Redcord::Base
@@ -32,8 +32,8 @@ describe Redcord::Migration::Index do
       attribute :index, T.nilable(String)
       attribute :range_index, T.nilable(Integer)
 
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        attribute :new_index, T.nilable(String), index: true
+      if cluster_mode?
+        attribute :new_index, T.nilable(String)
 
         shard_by_attribute :new_index
       end
@@ -63,12 +63,13 @@ describe Redcord::Migration::Index do
   it "drops custom index" do
     klass = Class.new(T::Struct) do
       include Redcord::Base
-      attribute :a, T.nilable(Integer), index: true
+
+      attribute :a, T.nilable(Integer)
       attribute :b, T.nilable(Integer)
       custom_index :first, [:a, :b]
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        shard_by_attribute :a
-      end
+
+      shard_by_attribute :a if cluster_mode?
+
       def self.name
         'RedcordSpecModelCustom'
       end
@@ -83,11 +84,11 @@ describe Redcord::Migration::Index do
 
     klass = Class.new(T::Struct) do
       include Redcord::Base
-      attribute :a, T.nilable(Integer), index: true
+      attribute :a, T.nilable(Integer), index: !cluster_mode?
       attribute :b, T.nilable(Integer)
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
-        shard_by_attribute :a
-      end
+
+      shard_by_attribute :a if cluster_mode?
+
       def self.name
         'RedcordSpecModelCustom'
       end

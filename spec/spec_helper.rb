@@ -9,6 +9,10 @@ if ENV['CI'] == 'true'
   SimpleCov.formatter = SimpleCov::Formatter::Codecov
 end
 
+def cluster_mode?
+  ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+end
+
 RSpec.configure do |config|
   require 'redcord'
 

@@ -59,7 +59,7 @@ module Redcord::Serializer
     def validate_types_and_encode_query(attr_key, attr_val)
       # Validate attribute types for index attributes
       attr_type = get_attr_type(attr_key)
-      if class_variable_get(:@@index_attributes).include?(attr_key)
+      if class_variable_get(:@@index_attributes).include?(attr_key) || attr_key == shard_by_attribute
         validate_attr_type(attr_val, attr_type)
       else
         validate_range_attr_types(attr_val, attr_type)
@@ -79,6 +79,8 @@ module Redcord::Serializer
     def validate_index_attributes(attr_keys, custom_index_name: nil)
       custom_index_attributes = class_variable_get(:@@custom_index_attributes)[custom_index_name]
       attr_keys.each do |attr_key|
+        next if attr_key == shard_by_attribute
+
         if !custom_index_attributes.empty?
           if !custom_index_attributes.include?(attr_key)
             raise(
