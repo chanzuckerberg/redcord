@@ -1,0 +1,12 @@
+// client: ec2 t3.2xlarge
+// server: elasticache cache.t3.micro with 3 shards
+
+7416 x query_view_at: avg = 2.6756935218094355
+7446 x query_edit_base: avg = 3.3323364148494354
+7448 x delete: avg = 1.8805349464805858
+7482 x update: avg = 2.5742901285544044
+7500 x create: avg = 2.598775524566493
+7510 x query_edit_base_with_custom_index: avg = 2.522227088183294
+7532 x query_view_base: avg = 2.89748288369387
+7538 x query_view_base_with_custom_index: avg = 2.5909074682864643
+7618 x query_edit_at: avg = 2.8271935365079233
