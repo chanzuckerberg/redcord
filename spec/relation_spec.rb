@@ -7,12 +7,12 @@ describe Redcord::Relation do
     Class.new(T::Struct) do
       include Redcord::Base
 
-      attribute :a, Integer, index: true
+      attribute :a, Integer, index: !cluster_mode?
       attribute :b, String, index: true
       attribute :c, Integer
       attribute :d, T.nilable(Time), index: true
 
-      if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+      if cluster_mode?
         shard_by_attribute :a
       end
 
@@ -36,19 +36,22 @@ describe Redcord::Relation do
     expect(queried_instances.first.id).to eq instance.id
 
     # other index attributes not changed should be untouched
-    queried_instances = klass.where(a: 3)
-    expect(queried_instances.count).to eq 1
-    expect(queried_instances.first.id).to eq instance.id
+    unless cluster_mode?
+      queried_instances = klass.where(a: 3)
+      expect(queried_instances.count).to eq 1
+      expect(queried_instances.first.id).to eq instance.id
+    end
 
     queried_instances = klass.where(a: 3, d: nil)
     expect(queried_instances.count).to eq 1
+    expect(queried_instances.first.id).to eq instance.id
   end
 
   it 'maintains index id sets after delete operation' do
     instance = klass.create!(a: 3, b: '3', c: 3)
     instance.destroy
 
-    queried_instances = klass.where(a: 3)
+    queried_instances = klass.where(a: 3, b: '3')
     expect(queried_instances.size).to eq 0
   end
 
@@ -68,7 +71,7 @@ describe Redcord::Relation do
     first = klass.create!(a: 3, b: '3', c: 3)
     klass.create!(a: 3, b: '4', c: 3)
 
-    queried_instances = klass.where(a: 3).select { |r| r.b == '3' }
+    queried_instances = klass.where(a: 3, d: nil).select { |r| r.b == '3' }
     expect(queried_instances.size).to eq 1
     expect(queried_instances[0].id).to eq(first.id)
   end
@@ -77,18 +80,18 @@ describe Redcord::Relation do
     klass.create!(a: 3, b: '3', c: 3)
     klass.create!(a: 3, b: '4', c: 3)
 
-    count = klass.where(a: 3).count
+    count = klass.where(a: 3, d: nil).count
     expect(count).to eq 2
 
-    expect(klass.where(a: 0).count).to eq 0
+    expect(klass.where(a: 0, d: nil).count).to eq 0
   end
 
-  if ENV['REDCORD_SPEC_USE_CLUSTER'] == 'true'
+  if cluster_mode?
     it 'does not allow queries without shard_by attribute' do
       # Cannot query without shard_by attribute
       expect {
         klass.where(b: '3').count
-      }.to raise_error(RuntimeError)
+      }.to raise_error(Redcord::InvalidQuery)
     end
   end
 end

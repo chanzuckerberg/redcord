@@ -9,6 +9,7 @@ require 'redcord/relation'
 module Redcord
   # Raised by Model.find
   class RecordNotFound < StandardError; end
+  class InvalidAction < StandardError; end
 end
 
 module Redcord::Actions
@@ -188,9 +189,9 @@ module Redcord::Actions
        'redcord_actions_instance_methods_update!',
         model_name: self.class.name,
       ) do
-        shard_by_attr = self.class.class_variable_get(:@@shard_by_attribute)
+        shard_by_attr = self.class.shard_by_attribute
         if args.keys.include?(shard_by_attr)
-          raise "Cannot update shard_by attribute #{shard_by_attr}"
+          raise Redcord::InvalidAction, "Cannot update shard_by attribute #{shard_by_attr}"
         end
 
         _id = id
