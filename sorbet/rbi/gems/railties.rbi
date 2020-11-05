@@ -7,13 +7,14 @@
 #
 #   https://github.com/sorbet/sorbet-typed/new/master?filename=lib/railties/all/railties.rbi
 #
-# railties-5.2.4.3
+# railties-6.0.3.1
 
 module Rails
   def self.app_class; end
   def self.app_class=(arg0); end
   def self.application; end
   def self.application=(arg0); end
+  def self.autoloaders; end
   def self.backtrace_cleaner; end
   def self.cache; end
   def self.cache=(arg0); end
@@ -92,7 +93,7 @@ end
 class Rails::Engine < Rails::Railtie
   def _all_autoload_once_paths; end
   def _all_autoload_paths; end
-  def _all_load_paths; end
+  def _all_load_paths(add_autoload_paths_to_load_path); end
   def app; end
   def build_middleware; end
   def build_request(env); end
@@ -170,13 +171,14 @@ class Rails::Application < Rails::Engine
   def build_middleware_stack; end
   def build_request(env); end
   def config; end
-  def config=(configuration); end
+  def config=(arg0); end
   def config_for(name, env: nil); end
   def console(&blk); end
   def credentials; end
   def default_middleware_stack; end
   def default_url_options(*args, &block); end
   def default_url_options=(arg); end
+  def eager_load!; end
   def encrypted(path, key_path: nil, env_key: nil); end
   def env_config; end
   def executor; end
@@ -211,7 +213,7 @@ class Rails::Application < Rails::Engine
   def sandbox?; end
   def secret_key_base; end
   def secrets; end
-  def secrets=(secrets); end
+  def secrets=(arg0); end
   def self.add_lib_to_load_path!(root); end
   def self.create(initial_variable_values = nil, &block); end
   def self.find_root(from); end
@@ -222,7 +224,21 @@ class Rails::Application < Rails::Engine
   def validate_secret_key_base(secret_key_base); end
   def watchable_args; end
 end
+class Rails::Application::NonSymbolAccessDeprecatedHash < ActiveSupport::HashWithIndifferentAccess
+  def []=(key, value); end
+  def convert_key(key); end
+  def convert_value(value, options = nil); end
+  def initialize(value = nil); end
+end
 module Rails::VERSION
+end
+module Rails::Autoloaders
+  def self.each; end
+  def self.log!; end
+  def self.logger=(logger); end
+  def self.main; end
+  def self.once; end
+  def self.zeitwerk_enabled?; end
 end
 module Rails::Paths
 end
@@ -259,6 +275,7 @@ class Rails::Paths::Path
   def existent_directories; end
   def expanded; end
   def extensions; end
+  def files_in(path); end
   def first; end
   def glob; end
   def glob=(arg0); end
@@ -329,19 +346,4 @@ class Rails::Railtie::Configuration
   def to_prepare_blocks; end
   def watchable_dirs; end
   def watchable_files; end
-end
-class Rails::Engine::Configuration < Rails::Railtie::Configuration
-  def autoload_once_paths; end
-  def autoload_once_paths=(arg0); end
-  def autoload_paths; end
-  def autoload_paths=(arg0); end
-  def eager_load_paths; end
-  def eager_load_paths=(arg0); end
-  def generators; end
-  def initialize(root = nil); end
-  def middleware; end
-  def middleware=(arg0); end
-  def paths; end
-  def root; end
-  def root=(value); end
 end
