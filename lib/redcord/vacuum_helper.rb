@@ -37,11 +37,19 @@ module Redcord::VacuumHelper
 
     # Handle nil values for range index attributes, which are stored in a normal
     # set at Redcord:Model:range_index_attr:
-    model.redis.scan_each_shard("#{range_index_set_nil_key}*") do |key|
+    model.redis.scan_each_shard(range_index_set_nil_key) do |key|
       _remove_stale_ids_from_set(model, key)
     end
 
-    model.redis.scan_each_shard("#{range_index_set_key}*") do |key|
+    model.redis.scan_each_shard("#{range_index_set_nil_key}{*}") do |key|
+      _remove_stale_ids_from_set(model, key)
+    end
+
+    model.redis.scan_each_shard(range_index_set_key) do |key|
+      _remove_stale_ids_from_sorted_set(model, key)
+    end
+
+    model.redis.scan_each_shard("#{range_index_set_key}{*}") do |key|
       _remove_stale_ids_from_sorted_set(model, key)
     end
   end
@@ -49,7 +57,13 @@ module Redcord::VacuumHelper
   sig { params(model: T.class_of(Redcord::Base), index_name: Symbol).void }
   def self._vacuum_custom_index(model, index_name)
     custom_index_content_key = "#{model.model_key}:custom_index:#{index_name}_content"
-    model.redis.scan_each_shard("#{custom_index_content_key}*") do |key|
+
+    model.redis.scan_each_shard(custom_index_content_key) do |key|
+      hash_tag = key.split(custom_index_content_key)[1] || ""
+      _remove_stale_records_from_custom_index(model, hash_tag, index_name)
+    end
+
+    model.redis.scan_each_shard("#{custom_index_content_key}{*}") do |key|
       hash_tag = key.split(custom_index_content_key)[1] || ""
       _remove_stale_records_from_custom_index(model, hash_tag, index_name)
     end
