@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 #
-# typed: strict
+# typed: true
 #
 #  This allows us to configure Redis connections for Redcord. Redis
 #  connections can be set at the base level or model level.
@@ -45,32 +45,19 @@ require 'redcord/redis_connection'
 require 'redcord/tracer'
 
 module Redcord::Configurations
-  extend T::Sig
-  extend T::Helpers
-
-  sig { params(klass: Module).void }
   def self.included(klass)
     klass.extend(ClassMethods)
   end
 
   module ClassMethods
-    extend T::Sig
+    @@configurations = Redcord::RedisConnection.merge_and_resolve_default({})
 
-    @@configurations = T.let(
-      Redcord::RedisConnection.merge_and_resolve_default({}),
-      T::Hash[String, T.untyped]
-    )
-
-    sig { returns(T::Hash[String, T.untyped]) }
     def configurations
       @@configurations
     end
 
-    sig { params(config: T::Hash[String, T.untyped]).void }
     def configurations=(config)
       @@configurations = Redcord::RedisConnection.merge_and_resolve_default(config)
     end
   end
-
-  mixes_in_class_methods(ClassMethods)
 end

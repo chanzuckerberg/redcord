@@ -1,13 +1,10 @@
 # frozen_string_literal: true
 
-# typed: strict
+# typed: true
 
 require 'erb'
 
 module Redcord::LuaScriptReader
-  extend T::Sig
-
-  sig { params(script_name: String).returns(String) }
   def self.read_lua_script(script_name)
     path = File.join(
       File.dirname(__FILE__),
@@ -16,7 +13,6 @@ module Redcord::LuaScriptReader
     ERB.new(File.read(path)).result(binding)
   end
 
-  sig { params(relative_path: String).returns(String) }
   def self.include_lua(relative_path)
     path = File.join(
       File.dirname(__FILE__),

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# typed: strict
+# typed: false
 
 require 'active_support/core_ext/array'
 require 'active_support/core_ext/module'
@@ -10,32 +10,12 @@ module Redcord
 end
 
 class Redcord::Relation
-  extend T::Sig
-
-  sig { returns(T.class_of(Redcord::Base)) }
   attr_reader :model
-
-  sig { returns(T::Set[Symbol]) }
   attr_reader :select_attrs
-
-  sig { returns(T.nilable(Symbol)) }
   attr_reader :custom_index_name
-
-  sig { returns(T::Hash[Symbol, T.untyped]) }
   attr_reader :regular_index_query_conditions
-
-  sig { returns(T::Hash[Symbol, T.untyped]) }
   attr_reader :custom_index_query_conditions
 
-  sig do
-    params(
-      model: T.class_of(Redcord::Base),
-      regular_index_query_conditions: T::Hash[Symbol, T.untyped],
-      custom_index_query_conditions: T::Hash[Symbol, T.untyped],
-      select_attrs: T::Set[Symbol],
-      custom_index_name: T.nilable(Symbol)
-    ).void
-  end
   def initialize(
     model,
     regular_index_query_conditions = {},
@@ -50,7 +30,6 @@ class Redcord::Relation
     @custom_index_name = custom_index_name
   end
 
-  sig { params(args: T::Hash[Symbol, T.untyped]).returns(Redcord::Relation) }
   def where(args)
     encoded_args = args.map do |attr_key, attr_val|
       encoded_val = model.validate_types_and_encode_query(attr_key, attr_val)
@@ -64,12 +43,6 @@ class Redcord::Relation
     self
   end
 
-  sig do
-    params(
-    args: T.untyped,
-    blk: T.nilable(T.proc.params(arg0: T.untyped).void),
-  ).returns(T.any(Redcord::Relation, T::Array[T.untyped]))
-  end
   def select(*args, &blk)
     Redcord::Base.trace(
      'redcord_relation_select',
@@ -86,7 +59,6 @@ class Redcord::Relation
     end
   end
 
-  sig { returns(Integer) }
   def count
     model.validate_index_attributes(query_conditions.keys, custom_index_name: custom_index_name)
     redis.find_by_attr_count(
@@ -100,7 +72,6 @@ class Redcord::Relation
     )
   end
 
-  sig { params(index_name: T.nilable(Symbol)).returns(Redcord::Relation) }
   def with_index(index_name)
     @custom_index_name = index_name
     adjusted_query_conditions = model.validate_and_adjust_custom_index_query_conditions(regular_index_query_conditions)
@@ -174,7 +145,6 @@ class Redcord::Relation
 
   private
 
-  sig { returns(T.nilable(String)) }
   def extract_hash_tag!
     attr = model.shard_by_attribute
     return nil if attr.nil?
@@ -203,7 +173,6 @@ class Redcord::Relation
     end
   end
 
-  sig { returns(T::Array[T.untyped]) }
   def execute_query
     Redcord::Base.trace(
      'redcord_relation_execute_query',
@@ -243,17 +212,14 @@ class Redcord::Relation
     end
   end
 
-  sig { returns(Redcord::Redis) }
   def redis
     model.redis
   end
 
-  sig { returns(T::Hash[Symbol, T.untyped]) }
   def query_conditions
     custom_index_name ? custom_index_query_conditions : regular_index_query_conditions
   end
 
-  sig { returns(T::Hash[Symbol, T.untyped]) }
   def extract_query_conditions!
     attr = model.shard_by_attribute
     return query_conditions if attr.nil?

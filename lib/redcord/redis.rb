@@ -1,22 +1,9 @@
-# typed: true
+# typed: ignore
 require 'digest'
 require 'redis'
 require 'securerandom'
 
 class Redcord::Redis < Redis
-  extend T::Sig
-
-  sig do
-    params(
-      key: T.any(String, Symbol),
-      args: T::Hash[T.untyped, T.untyped],
-      ttl: T.nilable(Integer),
-      index_attrs: T::Array[Symbol],
-      range_index_attrs: T::Array[Symbol],
-      custom_index_attrs: T::Hash[Symbol, T::Array],
-      hash_tag: T.nilable(String),
-    ).returns(String)
-  end
   def create_hash_returning_id(key, args, ttl:, index_attrs:, range_index_attrs:, custom_index_attrs:, hash_tag: nil)
     Redcord::Base.trace(
       'redcord_redis_create_hash_returning_id',
@@ -38,18 +25,6 @@ class Redcord::Redis < Redis
     end
   end
 
-  sig do
-    params(
-      model: String,
-      id: String,
-      args: T::Hash[T.untyped, T.untyped],
-      ttl: T.nilable(Integer),
-      index_attrs: T::Array[Symbol],
-      range_index_attrs: T::Array[Symbol],
-      custom_index_attrs: T::Hash[Symbol, T::Array],
-      hash_tag: T.nilable(String),
-    ).void
-  end
   def update_hash(model, id, args, ttl:, index_attrs:, range_index_attrs:, custom_index_attrs:, hash_tag:)
     Redcord::Base.trace(
       'redcord_redis_update_hash',
@@ -73,15 +48,6 @@ class Redcord::Redis < Redis
     end
   end
 
-  sig do
-    params(
-      model: String,
-      id: String,
-      index_attrs: T::Array[Symbol],
-      range_index_attrs: T::Array[Symbol],
-      custom_index_attrs: T::Hash[Symbol, T::Array],
-    ).returns(Integer)
-  end
   def delete_hash(model, id, index_attrs:, range_index_attrs:, custom_index_attrs:)
     Redcord::Base.trace(
       'redcord_redis_delete_hash',
@@ -96,18 +62,6 @@ class Redcord::Redis < Redis
     end
   end
 
-  sig do
-    params(
-      model: String,
-      query_conditions: T::Hash[T.untyped, T.untyped],
-      index_attrs: T::Array[Symbol],
-      range_index_attrs: T::Array[Symbol],
-      select_attrs: T::Set[Symbol],
-      custom_index_attrs: T::Array[Symbol],
-      hash_tag: T.nilable(String),
-      custom_index_name: T.nilable(Symbol),
-    ).returns(T::Hash[Integer, T::Hash[T.untyped, T.untyped]])
-  end
   def find_by_attr(
         model,
         query_conditions,
@@ -136,17 +90,6 @@ class Redcord::Redis < Redis
     end
   end
 
-  sig do
-    params(
-      model: String,
-      query_conditions: T::Hash[T.untyped, T.untyped],
-      index_attrs: T::Array[Symbol],
-      range_index_attrs: T::Array[Symbol],
-      custom_index_attrs: T::Array[Symbol],
-      hash_tag: T.nilable(String),
-      custom_index_name: T.nilable(Symbol),
-    ).returns(Integer)
-  end
   def find_by_attr_count(
         model,
         query_conditions,
@@ -212,7 +155,6 @@ class Redcord::Redis < Redis
 
   # When using custom index: On Lua side script expects query conditions sorted 
   # in the order of appearance of attributes in specified index
-  sig { params(query_conditions: T::Hash[T.untyped, T.untyped], partial_order: T::Array[Symbol]).returns(T::Array[T.untyped]) }
   def flatten_with_partial_sort(query_conditions, partial_order)
     conditions = partial_order.inject([]) do |result, attr|
       if !query_conditions[attr].nil?

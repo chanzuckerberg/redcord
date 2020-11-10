@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# typed: strict
+# typed: true
 
 require 'sorbet-coerce'
 
@@ -13,19 +13,12 @@ module Redcord
 end
 
 module Redcord::Actions
-  extend T::Sig
-  extend T::Helpers
-
-  sig { params(klass: T.class_of(T::Struct)).void }
   def self.included(klass)
     klass.extend(ClassMethods)
     klass.include(InstanceMethods)
   end
 
   module ClassMethods
-    extend T::Sig
-
-    sig { returns(Integer) }
     def count
       Redcord::Base.trace(
        'redcord_actions_class_methods_count',
@@ -37,7 +30,6 @@ module Redcord::Actions
       end
     end
 
-    sig { params(args: T::Hash[Symbol, T.untyped]).returns(T.untyped) }
     def create!(args)
       Redcord::Base.trace(
        'redcord_actions_class_methods_create!',
@@ -60,7 +52,6 @@ module Redcord::Actions
       end
     end
 
-    sig { params(id: T.untyped).returns(T.untyped) }
     def find(id)
       Redcord::Base.trace(
        'redcord_actions_class_methods_find',
@@ -76,7 +67,6 @@ module Redcord::Actions
       end
     end
 
-    sig { params(args: T::Hash[Symbol, T.untyped]).returns(T.untyped) }
     def find_by(args)
       Redcord::Base.trace(
        'redcord_actions_class_methods_find_by_args',
@@ -86,12 +76,10 @@ module Redcord::Actions
       end
     end
 
-    sig { params(args: T::Hash[Symbol, T.untyped]).returns(Redcord::Relation) }
     def where(args)
       Redcord::Relation.new(T.let(self, T.untyped)).where(args)
     end
 
-    sig { params(id: T.untyped).returns(T::Boolean) }
     def destroy(id)
       Redcord::Base.trace(
        'redcord_actions_class_methods_destroy',
@@ -109,32 +97,6 @@ module Redcord::Actions
   end
 
   module InstanceMethods
-    extend T::Sig
-    extend T::Helpers
-
-    abstract!
-
-    sig { abstract.returns(T.nilable(ActiveSupport::TimeWithZone)) }
-    def created_at; end
-
-    sig {
-      abstract.params(
-        time: ActiveSupport::TimeWithZone,
-      ).returns(T.nilable(ActiveSupport::TimeWithZone))
-    }
-    def created_at=(time); end
-
-    sig { abstract.returns(T.nilable(ActiveSupport::TimeWithZone)) }
-    def updated_at; end
-
-    sig {
-      abstract.params(
-        time: ActiveSupport::TimeWithZone,
-      ).returns(T.nilable(ActiveSupport::TimeWithZone))
-    }
-    def updated_at=(time); end
-
-    sig { void }
     def save!
       Redcord::Base.trace(
        'redcord_actions_instance_methods_save!',
@@ -173,7 +135,6 @@ module Redcord::Actions
       end
     end
 
-    sig { returns(T::Boolean) }
     def save
       save!
 
@@ -183,7 +144,6 @@ module Redcord::Actions
       false
     end
 
-    sig { params(args: T::Hash[Symbol, T.untyped]).void }
     def update!(args)
       Redcord::Base.trace(
        'redcord_actions_instance_methods_update!',
@@ -215,7 +175,6 @@ module Redcord::Actions
       end
     end
 
-    sig { params(args: T::Hash[Symbol, T.untyped]).returns(T::Boolean) }
     def update(args)
       update!(args)
 
@@ -225,7 +184,6 @@ module Redcord::Actions
       false
     end
 
-    sig { returns(T::Boolean) }
     def destroy
       Redcord::Base.trace(
        'redcord_actions_instance_methods_destroy',
@@ -237,30 +195,24 @@ module Redcord::Actions
       end
     end
 
-    sig { returns(String) }
     def instance_key
       "#{self.class.model_key}:id:#{T.must(id)}"
     end
 
-    sig { params(args: T::Hash[Symbol, T.untyped]).void }
     def _set_args!(args)
       args.each do |key, value|
         send(:"#{key}=", value)
       end
     end
 
-    sig { returns(T.nilable(String)) }
     def id
       instance_variable_get(:@_id)
     end
 
     private
 
-    sig { params(id: String).returns(String) }
     def id=(id)
       instance_variable_set(:@_id, id)
     end
   end
-
-  mixes_in_class_methods(ClassMethods)
 end

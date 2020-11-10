@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-# typed: strict
+# typed: ignore
 module Redcord
   class InvalidAttribute < StandardError; end
 end
 
 module Redcord::Attribute
-  extend T::Sig
-  extend T::Helpers
-
   # We implicitly determine what should be a range index on Redis based on Ruby
   # type.
   RangeIndexType = T.type_alias {
@@ -30,8 +27,7 @@ module Redcord::Attribute
       Time,
     )
   }
-  
-  sig { params(klass: T.class_of(T::Struct)).void }
+
   def self.included(klass)
     klass.extend(ClassMethods)
     klass.include(InstanceMethods)
@@ -43,15 +39,6 @@ module Redcord::Attribute
   end
 
   module ClassMethods
-    extend T::Sig
-
-    sig do
-      params(
-        name: Symbol,
-        type: T.untyped, # until smth better is proposed
-        options: T::Hash[Symbol, T.untyped],
-      ).void
-    end
     def attribute(name, type, options = {})
       # TODO: support uniq options
       # TODO: validate types
@@ -60,7 +47,6 @@ module Redcord::Attribute
       index_attribute(name, type) if options[:index]
     end
 
-    sig { params(attr: Symbol, type: T.any(Class, T::Types::Base)).void }
     def index_attribute(attr, type)
       if should_range_index?(type)
         class_variable_get(:@@range_index_attributes) << attr
@@ -68,8 +54,7 @@ module Redcord::Attribute
         class_variable_get(:@@index_attributes) << attr
       end
     end
-    
-    sig { params(index_name: Symbol, attrs: T::Array[Symbol]).void }
+
     def custom_index(index_name, attrs)
       attrs.each do |attr|
         type = props[attr][:type]
@@ -87,7 +72,6 @@ module Redcord::Attribute
       class_variable_get(:@@custom_index_attributes)[index_name] = attrs
     end
 
-    sig { params(duration: T.nilable(ActiveSupport::Duration)).void }
     def ttl(duration)
       class_variable_set(:@@ttl, duration)
     end
@@ -117,29 +101,24 @@ module Redcord::Attribute
       class_variable_set(:@@shard_by_attribute, attr)
     end
 
-    sig { returns(Integer) }
     def _script_arg_ttl
       class_variable_get(:@@ttl)&.to_i || -1
     end
 
-    sig { returns(T::Array[Symbol]) }
     def _script_arg_index_attrs
       class_variable_get(:@@index_attributes).to_a
     end
 
-    sig { returns(T::Array[Symbol]) }
     def _script_arg_range_index_attrs
       class_variable_get(:@@range_index_attributes).to_a
     end
 
-    sig { returns(T::Hash[Symbol, T::Array]) }
     def _script_arg_custom_index_attrs
       class_variable_get(:@@custom_index_attributes)
     end
 
     private
 
-    sig { params(type: T.any(Class, T::Types::Base)).returns(T::Boolean) }
     def should_range_index?(type)
       # Change Ruby raw type to Sorbet type in order to call subtype_of?
       type = T::Types::Simple.new(type) if type.is_a?(Class)
@@ -147,7 +126,6 @@ module Redcord::Attribute
       type.subtype_of?(RangeIndexType)
     end
 
-    sig { params(type: T.any(Class, T::Types::Base)).returns(T::Boolean) }
     def can_custom_index?(type)
       # Change Ruby raw type to Sorbet type in order to call subtype_of?
       type = T::Types::Simple.new(type) if type.is_a?(Class)
@@ -156,9 +134,6 @@ module Redcord::Attribute
   end
 
   module InstanceMethods
-    extend T::Sig
-
-    sig { returns(T.nilable(String)) }
     def hash_tag
       attr = self.class.class_variable_get(:@@shard_by_attribute)
 
@@ -175,6 +150,4 @@ module Redcord::Attribute
       "{#{tag || default_tag}}"
     end
   end
-
-  mixes_in_class_methods(ClassMethods)
 end
