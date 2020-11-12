@@ -88,16 +88,21 @@ class Redcord::Relation
 
   sig { returns(Integer) }
   def count
-    model.validate_index_attributes(query_conditions.keys, custom_index_name: custom_index_name)
-    redis.find_by_attr_count(
-      model.model_key,
-      extract_query_conditions!,
-      index_attrs: model._script_arg_index_attrs,
-      range_index_attrs: model._script_arg_range_index_attrs,
-      custom_index_attrs: model._script_arg_custom_index_attrs[custom_index_name],
-      hash_tag: extract_hash_tag!,
-      custom_index_name: custom_index_name
-    )
+    Redcord::Base.trace(
+     'redcord_relation_count',
+     model_name: model.name,
+    ) do
+      model.validate_index_attributes(query_conditions.keys, custom_index_name: custom_index_name)
+      redis.find_by_attr_count(
+        model.model_key,
+        extract_query_conditions!,
+        index_attrs: model._script_arg_index_attrs,
+        range_index_attrs: model._script_arg_range_index_attrs,
+        custom_index_attrs: model._script_arg_custom_index_attrs[custom_index_name],
+        hash_tag: extract_hash_tag!,
+        custom_index_name: custom_index_name
+      )
+    end
   end
 
   sig { params(index_name: T.nilable(Symbol)).returns(Redcord::Relation) }
