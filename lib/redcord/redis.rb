@@ -20,7 +20,7 @@ class Redcord::Redis < Redis
   def create_hash_returning_id(key, args, ttl:, index_attrs:, range_index_attrs:, custom_index_attrs:, hash_tag: nil)
     Redcord::Base.trace(
       'redcord_redis_create_hash_returning_id',
-      model_name: key,
+      model_name: key.to_s.split(':').last,
     ) do
       id = "#{SecureRandom.uuid}#{hash_tag}"
       custom_index_attrs_flat = custom_index_attrs.inject([]) do |result, (index_name, attrs)|
