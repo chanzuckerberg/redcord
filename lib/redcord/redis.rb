@@ -145,19 +145,19 @@ class Redcord::Redis < Redis
     )
   end
 
-  def scan_each_shard(key, &blk)
+  def scan_each_shard(key, count: 1000, &blk)
     clients = instance_variable_get(:@client)
       &.instance_variable_get(:@node)
       &.instance_variable_get(:@clients)
       &.values
 
     if clients.nil?
-      scan_each(match: key, &blk)
+      scan_each(match: key, count: count, &blk)
     else
       clients.each do |client|
         cursor = 0
         loop do
-          cursor, keys = client.call([:scan, cursor, 'match', key])
+          cursor, keys = client.call([:scan, cursor, 'match', key, 'count', count])
           keys.each(&blk)
           break if cursor == "0"
         end
