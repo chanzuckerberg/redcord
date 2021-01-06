@@ -286,12 +286,14 @@ describe Redcord::Actions do
       before(:each) { klass.redis.del("#{klass.model_key}:id:#{instance_2.id}") }
 
       it 'returns existing records, removes non-existing ids from index' do
-        query_set = klass.where(indexed_value: instance_1.indexed_value).to_a
-        expect(query_set.size).to eq 1
+        unless cluster_mode?
+          query_set = klass.where(indexed_value: instance_1.indexed_value).to_a
+          expect(query_set.size).to eq 1
 
-        range_index_key = "#{klass.model_key}:indexed_value"
-        range_index_set = klass.redis.zrangebyscore(range_index_key, 1, 1)
-        expect(range_index_set.size).to eq 1
+          range_index_key = "#{klass.model_key}:indexed_value"
+          range_index_set = klass.redis.zrangebyscore(range_index_key, 1, 1)
+          expect(range_index_set.size).to eq 1
+        end
       end
     end
   end
