@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require 'simplecov'
 require 'open3'
+require 'active_support/time'
 
 SimpleCov.start
 
