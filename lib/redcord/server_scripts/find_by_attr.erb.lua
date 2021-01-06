@@ -46,10 +46,11 @@ local attr_selection_pos = query_cond_pos + ARGV[6]
 
 -- Get all ids which have the corresponding attribute values.
 local ids_set = nil
+local index_sets, range_index_sets = {}, {}
 
 -- If custom index name is empty -> use single-attribute indices
 if index_name == '' then
-  local index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(
+  index_sets, range_index_sets = unpack(validate_and_parse_query_conditions(
     KEYS[1],
     model,
     to_set({unpack(ARGV, index_attr_pos, range_attr_pos - 1)}),
