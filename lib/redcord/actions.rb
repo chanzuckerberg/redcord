@@ -239,7 +239,7 @@ module Redcord::Actions
 
     def serialize_with_trace
       Redcord::Base.trace(
-        'redcord_actions_serialize',
+        'redcord_serialize',
         model_name: self.class.name,
       ) do
         return serialize

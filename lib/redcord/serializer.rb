@@ -194,9 +194,14 @@ module Redcord::Serializer
     def coerce_and_set_id(redis_hash, id)
       # Coerce each serialized result returned from Redis back into Model
       # instance
-      instance = TypeCoerce.send(:[], self).new.from(from_redis_hash(redis_hash))
-      instance.send(:id=, id)
-      instance
+      Redcord::Base.trace(
+        'redcord_deserialize',
+        model_name: self.class.name
+      ) do
+        instance = TypeCoerce.send(:[], self).new.from(from_redis_hash(redis_hash))
+        instance.send(:id=, id)
+        return instance
+      end
     end
 
     sig { returns(String) }
