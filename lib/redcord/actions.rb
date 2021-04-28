@@ -143,7 +143,7 @@ module Redcord::Actions
         self.updated_at = Time.zone.now
         _id = id
         if _id.nil?
-          serialized_instance = serialize
+          serialized_instance = serialize_with_trace
           self.class.props.keys.each do |attr_key|
             serialized_instance[attr_key.to_s] = nil unless serialized_instance.key?(attr_key.to_s) 
           end
@@ -162,7 +162,7 @@ module Redcord::Actions
           redis.update_hash(
             self.class.model_key,
             _id,
-            self.class.to_redis_hash(serialize),
+            self.class.to_redis_hash(serialize_with_trace),
             ttl: self.class._script_arg_ttl,
             index_attrs: self.class._script_arg_index_attrs,
             range_index_attrs: self.class._script_arg_range_index_attrs,
@@ -234,6 +234,15 @@ module Redcord::Actions
         return false if id.nil?
 
         self.class.destroy(T.must(id))
+      end
+    end
+
+    def serialize_with_trace
+      Redcord::Base.trace(
+        'redcord_actions_serialize',
+        model_name: self.class.name,
+      ) do
+        return serialize
       end
     end
 

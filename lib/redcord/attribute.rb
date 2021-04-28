@@ -132,7 +132,7 @@ module Redcord::Attribute
       class_variable_get(:@@range_index_attributes).to_a
     end
 
-    sig { returns(T::Hash[Symbol, T::Array]) }
+    sig { returns(T::Hash[Symbol, T::Array[Symbol]]) }
     def _script_arg_custom_index_attrs
       class_variable_get(:@@custom_index_attributes)
     end

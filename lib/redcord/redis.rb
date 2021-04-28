@@ -13,7 +13,7 @@ class Redcord::Redis < Redis
       ttl: T.nilable(Integer),
       index_attrs: T::Array[Symbol],
       range_index_attrs: T::Array[Symbol],
-      custom_index_attrs: T::Hash[Symbol, T::Array],
+      custom_index_attrs: T::Hash[Symbol, T::Array[Symbol]],
       hash_tag: T.nilable(String),
     ).returns(String)
   end
@@ -41,7 +41,7 @@ class Redcord::Redis < Redis
       ttl: T.nilable(Integer),
       index_attrs: T::Array[Symbol],
       range_index_attrs: T::Array[Symbol],
-      custom_index_attrs: T::Hash[Symbol, T::Array],
+      custom_index_attrs: T::Hash[Symbol, T::Array[Symbol]],
       hash_tag: T.nilable(String),
     ).void
   end
@@ -69,7 +69,7 @@ class Redcord::Redis < Redis
       id: String,
       index_attrs: T::Array[Symbol],
       range_index_attrs: T::Array[Symbol],
-      custom_index_attrs: T::Hash[Symbol, T::Array],
+      custom_index_attrs: T::Hash[Symbol, T::Array[Symbol]],
     ).returns(Integer)
   end
   def delete_hash(model, id, index_attrs:, range_index_attrs:, custom_index_attrs:)
@@ -168,21 +168,26 @@ class Redcord::Redis < Redis
   private
 
   def run_script(script_name, *args)
-    # Use EVAL when a redis shard has not loaded the script before
-    hash_var_name = :"@script_sha_#{script_name}"
-    hash = instance_variable_get(hash_var_name)
+    Redcord::Base.trace(
+      'redcord_run_script',
+      model_name: script_name.to_s
+    ) do
+      # Use EVAL when a redis shard has not loaded the script before
+      hash_var_name = :"@script_sha_#{script_name}"
+      hash = instance_variable_get(hash_var_name)
 
-    begin
-      return evalsha(hash, *args) if hash
-    rescue Redis::CommandError => e
-      if e.message != 'NOSCRIPT No matching script. Please use EVAL.'
-        raise e
+      begin
+        return evalsha(hash, *args) if hash
+      rescue Redis::CommandError => e
+        if e.message != 'NOSCRIPT No matching script. Please use EVAL.'
+          raise e
+        end
       end
-    end
 
-    script_content = Redcord::LuaScriptReader.read_lua_script(script_name.to_s)
-    instance_variable_set(hash_var_name, Digest::SHA1.hexdigest(script_content))
-    self.eval(script_content, *args)
+      script_content = Redcord::LuaScriptReader.read_lua_script(script_name.to_s)
+      instance_variable_set(hash_var_name, Digest::SHA1.hexdigest(script_content))
+      self.eval(script_content, *args)
+    end
   end
 
   # When using custom index: On Lua side script expects query conditions sorted 
