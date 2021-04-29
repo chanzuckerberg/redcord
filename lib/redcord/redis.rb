@@ -177,7 +177,9 @@ class Redcord::Redis < Redis
       hash = instance_variable_get(hash_var_name)
 
       begin
-        return evalsha(hash, *args) if hash
+        if hash
+          return evalsha_with_trace(script_name, hash, *args)
+        end
       rescue Redis::CommandError => e
         if e.message != 'NOSCRIPT No matching script. Please use EVAL.'
           raise e
@@ -202,4 +204,11 @@ class Redcord::Redis < Redis
     end
     conditions += query_conditions.to_a.flatten
   end
+
+    def evalsha_with_trace(script_name, hash, *args)
+      Redcord::Base.trace(
+        'redcord_evalsha',
+        model_name: script_name.to_s
+      ) { evalsha(hash, *args) }
+    end
 end
