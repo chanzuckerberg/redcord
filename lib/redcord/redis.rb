@@ -205,21 +205,10 @@ class Redcord::Redis < Redis
     conditions += query_conditions.to_a.flatten
   end
 
-  def evalsha_with_trace(script_name, *args)
-    Redcord::Base.trace(
-      'redcord_evalsha',
-      model_name: script_name.to_s
-    ) do
-      script = args.shift
-      options = args.pop if args.last.is_a?(Hash)
-      options ||= {}
-  
-      keys = args.shift || options[:keys] || []
-      argv = args.shift || options[:argv] || []
-  
-      # synchronize do |client|
-        @client.call([:evalsha, script, keys.length] + keys + argv)
-      # end
+    def evalsha_with_trace(script_name, hash, *args)
+      Redcord::Base.trace(
+        'redcord_evalsha',
+        model_name: script_name.to_s
+      ) { evalsha(hash, *args) }
     end
-  end
 end
