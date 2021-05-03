@@ -40,6 +40,21 @@ describe Redcord::RedisConnection do
     }.to raise_error(Redis::CannotConnectError)
   end
 
+  it 'uses a connection pool if pool size is specified in configurations' do
+    allow(Rails).to receive(:env).and_return(env)
+    allow(Redcord::Base).to receive(:configurations).and_return(
+      {
+        env => {
+          'spec_model' => {
+            'pool' => 5
+          },
+        },
+      },
+    )
+    model_class.establish_connection
+    expect(model_class.redis).to be_a(Redcord::ConnectionPool)
+  end
+
   it 'establishes Redis connection' do
     expect(model_class.redis.ping).to eq 'PONG'
   end

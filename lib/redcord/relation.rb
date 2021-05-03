@@ -248,7 +248,7 @@ class Redcord::Relation
     end
   end
 
-  sig { returns(Redcord::Redis) }
+  sig { returns(Redcord::RedisConnection::RedcordClientType) }
   def redis
     model.redis
   end
