@@ -82,7 +82,9 @@ module Redcord::Actions
        'redcord_actions_class_methods_find_by_args',
         model_name: name,
       ) do
-        where(args).to_a.first
+        res = where(args).to_a
+        Datadog.tracer.active_span.set_tag('found', res.count)
+        res.first
       end
     end
 
