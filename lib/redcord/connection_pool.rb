@@ -11,7 +11,8 @@ class Redcord::ConnectionPool
   end
 
   # Avoid method_missing when possible for better performance
-  %i(create_hash_returning_id update_hash delete_hash find_by_attr find_by_attr_count ping).each do |method_name|
+  methods = Redcord::Redis.instance_methods(false) + Redis.instance_methods(false)
+  methods.each do |method_name|
     define_method method_name do |*args, &blk|
       @connection_pool.with do |redis|
         redis.send(method_name, *args, &blk)
