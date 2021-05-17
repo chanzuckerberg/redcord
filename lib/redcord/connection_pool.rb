@@ -11,7 +11,7 @@ class Redcord::ConnectionPool
   end
 
   # Avoid method_missing when possible for better performance
-  methods = Redcord::Redis.instance_methods(false) + Redis.instance_methods(false)
+  methods = Set.new(Redcord::Redis.instance_methods(false) + Redis.instance_methods(false))
   methods.each do |method_name|
     define_method method_name do |*args, &blk|
       @connection_pool.with do |redis|
