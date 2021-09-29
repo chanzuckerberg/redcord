@@ -54,6 +54,9 @@ module Redcord::VacuumHelper
 
     model.redis.scan_each_shard("#{custom_index_content_key}#{key_suffix}") do |key|
       hash_tag = key.split(custom_index_content_key)[1] || ""
+      if index_name == nil
+        raise TypeError "index_name nil for model: #{model}"
+      end
       _remove_stale_records_from_custom_index(model, hash_tag, index_name)
     end
   end
