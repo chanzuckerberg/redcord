@@ -17,7 +17,7 @@ module Redcord::VacuumHelper
       _vacuum_range_index_attribute(model, range_index_attr)
     end
     model.class_variable_get(:@@custom_index_attributes).keys.each do |index_name|
-      puts "Vacuuming custom index: #{index_name}"
+      puts "Vacuuming custom index: #{index_name} for model #{model}"
       _vacuum_custom_index(model, index_name)
     end
   end
@@ -54,9 +54,6 @@ module Redcord::VacuumHelper
 
     model.redis.scan_each_shard("#{custom_index_content_key}#{key_suffix}") do |key|
       hash_tag = key.split(custom_index_content_key)[1] || ""
-      if index_name == nil
-        raise TypeError "index_name nil for model: #{model}"
-      end
       _remove_stale_records_from_custom_index(model, hash_tag, index_name)
     end
   end
