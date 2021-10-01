@@ -17,7 +17,7 @@ module Redcord::VacuumHelper
       _vacuum_range_index_attribute(model, range_index_attr)
     end
     model.class_variable_get(:@@custom_index_attributes).keys.each do |index_name|
-      puts "Vacuuming custom index: #{index_name} for model #{model}"
+      puts "Vacuuming custom index: #{index_name} for model #{model.name}"
       _vacuum_custom_index(model, index_name)
     end
   end
