@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches: # Trigger only on the main branch to avoid duplicate runs on PR branches
+      - master
+  pull_request: # Trigger All PRs
+
+jobs:
+  rspec:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: true
+      matrix:
+        ruby: [2.5, 2.6, 2.7]
+        use_cluster: [true, false]
+
+    env:
+      REDCORD_SPEC_USE_CLUSTER: ${{ matrix.use_cluster }}
+
+    services:
+      redis:
+        image: redis:5-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli GET 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+        bundler-cache: true
+    - run: bundle exec rspec
