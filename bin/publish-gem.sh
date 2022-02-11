@@ -4,5 +4,5 @@ chmod 600 ~/.gem/credentials
 echo "---" >> ~/.gem/credentials
 echo ":github: Bearer ${GITHUB_TOKEN}" >> ~/.gem/credentials
 echo ":rubygems_api_key: ${RUBYGEMS_API_KEY}" >> ~/.gem/credentials
-ls -l 
-gem push redcord*.gem
+gem build *.gemspec
+gem push *.gem

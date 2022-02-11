@@ -13,9 +13,6 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.7
-      - uses: actions/download-artifact@master
-        with:
-          name: redcord 
       - name: Publish gems to package repositry
         run: |
           ./bin/publish-gem.sh
