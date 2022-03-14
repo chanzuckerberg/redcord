@@ -81,7 +81,7 @@ module Redcord::Serializer
       attr_keys.each do |attr_key|
         next if attr_key == shard_by_attribute
 
-        if !custom_index_attributes.empty?
+        if !custom_index_attributes.nil? && !custom_index_attributes.empty?
           if !custom_index_attributes.include?(attr_key)
             raise(
               Redcord::AttributeNotIndexed,
