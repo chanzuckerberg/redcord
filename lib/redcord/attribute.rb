@@ -37,7 +37,7 @@ module Redcord::Attribute
     klass.include(InstanceMethods)
     klass.class_variable_set(:@@index_attributes, Set.new)
     klass.class_variable_set(:@@range_index_attributes, Set.new)
-    klass.class_variable_set(:@@custom_index_attributes, Hash.new { |h, k| h[k] = [] })
+    klass.class_variable_set(:@@custom_index_attributes, Hash.new)
     klass.class_variable_set(:@@ttl, nil)
     klass.class_variable_set(:@@shard_by_attribute, nil)
   end
