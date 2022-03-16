@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name          = 'redcord'
-  s.version       = '0.1.4'
+  s.version       = '0.1.5'
   s.date          = '2020-06-01'
   s.summary       = 'A Ruby ORM like Active Record, but for Redis'
   s.authors       = ['Chan Zuckerberg Initiative']
