@@ -3,7 +3,6 @@
 # typed: strict
 
 require 'sorbet-coerce'
-
 require 'redcord/relation'
 
 module Redcord::Actions
@@ -165,6 +164,13 @@ module Redcord::Actions
           )
         end
       end
+    # TODO: break down Redis::CommandError further by parsing the error message
+    rescue Redis::CommandError => e
+      if e.message.include?('has been deleted')
+        raise Redcord::RedcordDeletedError.new(e)
+      else
+        raise e
+      end
     end
 
     sig { returns(T::Boolean) }
@@ -173,7 +179,6 @@ module Redcord::Actions
 
       true
     rescue Redis::CommandError
-      # TODO: break down Redis::CommandError by parsing the error message
       false
     end
 
@@ -207,6 +212,13 @@ module Redcord::Actions
           )
         end
       end
+    # TODO: break down Redis::CommandError further by parsing the error message
+    rescue Redis::CommandError => e
+      if e.message.include?('has been deleted')
+        raise Redcord::RedcordDeletedError.new(e)
+      else
+        raise e
+      end
     end
 
     sig { params(args: T::Hash[Symbol, T.untyped]).returns(T::Boolean) }
@@ -215,7 +227,6 @@ module Redcord::Actions
 
       true
     rescue Redis::CommandError
-      # TODO: break down Redis::CommandError by parsing the error message
       false
     end
 

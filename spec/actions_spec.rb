@@ -327,12 +327,12 @@ describe Redcord::Actions do
 
       expect {
         instance.save!
-      }.to raise_error(Redis::CommandError)
+      }.to raise_error(Redcord::RedcordDeletedError)
       expect(klass.count).to eq 0
 
       expect {
         instance.update!(value: 2)
-      }.to raise_error(Redis::CommandError)
+      }.to raise_error(Redcord::RedcordDeletedError)
       expect(klass.count).to eq 0
     end
 

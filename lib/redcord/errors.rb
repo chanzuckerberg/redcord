@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'redcord/errors'
+
 module Redcord
   # Raised by Model.find
   class RecordNotFound < StandardError; end
@@ -11,6 +13,7 @@ module Redcord
   class WrongAttributeType < TypeError; end
   class CustomIndexInvalidQuery < StandardError; end
   class CustomIndexInvalidDesign < StandardError; end
+  class RedcordDeletedError < ::Redis::CommandError; end
 
   # Raised by shared_by_attribute
   class InvalidAttribute < StandardError; end
