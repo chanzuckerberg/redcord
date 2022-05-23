@@ -6,12 +6,6 @@ require 'sorbet-coerce'
 
 require 'redcord/relation'
 
-module Redcord
-  # Raised by Model.find
-  class RecordNotFound < StandardError; end
-  class InvalidAction < StandardError; end
-end
-
 module Redcord::Actions
   extend T::Sig
   extend T::Helpers

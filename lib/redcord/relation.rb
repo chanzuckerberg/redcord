@@ -6,10 +6,6 @@ require 'active_support'
 require 'active_support/core_ext/array'
 require 'active_support/core_ext/module'
 
-module Redcord
-  class InvalidQuery < StandardError; end
-end
-
 class Redcord::Relation
   extend T::Sig
 

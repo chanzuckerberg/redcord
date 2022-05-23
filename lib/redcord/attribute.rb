@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
 # typed: strict
-module Redcord
-  class InvalidAttribute < StandardError; end
-end
 
 module Redcord::Attribute
   extend T::Sig
