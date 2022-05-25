@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'redcord/errors'
-
 module Redcord
   # Raised by Model.find
   class RecordNotFound < StandardError; end
