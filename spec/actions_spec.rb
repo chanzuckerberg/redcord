@@ -319,7 +319,7 @@ describe Redcord::Actions do
       }.to raise_error(Redcord::RecordNotFound)
     end
 
-    it 'does not save/update a destroyed record' do
+    it 'raises Redcord::RedcordDeletedError on save/update of a destroyed record' do
       instance = klass.create!(value: 1)
       expect(klass.count).to eq 1
       instance.destroy
@@ -334,6 +334,20 @@ describe Redcord::Actions do
         instance.update!(value: 2)
       }.to raise_error(Redcord::RedcordDeletedError)
       expect(klass.count).to eq 0
+    end
+
+    it 'raises other Redis::CommandErrors on save/update' do
+      allow_any_instance_of(Redcord::Redis).to receive(:update_hash).and_raise(Redis::CommandError)
+
+      instance = klass.create!(value: 1)
+
+      expect {
+        instance.save!
+      }.to raise_error(Redis::CommandError)
+
+      expect {
+        instance.update!(value: 3)
+      }.to raise_error(Redis::CommandError)
     end
 
     it 'deletes a non-existing record' do
