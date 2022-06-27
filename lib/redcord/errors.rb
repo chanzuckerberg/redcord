@@ -1,18 +1,20 @@
 # frozen_string_literal: true
 
 module Redcord
+  class RedcordError < StandardError; end
+
   # Raised by Model.find
-  class RecordNotFound < StandardError; end
-  class InvalidAction < StandardError; end
+  class RecordNotFound < RedcordError; end
+  class InvalidAction < RedcordError; end
 
   # Raised by Model.where
-  class InvalidQuery < StandardError; end
-  class AttributeNotIndexed < StandardError; end
+  class InvalidQuery < RedcordError; end
+  class AttributeNotIndexed < RedcordError; end
   class WrongAttributeType < TypeError; end
-  class CustomIndexInvalidQuery < StandardError; end
-  class CustomIndexInvalidDesign < StandardError; end
+  class CustomIndexInvalidQuery < RedcordError; end
+  class CustomIndexInvalidDesign < RedcordError; end
   class RedcordDeletedError < ::Redis::CommandError; end
 
   # Raised by shared_by_attribute
-  class InvalidAttribute < StandardError; end
+  class InvalidAttribute < RedcordError; end
 end
