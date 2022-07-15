@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# typed: false
+# typed: ignore
 
 describe Redcord::Attribute do
   let!(:klass) do

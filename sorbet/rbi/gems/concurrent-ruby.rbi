@@ -7,7 +7,7 @@
 #
 #   https://github.com/sorbet/sorbet-typed/new/master?filename=lib/concurrent-ruby/all/concurrent-ruby.rbi
 #
-# concurrent-ruby-1.1.6
+# concurrent-ruby-1.1.10
 
 module Concurrent
   def abort_transaction; end
@@ -18,7 +18,7 @@ module Concurrent
   def dataflow_with!(executor, *inputs, &block); end
   def dataflow_with(executor, *inputs, &block); end
   def leave_transaction; end
-  def monotonic_time; end
+  def monotonic_time(unit = nil); end
   def self.abort_transaction; end
   def self.atomically; end
   def self.call_dataflow(method, executor, *inputs, &block); end
@@ -37,7 +37,7 @@ module Concurrent
   def self.global_logger=(value); end
   def self.global_timer_set; end
   def self.leave_transaction; end
-  def self.monotonic_time; end
+  def self.monotonic_time(unit = nil); end
   def self.new_fast_executor(opts = nil); end
   def self.new_io_executor(opts = nil); end
   def self.physical_processor_count; end
@@ -141,6 +141,7 @@ module Concurrent::Synchronization::ConditionSignalling
 end
 class Concurrent::Synchronization::MutexLockableObject < Concurrent::Synchronization::AbstractLockableObject
   def initialize(*defaults); end
+  def initialize_copy(other); end
   def ns_wait(timeout = nil); end
   def self.new(*args, &block); end
   def synchronize; end
@@ -148,6 +149,7 @@ class Concurrent::Synchronization::MutexLockableObject < Concurrent::Synchroniza
 end
 class Concurrent::Synchronization::MonitorLockableObject < Concurrent::Synchronization::AbstractLockableObject
   def initialize(*defaults); end
+  def initialize_copy(other); end
   def ns_wait(timeout = nil); end
   def self.new(*args, &block); end
   def synchronize; end
@@ -155,6 +157,7 @@ class Concurrent::Synchronization::MonitorLockableObject < Concurrent::Synchroni
 end
 class Concurrent::Synchronization::RbxLockableObject < Concurrent::Synchronization::AbstractLockableObject
   def initialize(*defaults); end
+  def initialize_copy(other); end
   def ns_broadcast; end
   def ns_signal; end
   def ns_wait(timeout = nil); end
@@ -231,6 +234,7 @@ class Concurrent::Collection::MriMapBackend < Concurrent::Collection::NonConcurr
 end
 class Concurrent::Map < Concurrent::Collection::MriMapBackend
   def [](key); end
+  def []=(key, value); end
   def each; end
   def each_key; end
   def each_pair; end
@@ -253,6 +257,15 @@ class Concurrent::Map < Concurrent::Collection::MriMapBackend
   def validate_options_hash!(options); end
   def value?(value); end
   def values; end
+end
+module Concurrent::ThreadSafe
+end
+module Concurrent::ThreadSafe::Util
+  def self.make_synchronized_on_cruby(klass); end
+  def self.make_synchronized_on_rbx(klass); end
+  def self.make_synchronized_on_truffleruby(klass); end
+end
+class Concurrent::Hash < Hash
 end
 class Concurrent::Error < StandardError
 end
@@ -352,8 +365,8 @@ end
 class Concurrent::AbstractExecutorService < Concurrent::Synchronization::LockableObject
   def auto_terminate=(value); end
   def auto_terminate?; end
+  def fallback_action(*args); end
   def fallback_policy; end
-  def handle_fallback(*args); end
   def initialize(opts = nil, &block); end
   def kill; end
   def name; end
@@ -455,19 +468,19 @@ class Concurrent::RubyThreadPoolExecutor < Concurrent::RubyExecutorService
   def ns_kill_execution; end
   def ns_limited_queue?; end
   def ns_prune_pool; end
-  def ns_ready_worker(worker, success = nil); end
+  def ns_ready_worker(worker, last_message, success = nil); end
   def ns_remove_busy_worker(worker); end
   def ns_reset_if_forked; end
   def ns_shutdown_execution; end
   def ns_worker_died(worker); end
-  def ns_worker_not_old_enough(worker); end
+  def prune_pool; end
   def queue_length; end
-  def ready_worker(worker); end
+  def ready_worker(worker, last_message); end
   def remaining_capacity; end
   def remove_busy_worker(worker); end
   def scheduled_task_count; end
+  def synchronous; end
   def worker_died(worker); end
-  def worker_not_old_enough(worker); end
   def worker_task_completed; end
 end
 class Concurrent::RubyThreadPoolExecutor::Worker
@@ -592,6 +605,8 @@ class Concurrent::RubyThreadLocalVar < Concurrent::AbstractThreadLocalVar
   def allocate_storage; end
   def get_default; end
   def get_threadlocal_array(thread = nil); end
+  def next_index; end
+  def self.semi_sync(&block); end
   def self.thread_finalizer(id); end
   def self.thread_local_finalizer(index); end
   def set_threadlocal_array(array, thread = nil); end
@@ -903,15 +918,72 @@ class Concurrent::Atom < Concurrent::Synchronization::Object
   def value=(value); end
   include Concurrent::Concern::Observable
 end
-module Concurrent::ThreadSafe
-end
-module Concurrent::ThreadSafe::Util
-end
 class Concurrent::Array < Array
 end
-class Concurrent::Hash < Hash
+class Concurrent::CRubySet < Set
+  def &(*args); end
+  def +(*args); end
+  def -(*args); end
+  def <(*args); end
+  def <<(*args); end
+  def <=(*args); end
+  def ==(*args); end
+  def ===(*args); end
+  def >(*args); end
+  def >=(*args); end
+  def ^(*args); end
+  def add(*args); end
+  def add?(*args); end
+  def classify(*args); end
+  def clear(*args); end
+  def collect!(*args); end
+  def compare_by_identity(*args); end
+  def compare_by_identity?(*args); end
+  def delete(*args); end
+  def delete?(*args); end
+  def delete_if(*args); end
+  def difference(*args); end
+  def disjoint?(*args); end
+  def divide(*args); end
+  def each(*args); end
+  def empty?(*args); end
+  def eql?(*args); end
+  def filter!(*args); end
+  def flatten!(*args); end
+  def flatten(*args); end
+  def flatten_merge(*args); end
+  def freeze(*args); end
+  def hash(*args); end
+  def include?(*args); end
+  def initialize(*args, &block); end
+  def initialize_copy(other); end
+  def inspect(*args); end
+  def intersect?(*args); end
+  def intersection(*args); end
+  def keep_if(*args); end
+  def length(*args); end
+  def map!(*args); end
+  def member?(*args); end
+  def merge(*args); end
+  def pretty_print(*args); end
+  def pretty_print_cycle(*args); end
+  def proper_subset?(*args); end
+  def proper_superset?(*args); end
+  def reject!(*args); end
+  def replace(*args); end
+  def reset(*args); end
+  def select!(*args); end
+  def size(*args); end
+  def subset?(*args); end
+  def subtract(*args); end
+  def superset?(*args); end
+  def to_a(*args); end
+  def to_s(*args); end
+  def to_set(*args); end
+  def union(*args); end
+  def |(*args); end
 end
-class Concurrent::Set < Set
+class Concurrent::Set < Concurrent::CRubySet
 end
 class Concurrent::Tuple
   def cas(i, old_value, new_value); end
@@ -941,6 +1013,7 @@ class Concurrent::Async::AsyncDelegator < Concurrent::Synchronization::LockableO
   def initialize(delegate); end
   def method_missing(method, *args, &block); end
   def perform; end
+  def reset_if_forked; end
   def respond_to_missing?(method, include_private = nil); end
 end
 class Concurrent::Async::AwaitDelegator
@@ -1154,18 +1227,15 @@ class Concurrent::TimerTask < Concurrent::RubyExecutorService
   def self.execute(opts = nil, &task); end
   def timeout_interval; end
   def timeout_interval=(value); end
-  def timeout_task(completion); end
   include Concurrent::Concern::Dereferenceable
   include Concurrent::Concern::Observable
 end
 class Concurrent::TVar < Concurrent::Synchronization::Object
   def initialize(value); end
   def self.new(*args, &block); end
-  def unsafe_increment_version; end
   def unsafe_lock; end
   def unsafe_value; end
   def unsafe_value=(value); end
-  def unsafe_version; end
   def value; end
   def value=(value); end
 end
@@ -1173,22 +1243,22 @@ class Concurrent::Transaction
   def abort; end
   def commit; end
   def initialize; end
+  def open(tvar); end
   def read(tvar); end
   def self.current; end
   def self.current=(transaction); end
   def unlock; end
-  def valid?; end
   def write(tvar, value); end
 end
-class Concurrent::Transaction::ReadLogEntry < Struct
+class Concurrent::Transaction::OpenEntry < Struct
+  def modified; end
+  def modified=(_); end
   def self.[](*arg0); end
   def self.inspect; end
   def self.members; end
   def self.new(*arg0); end
-  def tvar; end
-  def tvar=(_); end
-  def version; end
-  def version=(_); end
+  def value; end
+  def value=(_); end
 end
 class Concurrent::Transaction::AbortError < StandardError
 end

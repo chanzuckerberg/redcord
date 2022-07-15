@@ -7,29 +7,32 @@
 #
 #   https://github.com/sorbet/sorbet-typed/new/master?filename=lib/railties/all/railties.rbi
 #
-# railties-5.2.4.3
+# railties-7.0.3.1
 
 module Rails
   def self.app_class; end
   def self.app_class=(arg0); end
   def self.application; end
   def self.application=(arg0); end
+  def self.autoloaders; end
   def self.backtrace_cleaner; end
   def self.cache; end
   def self.cache=(arg0); end
   def self.configuration; end
   def self.env; end
   def self.env=(environment); end
+  def self.error; end
   def self.gem_version; end
   def self.groups(*groups); end
-  def self.initialize!(*args, &block); end
-  def self.initialized?(*args, &block); end
+  def self.initialize!(*, &); end
+  def self.initialized?(*, &); end
   def self.logger; end
   def self.logger=(arg0); end
   def self.public_path; end
   def self.root; end
   def self.version; end
   extend ActiveSupport::Autoload
+  extend ActiveSupport::Benchmarkable
 end
 module Rails::Initializable
   def initializers; end
@@ -64,20 +67,24 @@ class Rails::Railtie
   def configure(&block); end
   def each_registered_block(type, &block); end
   def initialize; end
-  def railtie_name(*args, &block); end
+  def railtie_name(*, &); end
   def railtie_namespace; end
   def run_console_blocks(app); end
   def run_generators_blocks(app); end
   def run_runner_blocks(app); end
+  def run_server_blocks(app); end
   def run_tasks_blocks(app); end
+  def self.<=>(other); end
   def self.abstract_railtie?; end
-  def self.config(*args, &block); end
+  def self.config(*, &); end
   def self.configure(&block); end
   def self.console(&blk); end
   def self.generate_railtie_name(string); end
   def self.generators(&blk); end
-  def self.inherited(base); end
+  def self.increment_load_index; end
+  def self.inherited(subclass); end
   def self.instance; end
+  def self.load_index; end
   def self.method_missing(name, *args, &block); end
   def self.new(*arg0); end
   def self.railtie_name(name = nil); end
@@ -85,14 +92,20 @@ class Rails::Railtie
   def self.register_block_for(type, &blk); end
   def self.respond_to_missing?(name, _); end
   def self.runner(&blk); end
+  def self.server(&blk); end
   def self.subclasses; end
+  extend ActiveSupport::DescendantsTracker
   extend Rails::Initializable::ClassMethods
   include Rails::Initializable
 end
 class Rails::Engine < Rails::Railtie
+  def __callbacks; end
+  def __callbacks?; end
   def _all_autoload_once_paths; end
   def _all_autoload_paths; end
-  def _all_load_paths; end
+  def _all_load_paths(add_autoload_paths_to_load_path); end
+  def _load_seed_callbacks; end
+  def _run_load_seed_callbacks(&block); end
   def app; end
   def build_middleware; end
   def build_request(env); end
@@ -101,29 +114,35 @@ class Rails::Engine < Rails::Railtie
   def default_middleware_stack; end
   def eager_load!; end
   def endpoint; end
-  def engine_name(*args, &block); end
+  def engine_name(*, &); end
   def env_config; end
   def has_migrations?; end
   def helpers; end
   def helpers_paths; end
   def initialize; end
-  def isolated?(*args, &block); end
+  def isolated?(*, &); end
   def load_config_initializer(initializer); end
   def load_console(app = nil); end
   def load_generators(app = nil); end
   def load_runner(app = nil); end
   def load_seed; end
+  def load_server(app = nil); end
   def load_tasks(app = nil); end
-  def middleware(*args, &block); end
-  def paths(*args, &block); end
+  def middleware(*, &); end
+  def paths(*, &); end
   def railties; end
-  def root(*args, &block); end
+  def root(*, &); end
   def routes(&block); end
   def routes?; end
   def run_tasks_blocks(*arg0); end
+  def self.__callbacks; end
+  def self.__callbacks=(value); end
+  def self.__callbacks?; end
+  def self._load_seed_callbacks; end
+  def self._load_seed_callbacks=(value); end
   def self.called_from; end
   def self.called_from=(arg0); end
-  def self.eager_load!(*args, &block); end
+  def self.eager_load!(*, &); end
   def self.endpoint(endpoint = nil); end
   def self.engine_name(name = nil); end
   def self.find(path); end
@@ -134,7 +153,9 @@ class Rails::Engine < Rails::Railtie
   def self.isolated; end
   def self.isolated=(arg0); end
   def self.isolated?; end
-  def with_inline_jobs; end
+  extend ActiveSupport::Callbacks::ClassMethods
+  extend ActiveSupport::DescendantsTracker
+  include ActiveSupport::Callbacks
 end
 class Rails::Engine::Railties
   def -(others); end
@@ -163,20 +184,38 @@ end
 class Rails::Secrets::MissingKeyError < RuntimeError
   def initialize; end
 end
+class Rails::Autoloaders
+  def each; end
+  def initialize; end
+  def log!; end
+  def logger=(logger); end
+  def main; end
+  def once; end
+  def zeitwerk_enabled?; end
+  include Enumerable
+end
+module Rails::Autoloaders::Inflector
+  def self.camelize(basename, _abspath); end
+  def self.inflect(overrides); end
+end
 class Rails::Application < Rails::Engine
   def assets; end
   def assets=(arg0); end
+  def autoloaders; end
   def build_middleware; end
   def build_middleware_stack; end
   def build_request(env); end
+  def coerce_same_site_protection(protection); end
   def config; end
-  def config=(configuration); end
+  def config=(arg0); end
   def config_for(name, env: nil); end
   def console(&blk); end
   def credentials; end
+  def credentials=(arg0); end
   def default_middleware_stack; end
-  def default_url_options(*args, &block); end
+  def default_url_options(*, &); end
   def default_url_options=(arg); end
+  def eager_load!; end
   def encrypted(path, key_path: nil, env_key: nil); end
   def env_config; end
   def executor; end
@@ -204,6 +243,7 @@ class Rails::Application < Rails::Engine
   def run_generators_blocks(app); end
   def run_load_hooks!; end
   def run_runner_blocks(app); end
+  def run_server_blocks(app); end
   def run_tasks_blocks(app); end
   def runner(&blk); end
   def sandbox; end
@@ -211,13 +251,14 @@ class Rails::Application < Rails::Engine
   def sandbox?; end
   def secret_key_base; end
   def secrets; end
-  def secrets=(secrets); end
+  def secrets=(arg0); end
   def self.add_lib_to_load_path!(root); end
   def self.create(initial_variable_values = nil, &block); end
   def self.find_root(from); end
   def self.inherited(base); end
   def self.instance; end
   def self.new(*arg0); end
+  def server(&blk); end
   def to_app; end
   def validate_secret_key_base(secret_key_base); end
   def watchable_args; end
@@ -259,6 +300,7 @@ class Rails::Paths::Path
   def existent_directories; end
   def expanded; end
   def extensions; end
+  def files_in(path); end
   def first; end
   def glob; end
   def glob=(arg0); end
@@ -266,6 +308,7 @@ class Rails::Paths::Path
   def last; end
   def load_path!; end
   def load_path?; end
+  def paths; end
   def push(path); end
   def skip_autoload!; end
   def skip_autoload_once!; end
@@ -282,19 +325,24 @@ module Rails::Configuration
 end
 class Rails::Configuration::MiddlewareStackProxy
   def +(other); end
-  def delete(*args, &block); end
+  def delete(*, &); end
   def delete_operations; end
   def initialize(operations = nil, delete_operations = nil); end
-  def insert(*args, &block); end
-  def insert_after(*args, &block); end
-  def insert_before(*args, &block); end
+  def insert(*, &); end
+  def insert_after(*, &); end
+  def insert_before(*, &); end
   def merge_into(other); end
+  def move(*, &); end
+  def move_after(*, &); end
+  def move_before(*, &); end
   def operations; end
-  def swap(*args, &block); end
-  def unshift(*args, &block); end
-  def use(*args, &block); end
+  def swap(*, &); end
+  def unshift(*, &); end
+  def use(*, &); end
 end
 class Rails::Configuration::Generators
+  def after_generate(&block); end
+  def after_generate_callbacks; end
   def aliases; end
   def aliases=(arg0); end
   def api_only; end
@@ -329,19 +377,4 @@ class Rails::Railtie::Configuration
   def to_prepare_blocks; end
   def watchable_dirs; end
   def watchable_files; end
-end
-class Rails::Engine::Configuration < Rails::Railtie::Configuration
-  def autoload_once_paths; end
-  def autoload_once_paths=(arg0); end
-  def autoload_paths; end
-  def autoload_paths=(arg0); end
-  def eager_load_paths; end
-  def eager_load_paths=(arg0); end
-  def generators; end
-  def initialize(root = nil); end
-  def middleware; end
-  def middleware=(arg0); end
-  def paths; end
-  def root; end
-  def root=(value); end
 end

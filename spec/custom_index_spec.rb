@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# typed: false
+# typed: ignore
 
 describe "Custom index" do
   let!(:klass) do

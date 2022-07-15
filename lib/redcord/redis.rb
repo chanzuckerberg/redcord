@@ -1,4 +1,4 @@
-# typed: true
+# typed: ignore
 require 'digest'
 require 'redis'
 require 'securerandom'

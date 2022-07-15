@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# typed: strict
+# typed: ignore
 
 require 'active_support'
 require 'active_support/core_ext/array'

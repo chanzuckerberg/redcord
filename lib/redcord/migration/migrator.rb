@@ -1,4 +1,4 @@
-# typed: strict
+# typed: false
 require 'redcord/migration'
 class Redcord::Migration::Migrator
   extend T::Sig

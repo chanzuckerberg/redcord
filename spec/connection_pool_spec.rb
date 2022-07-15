@@ -1,3 +1,4 @@
+# typed: ignore
 
 describe Redcord::ConnectionPool do
   let!(:klass) do

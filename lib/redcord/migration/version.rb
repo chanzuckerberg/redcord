@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# typed: strict
+# typed: false
 
 class Redcord::Migration::Version
   extend T::Sig

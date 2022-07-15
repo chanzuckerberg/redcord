@@ -1,3 +1,4 @@
+# typed: ignore
 require 'concurrent'
 require 'redis'
 require_relative '../lib/redcord'
