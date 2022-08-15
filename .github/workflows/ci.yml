@@ -35,6 +35,8 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby }}
         bundler-cache: true
+    - name: Sorbet Typecheck (allowed to fail)
+      run: bundle exec srb tc | true
     - run: bundle exec rspec
     - name: Upload to Codecov
       uses: codecov/codecov-action@v3
