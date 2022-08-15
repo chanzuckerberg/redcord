@@ -4,14 +4,6 @@
 
 require 'redcord/range_interval'
 
-module Redcord
-  # Raised by Model.where
-  class AttributeNotIndexed < StandardError; end
-  class WrongAttributeType < TypeError; end
-  class CustomIndexInvalidQuery < StandardError; end
-  class CustomIndexInvalidDesign < StandardError; end
-end
-
 # This module defines various helper methods on Redcord for serialization
 # between the  Ruby client and Redis server.
 module Redcord::Serializer
@@ -72,7 +64,7 @@ module Redcord::Serializer
       attr_keys.each do |attr_key|
         next if attr_key == shard_by_attribute
 
-        if !custom_index_attributes.empty?
+        if !custom_index_attributes.nil? && !custom_index_attributes.empty?
           if !custom_index_attributes.include?(attr_key)
             raise(
               Redcord::AttributeNotIndexed,

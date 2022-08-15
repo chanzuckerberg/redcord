@@ -12,11 +12,12 @@ describe Redcord::VacuumHelper do
     shard_by_attribute :a if cluster_mode?
   end
 
-  let (:model_key) { RedcordVacuumSpecModel.model_key }
+  let(:model_key) { RedcordVacuumSpecModel.model_key }
 
   context 'vacuum' do
     it 'vacuums all index attributes' do
       instance = RedcordVacuumSpecModel.create!(a: "x", b: 1)
+      RedcordVacuumSpecModel.create!(a: "x", b: nil)
       # index sets should contain the id
       unless cluster_mode?
         expect(

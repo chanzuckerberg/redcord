@@ -1,8 +1,10 @@
 # typed: true
 
-module Redcord::RedisConnection
+module RedcordClientTypeConnection
   extend T::Sig
   extend T::Helpers
+
+  RedcordClientType = T.type_alias { T.any(Redcord::Redis, Redcord::ConnectionPool) }
 
   @connections = T.let(nil, T.nilable(T::Hash[String, T.untyped]))
   @procs_to_prepare = T.let([], T::Array[Proc])
@@ -18,15 +20,15 @@ module Redcord::RedisConnection
     def connection_config
     end
 
-    sig { returns(Redcord::Redis) }
+    sig { returns(RedcordClientType) }
     def redis
     end
 
-    sig { returns(Redcord::Redis) }
+    sig { returns(RedcordClientType) }
     def establish_connection
     end
 
-    sig { params(redis: Redis).returns(Redcord::Redis) }
+    sig { params(redis: Redis).returns(RedcordClientType) }
     def redis=(redis)
     end
 
@@ -35,7 +37,7 @@ module Redcord::RedisConnection
     # definitions in each Redis query.
     #
     # TODO: Replace this with Redcord migrations
-    sig { params(client: T.nilable(Redis)).returns(Redcord::Redis) }
+    sig { params(client: T.nilable(Redis)).returns(RedcordClientType) }
     def prepare_redis!(client = nil)
     end
   end
@@ -43,7 +45,7 @@ module Redcord::RedisConnection
   module InstanceMethods
     extend T::Sig
 
-    sig { returns(Redcord::Redis) }
+    sig { returns(RedcordClientType) }
     def redis
     end
   end
@@ -66,9 +68,9 @@ module Redcord::RedisConnection
 end
 
 module Redcord::Base
-  extend Redcord::RedisConnection::ClassMethods
+  extend RedcordClientTypeConnection::ClassMethods
 
-  include Redcord::RedisConnection::InstanceMethods
+  include RedcordClientTypeConnection::InstanceMethods
 end
 
 module Redcord

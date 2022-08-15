@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 require 'simplecov'
 require 'open3'
+require "active_support"
+require 'active_support/time'
 
 SimpleCov.start
 
 if ENV['CI'] == 'true'
-  require 'codecov'
-  SimpleCov.formatter = SimpleCov::Formatter::Codecov
+  require 'simplecov-cobertura'
+  SimpleCov.formatter = SimpleCov::Formatter::CoberturaFormatter
 end
 
 def cluster_mode?

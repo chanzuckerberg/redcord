@@ -6,10 +6,11 @@ require 'rails'
 
 require 'redcord/lua_script_reader'
 require 'redcord/redis'
+require 'redcord/connection_pool'
 
 module Redcord::RedisConnection
-  @connections = T.let(nil, T.nilable(T::Hash[String, T.untyped]))
-  @procs_to_prepare = T.let([], T::Array[Proc])
+  @connections = nil
+  @procs_to_prepare = []
 
   def self.included(klass)
     klass.extend(ClassMethods)
@@ -41,18 +42,19 @@ module Redcord::RedisConnection
     #
     # TODO: Replace this with Redcord migrations
     def prepare_redis!(client = nil)
-      return client if client.is_a?(Redcord::Redis)
+      return client if client.is_a?(Redcord::Redis) || client.is_a?(Redcord::ConnectionPool)
 
-      client = Redcord::Redis.new(
-        **(
-          if client.nil?
-            connection_config
-          else
-            client.instance_variable_get(:@options)
-          end
-        ),
-        logger: Redcord::Logger.proxy,
-      )
+      options = client.nil? ? connection_config : client.instance_variable_get(:@options)
+      client =
+        if options[:pool]
+          Redcord::ConnectionPool.new(
+            pool_size: options[:pool],
+            timeout: options[:connection_timeout] || 1.0,
+            **options
+          )
+        else
+          Redcord::Redis.new(**options, logger: Redcord::Logger.proxy)
+        end
 
       client.ping
       client
@@ -60,8 +62,6 @@ module Redcord::RedisConnection
   end
 
   module InstanceMethods
-    extend T::Sig
-
     def redis
       self.class.redis
     end

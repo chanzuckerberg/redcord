@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-# typed: ignore
-module Redcord
-  class InvalidAttribute < StandardError; end
-end
-
 module Redcord::Attribute
   # We implicitly determine what should be a range index on Redis based on Ruby
   # type.
@@ -19,7 +14,7 @@ module Redcord::Attribute
   }
 
   # Implicitly determine what data type can be a used in custom index on Redis based on Ruby type.
-  # Custom index currently supports positive integers with up to 19 characters in decimal notation, 
+  # Custom index currently supports positive integers with up to 19 characters in decimal notation,
   # will raise error in Lua if bigger numbers are used.
   CustomIndexType = T.type_alias {
     T.any(
@@ -33,7 +28,7 @@ module Redcord::Attribute
     klass.include(InstanceMethods)
     klass.class_variable_set(:@@index_attributes, Set.new)
     klass.class_variable_set(:@@range_index_attributes, Set.new)
-    klass.class_variable_set(:@@custom_index_attributes, Hash.new { |h, k| h[k] = [] })
+    klass.class_variable_set(:@@custom_index_attributes, Hash.new)
     klass.class_variable_set(:@@ttl, nil)
     klass.class_variable_set(:@@shard_by_attribute, nil)
   end

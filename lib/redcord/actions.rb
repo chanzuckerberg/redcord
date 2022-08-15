@@ -3,14 +3,7 @@
 # typed: true
 
 require 'sorbet-coerce'
-
 require 'redcord/relation'
-
-module Redcord
-  # Raised by Model.find
-  class RecordNotFound < StandardError; end
-  class InvalidAction < StandardError; end
-end
 
 module Redcord::Actions
   def self.included(klass)
@@ -133,6 +126,13 @@ module Redcord::Actions
           )
         end
       end
+    # TODO: break down Redis::CommandError further by parsing the error message
+    rescue Redis::CommandError => e
+      if e.message.include?('has been deleted')
+        raise Redcord::RedcordDeletedError.new(e)
+      else
+        raise e
+      end
     end
 
     def save
@@ -140,7 +140,6 @@ module Redcord::Actions
 
       true
     rescue Redis::CommandError
-      # TODO: break down Redis::CommandError by parsing the error message
       false
     end
 
@@ -173,6 +172,13 @@ module Redcord::Actions
           )
         end
       end
+    # TODO: break down Redis::CommandError further by parsing the error message
+    rescue Redis::CommandError => e
+      if e.message.include?('has been deleted')
+        raise Redcord::RedcordDeletedError.new(e)
+      else
+        raise e
+      end
     end
 
     def update(args)
@@ -180,7 +186,6 @@ module Redcord::Actions
 
       true
     rescue Redis::CommandError
-      # TODO: break down Redis::CommandError by parsing the error message
       false
     end
 

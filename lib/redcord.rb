@@ -23,6 +23,7 @@ module Redcord
 end
 
 require 'redcord/base'
+require 'redcord/errors'
 require 'redcord/migration'
 require 'redcord/migration/migrator'
 require 'redcord/migration/version'

@@ -279,6 +279,23 @@ describe Redcord::Actions do
       end
 
     end
+
+    context 'index set has ids of records that do not exist' do
+      let(:instance_1) { klass.create!(indexed_value: 1) }
+      let(:instance_2) { klass.create!(indexed_value: 1) }
+      before(:each) { klass.redis.del("#{klass.model_key}:id:#{instance_2.id}") }
+
+      it 'returns existing records, removes non-existing ids from index' do
+        unless cluster_mode?
+          query_set = klass.where(indexed_value: instance_1.indexed_value).to_a
+          expect(query_set.size).to eq 1
+
+          range_index_key = "#{klass.model_key}:indexed_value"
+          range_index_set = klass.redis.zrangebyscore(range_index_key, 1, 1)
+          expect(range_index_set.size).to eq 1
+        end
+      end
+    end
   end
 
   context 'delete' do
@@ -302,7 +319,7 @@ describe Redcord::Actions do
       }.to raise_error(Redcord::RecordNotFound)
     end
 
-    it 'does not save/update a destroyed record' do
+    it 'raises Redcord::RedcordDeletedError on save/update of a destroyed record' do
       instance = klass.create!(value: 1)
       expect(klass.count).to eq 1
       instance.destroy
@@ -310,13 +327,27 @@ describe Redcord::Actions do
 
       expect {
         instance.save!
-      }.to raise_error(Redis::CommandError)
+      }.to raise_error(Redcord::RedcordDeletedError)
       expect(klass.count).to eq 0
 
       expect {
         instance.update!(value: 2)
-      }.to raise_error(Redis::CommandError)
+      }.to raise_error(Redcord::RedcordDeletedError)
       expect(klass.count).to eq 0
+    end
+
+    it 'raises other Redis::CommandErrors on save/update' do
+      allow_any_instance_of(Redcord::Redis).to receive(:update_hash).and_raise(Redis::CommandError)
+
+      instance = klass.create!(value: 1)
+
+      expect {
+        instance.save!
+      }.to raise_error(Redis::CommandError)
+
+      expect {
+        instance.update!(value: 3)
+      }.to raise_error(Redis::CommandError)
     end
 
     it 'deletes a non-existing record' do
