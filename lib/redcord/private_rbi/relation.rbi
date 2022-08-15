@@ -67,7 +67,7 @@ class Redcord::Relation
   def execute_query
   end
 
-  sig { returns(Redcord::Redis) }
+  sig { returns(RedcordClientTypeConnection::RedcordClientType) }
   def redis
   end
 
