@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'sorbet-static', '>= 0.4.4704'
 
   s.add_development_dependency 'rspec', '~> 3.2'
+  s.add_development_dependency 'rubocop', '~> 1.35'
   s.add_development_dependency 'simplecov'
   s.add_development_dependency 'simplecov-cobertura'
 end
