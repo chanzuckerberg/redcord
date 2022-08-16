@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# typed: false
 
 require 'redcord/range_interval'
 
@@ -15,7 +14,7 @@ module Redcord::Serializer
     # Redis only allows range queries on floats. To allow range queries on the
     # Ruby Time type, encode_attr_value and decode_attr_value will implicitly
     # encode and decode Time attributes to a float.
-    TIME_TYPES = T.let(Set[Time, T.nilable(Time)], T::Set[T.untyped])
+    TIME_TYPES = Set[Time]
 
     def encode_attr_value(attribute, val)
       if !val.blank? && TIME_TYPES.include?(props[attribute][:type])

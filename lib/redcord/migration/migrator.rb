@@ -1,16 +1,11 @@
-# typed: strict
 require 'redcord/migration'
 class Redcord::Migration::Migrator
-  extend T::Sig
-
-  sig { params(redis: Redis).returns(T::Boolean) }
   def self.need_to_migrate?(redis)
     local_version = Redcord::Migration::Version.new
     remote_version = Redcord::Migration::Version.new(redis: redis)
     !(local_version.all - remote_version.all).empty?
   end
 
-  sig { params(redis: Redis, version: String, direction: Symbol).void }
   def self.migrate(redis:, version:, direction:)
     migration = load_version(version)
     print [
@@ -39,7 +34,6 @@ class Redcord::Migration::Migrator
 
   private
 
-  sig { params(version: String).returns(T.class_of(Redcord::Migration)) }
   def self.load_version(version)
     file = T.must(migration_files.select { |f| f.match(version) }.first)
     require(File.expand_path(file))
@@ -49,25 +43,18 @@ class Redcord::Migration::Migrator
 
   MIGRATION_FILENAME_REGEX = /\A([0-9]+)_([_a-z0-9]*)\.?([_a-z0-9]*)?\.rb\z/
 
-  @@migrations_paths = T.let(
-    ['db/redcord/migrate'],
-    T::Array[String],
-  )
+  @@migrations_paths = ['db/redcord/migrate']
 
-  sig { returns(T::Array[String]) }
   def self.migrations_paths
     @@migrations_paths
   end
 
-  sig { returns(T::Array[String]) }
   def self.migration_files
     paths = migrations_paths
     # Use T.unsafe to workaround sorbet: splat the paths
     T.unsafe(Dir)[*paths.flat_map { |path| "#{path}/**/[0-9]*_*.rb" }]
   end
 
-
-  sig { params(filename: String).returns([String, String, String]) }
   def self.parse_migration_filename(filename)
     T.unsafe(File.basename(filename).scan(MIGRATION_FILENAME_REGEX).first)
   end

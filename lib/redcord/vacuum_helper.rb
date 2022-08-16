@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# typed: false
 
 module Redcord::VacuumHelper
   def self.vacuum(model)

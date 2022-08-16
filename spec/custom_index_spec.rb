@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# typed: false
 
 describe "Custom index" do
   let!(:klass) do
@@ -82,7 +81,7 @@ describe "Custom index" do
       expect(rel.count).to eq(1)
       expect(rel.to_a.size).to eq(1)
     end
-    
+
     it 'raises error if exclusive ranges are used in a query' do
       expect {
         klass.where(indexed_value: 1, time_value: Redcord::RangeInterval.new(min: Time.zone.at(2020), min_exclusive: true)).with_index(:first)

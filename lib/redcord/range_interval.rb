@@ -1,4 +1,3 @@
-# typed: strict
 require 'redcord/attribute'
 
 class Redcord::RangeInterval < T::Struct

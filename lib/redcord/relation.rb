@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# typed: false
 
 require 'active_support'
 require 'active_support/core_ext/array'

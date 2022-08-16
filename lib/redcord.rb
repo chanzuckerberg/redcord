@@ -1,12 +1,9 @@
 # frozen_string_literal: true
 
-# typed: true
 
 require 'sorbet-runtime'
 
 module Redcord
-  extend T::Sig
-
   @@configuration_blks = []
 
   def self.configure(&blk)

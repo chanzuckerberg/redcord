@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 #
-# typed: false
 #
 # A Redis ORM API inspired by ActiveRecord:
 # - It provides atomic CRUD operations
@@ -16,9 +15,6 @@ require 'redcord/serializer'
 require 'redcord/tracer'
 
 module Redcord::Base
-  extend T::Sig
-  extend T::Helpers
-
   # Base level methods
   #   Redis logger can be configured at the baes level. Redis connections can
   #   be configured at the base-level, the model level, and Rails environment
@@ -30,7 +26,6 @@ module Redcord::Base
 
   abstract!
 
-  sig { params(klass: T.class_of(T::Struct)).void }
   def self.included(klass)
     # Redcord uses `T::Struct` to validate the attribute types. The
     # Redcord models need to inherit `T::Struct` and include
@@ -56,12 +51,11 @@ module Redcord::Base
       # coerced to the specified attribute types. Like ActiveRecord,
       # Redcord manages the created_at and updated_at fields behind the
       # scene.
-      prop :created_at, T.nilable(Time)
-      prop :updated_at, T.nilable(Time)
+      prop :created_at
+      prop :updated_at
     end
   end
 
-  sig { returns(T::Array[T.class_of(Redcord::Base)]) }
   def self.descendants
     descendants = []
     # TODO: Use T::Struct instead of Class

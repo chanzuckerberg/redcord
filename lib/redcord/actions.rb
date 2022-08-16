@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# typed: true
 
 require 'sorbet-coerce'
 require 'redcord/relation'
@@ -70,7 +69,7 @@ module Redcord::Actions
     end
 
     def where(args)
-      Redcord::Relation.new(T.let(self, T.untyped)).where(args)
+      Redcord::Relation.new(self).where(args)
     end
 
     def destroy(id)
@@ -100,7 +99,7 @@ module Redcord::Actions
         if _id.nil?
           serialized_instance = serialize
           self.class.props.keys.each do |attr_key|
-            serialized_instance[attr_key.to_s] = nil unless serialized_instance.key?(attr_key.to_s) 
+            serialized_instance[attr_key.to_s] = nil unless serialized_instance.key?(attr_key.to_s)
           end
           self.created_at = T.must(self.updated_at)
           _id = redis.create_hash_returning_id(

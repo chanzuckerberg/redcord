@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# typed: false
 
 describe Redcord::VacuumHelper do
   class RedcordVacuumSpecModel < T::Struct

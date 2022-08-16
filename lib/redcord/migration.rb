@@ -1,4 +1,3 @@
-# typed: strict
 class Redcord::Migration
 end
 

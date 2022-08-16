@@ -5,10 +5,10 @@ require_relative '../lib/redcord'
 class Session < T::Struct
   include Redcord::Base
 
-  attribute :view_at, T.nilable(Time), index: true
-  attribute :edit_at, T.nilable(Time), index: true
-  attribute :resource_id, Integer
-  attribute :user_id, Integer, index: true
+  attribute :view_at, index: true
+  attribute :edit_at, index: true
+  attribute :resource_id
+  attribute :user_id, index: true
 
   custom_index :view_at, [:resource_id, :view_at]
   custom_index :edit_at, [:resource_id, :edit_at]

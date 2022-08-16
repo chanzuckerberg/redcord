@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# typed: false
 
 describe Redcord::Migration::Migrator do
   before(:all) do
@@ -44,7 +43,7 @@ describe Redcord::Migration::Migrator do
     <<~RUBY
       class TestMigration < Redcord::Migration
         def up
-         
+
         end
 
         def down

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 #
-# typed: true
 #
 #  This allows us to configure Redis connections for Redcord. Redis
 #  connections can be set at the base level or model level.

@@ -1,4 +1,3 @@
-# typed: strict
 require 'redcord/migration/version'
 require 'redcord/migration/migrator'
 require 'redcord/vacuum_helper'

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# typed: strict
 
 module Redcord::Tracer
   def self.included(klass)
@@ -10,9 +9,7 @@ module Redcord::Tracer
   module ClassMethods
     include Kernel
 
-    extend T::Sig
-
-    @@tracer = T.let(nil, T.untyped)
+    @@tracer = nil
 
     def trace(span_name, model_name:, tags: [], &blk)
       return blk.call if @@tracer.nil?

@@ -19,10 +19,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'railties', '>= 5'
   s.add_dependency 'redis', '~> 4'
   s.add_dependency 'connection_pool', '>= 2.2.3'
-  s.add_dependency 'sorbet', '>= 0.4.4704'
-  s.add_dependency 'sorbet-coerce', '>= 0.2.7'
-  s.add_dependency 'sorbet-runtime', '>= 0.4.4704'
-  s.add_dependency 'sorbet-static', '>= 0.4.4704'
 
   s.add_development_dependency 'rspec', '~> 3.2'
   s.add_development_dependency 'simplecov'
