@@ -11,10 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        ruby: [2.5, 2.6, 2.7]
+        ruby: [2.5, 2.6, 2.7, 3.1, ruby-head]
         use_cluster: [true, false]
+        include:
+          - ruby: 3.1 # TODO(mattxwang): remove this ASAP!
+            experimental: true # a hack to allow tests to fail for ruby-head, https://github.com/actions/toolkit/issues/399
+          - ruby: ruby-head
+            experimental: true # a hack to allow tests to fail for ruby-head, https://github.com/actions/toolkit/issues/399
 
     env:
       REDCORD_SPEC_USE_CLUSTER: ${{ matrix.use_cluster }}
@@ -37,7 +42,8 @@ jobs:
         bundler-cache: true
     - name: Sorbet Typecheck (allowed to fail)
       run: bundle exec srb tc | true
-    - run: bundle exec rspec
+    - name: "Run Tests (allowed failure: ${{ matrix.experimental == true }})"
+      run: bundle exec rspec || ${{ matrix.experimental == true }} # the eq forces a boolean instead of an empty string
     - name: Upload to Codecov
       uses: codecov/codecov-action@v3
       with:
