@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
   s.files         = Dir.glob('lib/**/*')
 
-  s.required_ruby_version = ['>= 2.5.0']
+  s.required_ruby_version = ['>= 2.7.0']
 
   s.add_dependency 'activesupport', '>= 5'
   s.add_dependency 'railties', '>= 5'
