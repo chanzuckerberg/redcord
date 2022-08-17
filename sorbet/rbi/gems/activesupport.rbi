@@ -7,25 +7,8 @@
 #
 #   https://github.com/sorbet/sorbet-typed/new/master?filename=lib/activesupport/all/activesupport.rbi
 #
-# activesupport-5.2.4.3
+# activesupport-6.0.3.1
 
-class Array
-  def as_json(options = nil); end
-  def blank?; end
-  def deep_dup; end
-  def extract_options!; end
-  def self.wrap(object); end
-  def to_default_s; end
-  def to_formatted_s(format = nil); end
-  def to_param; end
-  def to_query(key); end
-  def to_sentence(options = nil); end
-  def to_xml(options = nil); end
-end
-class Regexp
-  def as_json(options = nil); end
-  def multiline?; end
-end
 class Hash
   def _deep_transform_keys_in_object!(object, &block); end
   def _deep_transform_keys_in_object(object, &block); end
@@ -45,7 +28,6 @@ class Hash
   def except(*keys); end
   def extract!(*keys); end
   def extractable_options?; end
-  def nested_under_indifferent_access; end
   def reverse_merge!(other_hash); end
   def reverse_merge(other_hash); end
   def reverse_update(other_hash); end
@@ -63,7 +45,6 @@ class Hash
   def to_xml(options = nil); end
   def with_defaults!(other_hash); end
   def with_defaults(other_hash); end
-  def with_indifferent_access; end
 end
 module ActiveSupport
   def parse_json_times; end
@@ -120,22 +101,34 @@ class Module
   def cattr_accessor(*syms, instance_reader: nil, instance_writer: nil, instance_accessor: nil, default: nil, &blk); end
   def cattr_reader(*syms, instance_reader: nil, instance_accessor: nil, default: nil); end
   def cattr_writer(*syms, instance_writer: nil, instance_accessor: nil, default: nil); end
-  def delegate(*methods, to: nil, prefix: nil, allow_nil: nil); end
+  def delegate(*methods, to: nil, prefix: nil, allow_nil: nil, private: nil); end
   def delegate_missing_to(target); end
   def deprecate(*method_names); end
   def mattr_accessor(*syms, instance_reader: nil, instance_writer: nil, instance_accessor: nil, default: nil, &blk); end
   def mattr_reader(*syms, instance_reader: nil, instance_accessor: nil, default: nil); end
   def mattr_writer(*syms, instance_writer: nil, instance_accessor: nil, default: nil); end
   def method_visibility(method); end
+  def module_parent; end
+  def module_parent_name; end
+  def module_parents; end
   def parent; end
   def parent_name; end
   def parents; end
   def redefine_method(method, &block); end
   def redefine_singleton_method(method, &block); end
+  def remove_possible_method(method); end
+  def remove_possible_singleton_method(method); end
   def self.attr_internal_naming_format; end
   def self.attr_internal_naming_format=(arg0); end
   def silence_redefinition_of_method(method); end
+  def thread_cattr_accessor(*syms, instance_reader: nil, instance_writer: nil, instance_accessor: nil); end
+  def thread_cattr_reader(*syms, instance_reader: nil, instance_accessor: nil); end
+  def thread_cattr_writer(*syms, instance_writer: nil, instance_accessor: nil); end
+  def thread_mattr_accessor(*syms, instance_reader: nil, instance_writer: nil, instance_accessor: nil); end
+  def thread_mattr_reader(*syms, instance_reader: nil, instance_accessor: nil); end
+  def thread_mattr_writer(*syms, instance_writer: nil, instance_accessor: nil); end
   include ActiveSupport::Dependencies::ModuleConstMissing
+  include Module::Concerning
 end
 class Module::DelegationError < NoMethodError
 end
@@ -196,14 +189,23 @@ class ActiveSupport::Notifications::Instrumenter
 end
 class ActiveSupport::Notifications::Event
   def <<(event); end
+  def allocations; end
   def children; end
+  def cpu_time; end
   def duration; end
   def end; end
-  def end=(arg0); end
+  def end=(ending); end
+  def finish!; end
+  def idle_time; end
   def initialize(name, start, ending, transaction_id, payload); end
   def name; end
+  def now; end
+  def now_allocations; end
+  def now_cpu; end
   def parent_of?(event); end
   def payload; end
+  def self.clock_gettime_supported?; end
+  def start!; end
   def time; end
   def transaction_id; end
 end
@@ -225,19 +227,36 @@ class ActiveSupport::Notifications::Fanout
   include Mutex_m
 end
 module ActiveSupport::Notifications::Fanout::Subscribers
+  def self.event_object_subscriber(pattern, block); end
   def self.new(pattern, listener); end
+  def self.wrap_all(pattern, subscriber); end
+end
+class ActiveSupport::Notifications::Fanout::Subscribers::Matcher
+  def ===(name); end
+  def exclusions; end
+  def initialize(pattern); end
+  def pattern; end
+  def self.wrap(pattern); end
+  def unsubscribe!(name); end
 end
 class ActiveSupport::Notifications::Fanout::Subscribers::Evented
   def finish(name, id, payload); end
   def initialize(pattern, delegate); end
   def matches?(name); end
+  def pattern; end
   def publish(name, *args); end
   def start(name, id, payload); end
   def subscribed_to?(name); end
+  def unsubscribe!(name); end
 end
 class ActiveSupport::Notifications::Fanout::Subscribers::Timed < ActiveSupport::Notifications::Fanout::Subscribers::Evented
   def finish(name, id, payload); end
   def publish(name, *args); end
+  def start(name, id, payload); end
+end
+class ActiveSupport::Notifications::Fanout::Subscribers::EventObject < ActiveSupport::Notifications::Fanout::Subscribers::Evented
+  def build_event(name, id, payload); end
+  def finish(name, id, payload); end
   def start(name, id, payload); end
 end
 class ActiveSupport::Notifications::Fanout::Subscribers::AllMessages
@@ -247,6 +266,7 @@ class ActiveSupport::Notifications::Fanout::Subscribers::AllMessages
   def publish(name, *args); end
   def start(name, id, payload); end
   def subscribed_to?(name); end
+  def unsubscribe!(*arg0); end
 end
 module ActiveSupport::PerThreadRegistry
   def instance; end
@@ -285,6 +305,36 @@ end
 module ActiveSupport::Deprecation::DeprecatedConstantAccessor
   def self.included(base); end
 end
+class Array
+  def as_json(options = nil); end
+  def blank?; end
+  def deep_dup; end
+  def excluding(*elements); end
+  def extract!; end
+  def extract_options!; end
+  def fifth; end
+  def forty_two; end
+  def fourth; end
+  def from(position); end
+  def in_groups(number, fill_with = nil); end
+  def in_groups_of(number, fill_with = nil); end
+  def including(*elements); end
+  def inquiry; end
+  def second; end
+  def second_to_last; end
+  def self.try_convert(arg0); end
+  def split(value = nil); end
+  def third; end
+  def third_to_last; end
+  def to(position); end
+  def to_default_s; end
+  def to_formatted_s(format = nil); end
+  def to_param; end
+  def to_query(key); end
+  def to_sentence(options = nil); end
+  def to_xml(options = nil); end
+  def without(*elements); end
+end
 module ActiveSupport::Deprecation::MethodWrapper
   def deprecate_methods(target_module, *method_names); end
 end
@@ -303,11 +353,17 @@ class ActiveSupport::Deprecation::DeprecatedInstanceVariableProxy < ActiveSuppor
   def target; end
   def warn(callstack, called, args); end
 end
-class ActiveSupport::Deprecation::DeprecatedConstantProxy < ActiveSupport::Deprecation::DeprecationProxy
+class ActiveSupport::Deprecation::DeprecatedConstantProxy < Module
   def class; end
+  def const_missing(name); end
+  def hash(*args, &block); end
   def initialize(old_const, new_const, deprecator = nil, message: nil); end
+  def inspect; end
+  def instance_methods(*args, &block); end
+  def method_missing(called, *args, &block); end
+  def name(*args, &block); end
+  def self.new(*args, **kwargs, &block); end
   def target; end
-  def warn(callstack, called, args); end
 end
 module ActiveSupport::Inflector
   def apply_inflections(word, rules, locale = nil); end
@@ -323,13 +379,13 @@ module ActiveSupport::Inflector
   def inflections(locale = nil); end
   def ordinal(number); end
   def ordinalize(number); end
-  def parameterize(string, separator: nil, preserve_case: nil); end
+  def parameterize(string, separator: nil, preserve_case: nil, locale: nil); end
   def pluralize(word, locale = nil); end
   def safe_constantize(camel_cased_word); end
   def singularize(word, locale = nil); end
   def tableize(class_name); end
   def titleize(word, keep_id_suffix: nil); end
-  def transliterate(string, replacement = nil); end
+  def transliterate(string, replacement = nil, locale: nil); end
   def underscore(camel_cased_word); end
   def upcase_first(string); end
   extend ActiveSupport::Inflector
@@ -337,9 +393,6 @@ module ActiveSupport::Inflector
 end
 class ActiveSupport::Inflector::Inflections
   def acronym(word); end
-  def acronym_regex(*args, &block); end
-  def acronym_regex_with_deprecation(*args, &block); end
-  def acronym_regex_without_deprecation; end
   def acronyms; end
   def acronyms_camelize_regex; end
   def acronyms_underscore_regex; end
@@ -386,35 +439,40 @@ end
 class ActiveSupport::Concern::MultipleIncludedBlocks < StandardError
   def initialize; end
 end
-module LoggerSilence
-  def silence(temporary_level = nil); end
-  extend ActiveSupport::Concern
-end
 module ActiveSupport::LoggerThreadSafeLevel
-  def after_initialize; end
-  def level; end
-  def local_level; end
-  def local_level=(level); end
-  def local_log_id; end
-  extend ActiveSupport::Concern
-end
-class ActiveSupport::Logger < Logger
   def add(severity, message = nil, progname = nil, &block); end
+  def after_initialize; end
   def debug?; end
   def error?; end
   def fatal?; end
   def info?; end
-  def initialize(*args); end
+  def level; end
+  def local_level; end
+  def local_level=(level); end
+  def local_log_id; end
+  def unknown?; end
+  def warn?; end
+  extend ActiveSupport::Concern
+end
+module LoggerSilence
+  extend ActiveSupport::Concern
+end
+module ActiveSupport::LoggerSilence
+  def silence(temporary_level = nil); end
+  extend ActiveSupport::Concern
+end
+class ActiveSupport::Logger < Logger
+  def initialize(*args, **kwargs); end
   def self.broadcast(logger); end
+  def self.local_levels; end
+  def self.local_levels=(obj); end
   def self.logger_outputs_to?(logger, *sources); end
   def self.silencer; end
   def self.silencer=(obj); end
   def silencer; end
   def silencer=(obj); end
-  def unknown?; end
-  def warn?; end
+  include ActiveSupport::LoggerSilence
   include ActiveSupport::LoggerThreadSafeLevel
-  include LoggerSilence
 end
 class ActiveSupport::Logger::SimpleFormatter < Logger::Formatter
   def call(severity, timestamp, progname, msg); end
@@ -425,6 +483,226 @@ module DateAndTime::Compatibility
   def preserve_timezone; end
   def self.preserve_timezone; end
   def self.preserve_timezone=(obj); end
+end
+module ActiveSupport::ActionableError
+  def self.actions(error); end
+  def self.dispatch(error, name); end
+  extend ActiveSupport::Concern
+end
+class ActiveSupport::ActionableError::NonActionable < StandardError
+end
+module ActiveSupport::ActionableError::ClassMethods
+  def action(name, &block); end
+end
+module ActiveSupport::DescendantsTracker
+  def descendants; end
+  def direct_descendants; end
+  def inherited(base); end
+  def self.accumulate_descendants(klass, acc); end
+  def self.clear; end
+  def self.descendants(klass); end
+  def self.direct_descendants(klass); end
+  def self.store_inherited(klass, descendant); end
+end
+class ActiveSupport::DescendantsTracker::DescendantsArray
+  def <<(klass); end
+  def cleanup!; end
+  def each; end
+  def initialize; end
+  def initialize_copy(orig); end
+  def refs_size; end
+  def reject!; end
+  include Enumerable
+end
+class Class < Module
+  def class_attribute(*attrs, instance_accessor: nil, instance_reader: nil, instance_writer: nil, instance_predicate: nil, default: nil); end
+end
+class String
+  def acts_like_string?; end
+  def as_json(options = nil); end
+  def at(position); end
+  def blank?; end
+  def camelcase(first_letter = nil); end
+  def camelize(first_letter = nil); end
+  def classify; end
+  def constantize; end
+  def dasherize; end
+  def deconstantize; end
+  def demodulize; end
+  def ends_with?(*arg0); end
+  def first(limit = nil); end
+  def foreign_key(separate_class_name_and_id_with_underscore = nil); end
+  def from(position); end
+  def html_safe; end
+  def humanize(capitalize: nil, keep_id_suffix: nil); end
+  def in_time_zone(zone = nil); end
+  def is_utf8?; end
+  def last(limit = nil); end
+  def mb_chars; end
+  def parameterize(separator: nil, preserve_case: nil, locale: nil); end
+  def pluralize(count = nil, locale = nil); end
+  def remove!(*patterns); end
+  def remove(*patterns); end
+  def safe_constantize; end
+  def singularize(locale = nil); end
+  def squish!; end
+  def squish; end
+  def starts_with?(*arg0); end
+  def tableize; end
+  def titlecase(keep_id_suffix: nil); end
+  def titleize(keep_id_suffix: nil); end
+  def to(position); end
+  def to_date; end
+  def to_datetime; end
+  def to_time(form = nil); end
+  def truncate(truncate_at, options = nil); end
+  def truncate_bytes(truncate_at, omission: nil); end
+  def truncate_words(words_count, options = nil); end
+  def underscore; end
+  def upcase_first; end
+end
+module ActiveSupport::Callbacks
+  def halted_callback_hook(filter); end
+  def run_callbacks(kind); end
+  extend ActiveSupport::Concern
+end
+module ActiveSupport::Callbacks::Conditionals
+end
+class ActiveSupport::Callbacks::Conditionals::Value
+  def call(target, value); end
+  def initialize(&block); end
+end
+module ActiveSupport::Callbacks::Filters
+end
+class ActiveSupport::Callbacks::Filters::Environment < Struct
+  def halted; end
+  def halted=(_); end
+  def self.[](*arg0); end
+  def self.inspect; end
+  def self.members; end
+  def self.new(*arg0); end
+  def target; end
+  def target=(_); end
+  def value; end
+  def value=(_); end
+end
+class ActiveSupport::Callbacks::Filters::Before
+  def self.build(callback_sequence, user_callback, user_conditions, chain_config, filter); end
+  def self.halting(callback_sequence, user_callback, halted_lambda, filter); end
+  def self.halting_and_conditional(callback_sequence, user_callback, user_conditions, halted_lambda, filter); end
+end
+class ActiveSupport::Callbacks::Filters::After
+  def self.build(callback_sequence, user_callback, user_conditions, chain_config); end
+  def self.conditional(callback_sequence, user_callback, user_conditions); end
+  def self.halting(callback_sequence, user_callback); end
+  def self.halting_and_conditional(callback_sequence, user_callback, user_conditions); end
+  def self.simple(callback_sequence, user_callback); end
+end
+class ActiveSupport::Callbacks::Callback
+  def apply(callback_sequence); end
+  def chain_config; end
+  def check_conditionals(conditionals); end
+  def compute_identifier(filter); end
+  def conditions_lambdas; end
+  def current_scopes; end
+  def duplicates?(other); end
+  def filter; end
+  def initialize(name, filter, kind, options, chain_config); end
+  def kind; end
+  def kind=(arg0); end
+  def matches?(_kind, _filter); end
+  def merge_conditional_options(chain, if_option:, unless_option:); end
+  def name; end
+  def name=(arg0); end
+  def raw_filter; end
+  def self.build(chain, filter, kind, options); end
+end
+class ActiveSupport::Callbacks::CallTemplate
+  def expand(target, value, block); end
+  def initialize(target, method, arguments, block); end
+  def inverted_lambda; end
+  def make_lambda; end
+  def self.build(filter, callback); end
+end
+class ActiveSupport::Callbacks::CallbackSequence
+  def after(&after); end
+  def around(call_template, user_conditions); end
+  def before(&before); end
+  def expand_call_template(arg, block); end
+  def final?; end
+  def initialize(nested = nil, call_template = nil, user_conditions = nil); end
+  def invoke_after(arg); end
+  def invoke_before(arg); end
+  def nested; end
+  def skip?(arg); end
+end
+class ActiveSupport::Callbacks::CallbackChain
+  def append(*callbacks); end
+  def append_one(callback); end
+  def chain; end
+  def clear; end
+  def compile; end
+  def config; end
+  def default_terminator; end
+  def delete(o); end
+  def each(&block); end
+  def empty?; end
+  def index(o); end
+  def initialize(name, config); end
+  def initialize_copy(other); end
+  def insert(index, o); end
+  def name; end
+  def prepend(*callbacks); end
+  def prepend_one(callback); end
+  def remove_duplicates(callback); end
+  include Enumerable
+end
+module ActiveSupport::Callbacks::ClassMethods
+  def __update_callbacks(name); end
+  def define_callbacks(*names); end
+  def get_callbacks(name); end
+  def normalize_callback_params(filters, block); end
+  def reset_callbacks(name); end
+  def set_callback(name, *filter_list, &block); end
+  def set_callbacks(name, callbacks); end
+  def skip_callback(name, *filter_list, &block); end
+end
+class ActiveSupport::CurrentAttributes
+  def __callbacks; end
+  def __callbacks?; end
+  def _reset_callbacks; end
+  def _run_reset_callbacks(&block); end
+  def assign_attributes(new_attributes); end
+  def attributes; end
+  def attributes=(arg0); end
+  def compute_attributes(keys); end
+  def initialize; end
+  def reset; end
+  def self.__callbacks; end
+  def self.__callbacks=(val); end
+  def self.__callbacks?; end
+  def self._reset_callbacks; end
+  def self._reset_callbacks=(value); end
+  def self.after_reset(&block); end
+  def self.attribute(*names); end
+  def self.before_reset(&block); end
+  def self.clear_all; end
+  def self.current_instances; end
+  def self.generated_attribute_methods; end
+  def self.instance; end
+  def self.method_missing(name, *args, &block); end
+  def self.reset(*args, &block); end
+  def self.reset_all; end
+  def self.resets(&block); end
+  def self.set(*args, &block); end
+  def set(set_attributes); end
+  extend ActiveSupport::Callbacks::ClassMethods
+  extend ActiveSupport::DescendantsTracker
+  include ActiveSupport::Callbacks
+end
+module ActiveSupport::Multibyte
+  def self.proxy_class; end
+  def self.proxy_class=(klass); end
 end
 class Object < BasicObject
   def acts_like?(duck); end
@@ -449,8 +727,8 @@ class NilClass
   def as_json(options = nil); end
   def blank?; end
   def to_param; end
-  def try!(*args); end
-  def try(*args); end
+  def try!(method_name = nil, *args); end
+  def try(method_name = nil, *args); end
 end
 class FalseClass
   def as_json(options = nil); end
@@ -462,59 +740,35 @@ class TrueClass
   def blank?; end
   def to_param; end
 end
-class String
-  def as_json(options = nil); end
-  def blank?; end
-  def camelcase(first_letter = nil); end
-  def camelize(first_letter = nil); end
-  def classify; end
-  def constantize; end
-  def dasherize; end
-  def deconstantize; end
-  def demodulize; end
-  def ends_with?(*arg0); end
-  def foreign_key(separate_class_name_and_id_with_underscore = nil); end
-  def html_safe; end
-  def humanize(capitalize: nil, keep_id_suffix: nil); end
-  def in_time_zone(zone = nil); end
-  def is_utf8?; end
-  def mb_chars; end
-  def parameterize(separator: nil, preserve_case: nil); end
-  def pluralize(count = nil, locale = nil); end
-  def remove!(*patterns); end
-  def remove(*patterns); end
-  def safe_constantize; end
-  def singularize(locale = nil); end
-  def squish!; end
-  def squish; end
-  def starts_with?(*arg0); end
-  def strip_heredoc; end
-  def tableize; end
-  def titlecase(keep_id_suffix: nil); end
-  def titleize(keep_id_suffix: nil); end
-  def to_date; end
-  def to_datetime; end
-  def to_time(form = nil); end
-  def truncate(truncate_at, options = nil); end
-  def truncate_words(words_count, options = nil); end
-  def underscore; end
-  def upcase_first; end
-end
 class Numeric
   def as_json(options = nil); end
   def blank?; end
+  def byte; end
+  def bytes; end
   def day; end
   def days; end
+  def exabyte; end
+  def exabytes; end
   def fortnight; end
   def fortnights; end
+  def gigabyte; end
+  def gigabytes; end
   def hour; end
   def hours; end
   def html_safe?; end
   def in_milliseconds; end
+  def kilobyte; end
+  def kilobytes; end
+  def megabyte; end
+  def megabytes; end
   def minute; end
   def minutes; end
+  def petabyte; end
+  def petabytes; end
   def second; end
   def seconds; end
+  def terabyte; end
+  def terabytes; end
   def week; end
   def weeks; end
 end
@@ -554,9 +808,15 @@ class Time
   def minus_with_duration(other); end
   def minus_without_coercion(other); end
   def minus_without_duration(arg0); end
+  def next_day(days = nil); end
+  def next_month(months = nil); end
+  def next_year(years = nil); end
   def noon; end
   def plus_with_duration(other); end
   def plus_without_duration(arg0); end
+  def prev_day(days = nil); end
+  def prev_month(months = nil); end
+  def prev_year(years = nil); end
   def rfc3339(fraction_digits = nil); end
   def sec_fraction; end
   def seconds_since_midnight; end
@@ -582,144 +842,230 @@ class Time
   include DateAndTime::Compatibility
   include DateAndTime::Zones
 end
-class ActiveSupport::KeyGenerator
-  def generate_key(salt, key_size = nil); end
-  def initialize(secret, options = nil); end
+class LoadError < ScriptError
+  def is_missing?(location); end
 end
-class ActiveSupport::CachingKeyGenerator
-  def generate_key(*args); end
-  def initialize(key_generator); end
+class NameError < StandardError
+  def missing_name; end
+  def missing_name?(name); end
 end
-class ActiveSupport::LegacyKeyGenerator
-  def ensure_secret_secure(secret); end
-  def generate_key(salt); end
-  def initialize(secret); end
+module ActiveSupport::Concurrency
 end
-module ActiveSupport::SecurityUtils
-  def fixed_length_secure_compare(a, b); end
-  def secure_compare(a, b); end
-  def self.fixed_length_secure_compare(a, b); end
-  def self.secure_compare(a, b); end
+class ActiveSupport::Concurrency::ShareLock
+  def busy_for_exclusive?(purpose); end
+  def busy_for_sharing?(purpose); end
+  def eligible_waiters?(compatible); end
+  def exclusive(purpose: nil, compatible: nil, after_compatible: nil, no_wait: nil); end
+  def initialize; end
+  def raw_state; end
+  def sharing; end
+  def start_exclusive(purpose: nil, compatible: nil, no_wait: nil); end
+  def start_sharing; end
+  def stop_exclusive(compatible: nil); end
+  def stop_sharing; end
+  def wait_for(method); end
+  def yield_shares(purpose: nil, compatible: nil, block_share: nil); end
+  include MonitorMixin
 end
-module ActiveSupport::Messages
+module ActiveSupport::Dependencies
+  def _eager_load_paths; end
+  def _eager_load_paths=(obj); end
+  def autoload_module!(into, const_name, qualified_name, path_suffix); end
+  def autoload_once_paths; end
+  def autoload_once_paths=(obj); end
+  def autoload_paths; end
+  def autoload_paths=(obj); end
+  def autoloadable_module?(path_suffix); end
+  def autoloaded?(desc); end
+  def autoloaded_constants; end
+  def autoloaded_constants=(obj); end
+  def clear; end
+  def constant_watch_stack; end
+  def constant_watch_stack=(obj); end
+  def constantize(name); end
+  def depend_on(file_name, message = nil); end
+  def explicitly_unloadable_constants; end
+  def explicitly_unloadable_constants=(obj); end
+  def history; end
+  def history=(obj); end
+  def hook!; end
+  def interlock; end
+  def interlock=(obj); end
+  def load?; end
+  def load_file(path, const_paths = nil); end
+  def load_missing_constant(from_mod, const_name); end
+  def load_once_path?(path); end
+  def loadable_constants_for_path(path, bases = nil); end
+  def loaded; end
+  def loaded=(obj); end
+  def loading; end
+  def loading=(obj); end
+  def log(message); end
+  def logger; end
+  def logger=(obj); end
+  def mark_for_unload(const_desc); end
+  def mechanism; end
+  def mechanism=(obj); end
+  def new_constants_in(*descs); end
+  def qualified_const_defined?(path); end
+  def qualified_name_for(mod, name); end
+  def real_mod_name(mod); end
+  def reference(klass); end
+  def remove_constant(const); end
+  def remove_unloadable_constants!; end
+  def require_or_load(file_name, const_path = nil); end
+  def safe_constantize(name); end
+  def search_for_file(path_suffix); end
+  def self._eager_load_paths; end
+  def self._eager_load_paths=(obj); end
+  def self.autoload_once_paths; end
+  def self.autoload_once_paths=(obj); end
+  def self.autoload_paths; end
+  def self.autoload_paths=(obj); end
+  def self.autoloaded_constants; end
+  def self.autoloaded_constants=(obj); end
+  def self.constant_watch_stack; end
+  def self.constant_watch_stack=(obj); end
+  def self.explicitly_unloadable_constants; end
+  def self.explicitly_unloadable_constants=(obj); end
+  def self.history; end
+  def self.history=(obj); end
+  def self.interlock; end
+  def self.interlock=(obj); end
+  def self.load_interlock; end
+  def self.loaded; end
+  def self.loaded=(obj); end
+  def self.loading; end
+  def self.loading=(obj); end
+  def self.logger; end
+  def self.logger=(obj); end
+  def self.mechanism; end
+  def self.mechanism=(obj); end
+  def self.run_interlock; end
+  def self.unload_interlock; end
+  def self.verbose; end
+  def self.verbose=(obj); end
+  def self.warnings_on_first_load; end
+  def self.warnings_on_first_load=(obj); end
+  def to_constant_name(desc); end
+  def unhook!; end
+  def verbose; end
+  def verbose=(obj); end
+  def warnings_on_first_load; end
+  def warnings_on_first_load=(obj); end
+  def will_unload?(const_desc); end
+  extend ActiveSupport::Dependencies
 end
-class ActiveSupport::Messages::Metadata
-  def as_json(options = nil); end
-  def fresh?; end
-  def initialize(message, expires_at = nil, purpose = nil); end
-  def match?(purpose); end
-  def self.decode(message); end
-  def self.encode(message); end
-  def self.extract_metadata(message); end
-  def self.pick_expiry(expires_at, expires_in); end
-  def self.verify(message, purpose); end
-  def self.wrap(message, expires_at: nil, expires_in: nil, purpose: nil); end
-  def verify(purpose); end
+class ActiveSupport::Dependencies::Interlock
+  def done_running; end
+  def done_unloading; end
+  def initialize; end
+  def loading; end
+  def permit_concurrent_loads; end
+  def raw_state(&block); end
+  def running; end
+  def start_running; end
+  def start_unloading; end
+  def unloading; end
 end
-module ActiveSupport::Messages::Rotator
-  def initialize(*arg0, **options); end
-  def rotate(*secrets, **options); end
-  def run_rotations(on_rotation); end
+class ActiveSupport::Dependencies::WatchStack
+  def each(&block); end
+  def initialize; end
+  def new_constants; end
+  def pop_modules(modules); end
+  def watch_namespaces(namespaces); end
+  def watching; end
+  def watching?; end
+  include Enumerable
 end
-module ActiveSupport::Messages::Rotator::Encryptor
-  def build_rotation(secret = nil, sign_secret = nil, options); end
-  def decrypt_and_verify(*args, on_rotation: nil, **options); end
-  include ActiveSupport::Messages::Rotator
+module ActiveSupport::Dependencies::ModuleConstMissing
+  def const_missing(const_name); end
+  def guess_for_anonymous(const_name); end
+  def self.append_features(base); end
+  def self.exclude_from(base); end
+  def self.include_into(base); end
+  def unloadable(const_desc = nil); end
 end
-module ActiveSupport::Messages::Rotator::Verifier
-  def build_rotation(secret = nil, options); end
-  def verified(*args, on_rotation: nil, **options); end
-  include ActiveSupport::Messages::Rotator
+module ActiveSupport::Dependencies::Loadable
+  def load(file, wrap = nil); end
+  def load_dependency(file); end
+  def require(file); end
+  def require_dependency(file_name, message = nil); end
+  def require_or_load(file_name); end
+  def self.exclude_from(base); end
+  def self.include_into(base); end
+  def unloadable(const_desc); end
 end
-class ActiveSupport::MessageVerifier
-  def decode(data); end
-  def encode(data); end
-  def generate(value, expires_at: nil, expires_in: nil, purpose: nil); end
-  def generate_digest(data); end
-  def initialize(*arg0, **options); end
-  def valid_message?(signed_message); end
-  def verified(*args, on_rotation: nil, **options); end
-  def verify(*args); end
+module ActiveSupport::Dependencies::Blamable
+  def blame_file!(file); end
+  def blamed_files; end
+  def copy_blame!(exc); end
+  def describe_blame; end
 end
-class ActiveSupport::MessageVerifier::InvalidSignature < StandardError
-end
-class ActiveSupport::MessageEncryptor
-  def _decrypt(encrypted_message, purpose); end
-  def _encrypt(value, **metadata_options); end
-  def aead_mode?; end
-  def decrypt_and_verify(*args, on_rotation: nil, **options); end
-  def encrypt_and_sign(value, expires_at: nil, expires_in: nil, purpose: nil); end
-  def initialize(*arg0, **options); end
-  def new_cipher; end
-  def resolve_verifier; end
-  def self.default_cipher; end
-  def self.key_len(cipher = nil); end
-  def self.use_authenticated_message_encryption; end
-  def self.use_authenticated_message_encryption=(obj); end
-  def verifier; end
-end
-module ActiveSupport::MessageEncryptor::NullSerializer
-  def self.dump(value); end
-  def self.load(value); end
-end
-module ActiveSupport::MessageEncryptor::NullVerifier
-  def self.generate(value); end
-  def self.verify(value); end
-end
-class ActiveSupport::MessageEncryptor::InvalidMessage < StandardError
-end
-class ActiveSupport::EncryptedFile
-  def change(&block); end
-  def content_path; end
-  def decrypt(contents); end
-  def encrypt(contents); end
-  def encryptor; end
-  def env_key; end
-  def handle_missing_key; end
-  def initialize(content_path:, key_path:, env_key:, raise_if_missing_key:); end
-  def key; end
-  def key_path; end
-  def raise_if_missing_key; end
-  def read; end
-  def read_env_key; end
-  def read_key_file; end
-  def self.generate_key; end
-  def write(contents); end
-  def writing(contents); end
-end
-class ActiveSupport::EncryptedFile::MissingContentError < RuntimeError
-  def initialize(content_path); end
-end
-class ActiveSupport::EncryptedFile::MissingKeyError < RuntimeError
-  def initialize(key_path:, env_key:); end
-end
-class ActiveSupport::OrderedOptions < Hash
+class ActiveSupport::Dependencies::ClassCache
   def [](key); end
-  def []=(key, value); end
-  def _get(arg0); end
-  def method_missing(name, *args); end
-  def respond_to_missing?(name, include_private); end
+  def clear!; end
+  def empty?; end
+  def get(key); end
+  def initialize; end
+  def key?(key); end
+  def safe_get(key); end
+  def store(klass); end
 end
-class ActiveSupport::InheritableOptions < ActiveSupport::OrderedOptions
-  def inheritable_copy; end
-  def initialize(parent = nil); end
+class Exception
+  def as_json(options = nil); end
+  include ActiveSupport::Dependencies::Blamable
 end
-class ActiveSupport::EncryptedConfiguration < ActiveSupport::EncryptedFile
-  def [](*args, &block); end
-  def config; end
-  def deserialize(config); end
-  def fetch(*args, &block); end
-  def initialize(config_path:, key_path:, env_key:, raise_if_missing_key:); end
-  def method_missing(method, *args, &block); end
-  def options; end
-  def read; end
-  def respond_to_missing?(name, include_private = nil); end
-  def serialize(config); end
-  def write(contents); end
+class ActiveSupport::ExecutionWrapper
+  def __callbacks; end
+  def __callbacks?; end
+  def _complete_callbacks; end
+  def _run_callbacks; end
+  def _run_complete_callbacks(&block); end
+  def _run_run_callbacks(&block); end
+  def complete!; end
+  def hook_state; end
+  def run!; end
+  def self.__callbacks; end
+  def self.__callbacks=(val); end
+  def self.__callbacks?; end
+  def self._complete_callbacks; end
+  def self._complete_callbacks=(value); end
+  def self._run_callbacks; end
+  def self._run_callbacks=(value); end
+  def self.active; end
+  def self.active=(arg0); end
+  def self.active?; end
+  def self.inherited(other); end
+  def self.register_hook(hook, outer: nil); end
+  def self.run!; end
+  def self.to_complete(*args, &block); end
+  def self.to_run(*args, &block); end
+  def self.wrap; end
+  extend ActiveSupport::Callbacks::ClassMethods
+  extend ActiveSupport::DescendantsTracker
+  include ActiveSupport::Callbacks
 end
-module ActiveSupport::Multibyte
-  def self.proxy_class; end
-  def self.proxy_class=(klass); end
+class ActiveSupport::ExecutionWrapper::RunHook < Struct
+  def before(target); end
+  def hook; end
+  def hook=(_); end
+  def self.[](*arg0); end
+  def self.inspect; end
+  def self.members; end
+  def self.new(*arg0); end
+end
+class ActiveSupport::ExecutionWrapper::CompleteHook < Struct
+  def after(target); end
+  def before(target); end
+  def hook; end
+  def hook=(_); end
+  def self.[](*arg0); end
+  def self.inspect; end
+  def self.members; end
+  def self.new(*arg0); end
+end
+class ActiveSupport::Executor < ActiveSupport::ExecutionWrapper
 end
 class DateTime < Date
   def <=>(other); end
@@ -881,7 +1227,7 @@ end
 class ActiveSupport::TimeZone
   def <=>(zone); end
   def =~(re); end
-  def at(secs); end
+  def at(*args); end
   def encode_with(coder); end
   def formatted_offset(colon = nil, alternate_utc_string = nil); end
   def init_with(coder); end
@@ -925,8 +1271,10 @@ class ActiveSupport::TimeWithZone
   def <=>(other); end
   def acts_like_time?; end
   def advance(options); end
+  def after?(arg0); end
   def ago(other); end
   def as_json(options = nil); end
+  def before?(arg0); end
   def between?(min, max); end
   def blank?; end
   def change(options); end
@@ -1010,13 +1358,14 @@ module DateAndTime::Zones
   def time_with_zone(time, zone); end
 end
 module ActiveSupport::Tryable
-  def try!(*a, &b); end
-  def try(*a, &b); end
+  def try!(method_name = nil, *args, &b); end
+  def try(method_name = nil, *args, &b); end
 end
 class Delegator < BasicObject
   include ActiveSupport::Tryable
 end
 module DateAndTime::Calculations
+  def after?(date_or_time); end
   def all_day; end
   def all_month; end
   def all_quarter; end
@@ -1030,6 +1379,7 @@ module DateAndTime::Calculations
   def at_end_of_quarter; end
   def at_end_of_week(start_day = nil); end
   def at_end_of_year; end
+  def before?(date_or_time); end
   def beginning_of_month; end
   def beginning_of_quarter; end
   def beginning_of_week(start_day = nil); end
@@ -1054,23 +1404,17 @@ module DateAndTime::Calculations
   def monday; end
   def months_ago(months); end
   def months_since(months); end
-  def next_day(days = nil); end
-  def next_month(months = nil); end
   def next_occurring(day_of_week); end
   def next_quarter; end
   def next_week(given_day_in_next_week = nil, same_time: nil); end
   def next_weekday; end
-  def next_year(years = nil); end
   def on_weekday?; end
   def on_weekend?; end
   def past?; end
-  def prev_day(days = nil); end
-  def prev_month(months = nil); end
   def prev_occurring(day_of_week); end
   def prev_quarter; end
   def prev_week(start_day = nil, same_time: nil); end
   def prev_weekday; end
-  def prev_year(years = nil); end
   def sunday; end
   def today?; end
   def tomorrow; end
@@ -1134,43 +1478,329 @@ class ActiveSupport::FileUpdateChecker
   def updated_at(paths); end
   def watched; end
 end
-class Symbol
-  def as_json(options = nil); end
+class ActiveSupport::EventedFileUpdateChecker
+  def boot!; end
+  def changed(modified, added, removed); end
+  def directories_to_watch; end
+  def execute; end
+  def execute_if_updated; end
+  def initialize(files, dirs = nil, &block); end
+  def normalize_dirs!; end
+  def shutdown!; end
+  def updated?; end
+  def watching?(file); end
 end
-class BigDecimal < Numeric
-  def as_json(options = nil); end
-  def duplicable?; end
+class ActiveSupport::EventedFileUpdateChecker::PathHelper
+  def ascendant_of?(base, other); end
+  def existing_parent(dir); end
+  def filter_out_descendants(dirs); end
+  def longest_common_subpath(paths); end
+  def normalize_extension(ext); end
+  def xpath(path); end
+end
+class ActiveSupport::Subscriber
+  def self.add_event_subscriber(event); end
+  def self.attach_to(namespace, subscriber = nil, notifier = nil); end
+  def self.detach_from(namespace, notifier = nil); end
+  def self.find_attached_subscriber; end
+  def self.invalid_event?(event); end
+  def self.method_added(event); end
+  def self.namespace; end
+  def self.notifier; end
+  def self.pattern_subscribed?(pattern); end
+  def self.prepare_pattern(event); end
+  def self.remove_event_subscriber(event); end
+  def self.subscriber; end
+  def self.subscribers; end
+end
+class ActiveSupport::SubscriberQueueRegistry
+  def get_queue(queue_key); end
+  def initialize; end
+  extend ActiveSupport::PerThreadRegistry
+end
+class ActiveSupport::LogSubscriber < ActiveSupport::Subscriber
+  def self.colorize_logging; end
+  def self.colorize_logging=(obj); end
+  def self.flush_all!; end
+  def self.log_subscribers; end
+  def self.logger; end
+  def self.logger=(arg0); end
+end
+class ActiveSupport::Reloader < ActiveSupport::ExecutionWrapper
+  def _class_unload_callbacks; end
+  def _prepare_callbacks; end
+  def _run_class_unload_callbacks(&block); end
+  def _run_prepare_callbacks(&block); end
+  def check; end
+  def check=(val); end
+  def check?; end
+  def class_unload!(&block); end
+  def complete!; end
+  def executor; end
+  def executor=(val); end
+  def executor?; end
+  def initialize; end
+  def release_unload_lock!; end
+  def require_unload_lock!; end
+  def run!; end
+  def self.__callbacks; end
+  def self._class_unload_callbacks; end
+  def self._class_unload_callbacks=(value); end
+  def self._prepare_callbacks; end
+  def self._prepare_callbacks=(value); end
+  def self.after_class_unload(*args, &block); end
+  def self.before_class_unload(*args, &block); end
+  def self.check!; end
+  def self.check; end
+  def self.check=(val); end
+  def self.check?; end
+  def self.executor; end
+  def self.executor=(val); end
+  def self.executor?; end
+  def self.prepare!; end
+  def self.reload!; end
+  def self.reloaded!; end
+  def self.run!; end
+  def self.to_prepare(*args, &block); end
+  def self.wrap; end
+end
+class ActiveSupport::BacktraceCleaner
+  def add_filter(&block); end
+  def add_gem_filter; end
+  def add_gem_silencer; end
+  def add_silencer(&block); end
+  def add_stdlib_silencer; end
+  def clean(backtrace, kind = nil); end
+  def filter(backtrace, kind = nil); end
+  def filter_backtrace(backtrace); end
+  def initialize; end
+  def noise(backtrace); end
+  def remove_filters!; end
+  def remove_silencers!; end
+  def silence(backtrace); end
+end
+class ActiveSupport::ProxyObject < BasicObject
+  def raise(*args); end
+end
+module Benchmark
+  def self.ms; end
+end
+module ActiveSupport::Benchmarkable
+  def benchmark(message = nil, options = nil); end
+end
+module ActiveSupport::Cache
+  def self.expand_cache_key(key, namespace = nil); end
+  def self.lookup_store(store = nil, *parameters); end
+  def self.retrieve_cache_key(key); end
+  def self.retrieve_store_class(store); end
+end
+module ActiveSupport::Cache::Strategy
+end
+class ActiveSupport::Cache::Store
+  def cleanup(options = nil); end
+  def clear(options = nil); end
+  def decrement(name, amount = nil, options = nil); end
+  def delete(name, options = nil); end
+  def delete_entry(key, **options); end
+  def delete_matched(matcher, options = nil); end
+  def exist?(name, options = nil); end
+  def expanded_key(key); end
+  def expanded_version(key); end
+  def fetch(name, options = nil); end
+  def fetch_multi(*names); end
+  def get_entry_value(entry, name, options); end
+  def handle_expired_entry(entry, key, options); end
+  def increment(name, amount = nil, options = nil); end
+  def initialize(options = nil); end
+  def instrument(operation, key, options = nil); end
+  def key_matcher(pattern, options); end
+  def log; end
+  def logger; end
+  def logger=(obj); end
+  def merged_options(call_options); end
+  def mute; end
+  def namespace_key(key, options = nil); end
+  def normalize_key(key, options = nil); end
+  def normalize_version(key, options = nil); end
+  def options; end
+  def read(name, options = nil); end
+  def read_entry(key, **options); end
+  def read_multi(*names); end
+  def read_multi_entries(names, **options); end
+  def save_block_result_to_cache(name, **options); end
+  def self.ensure_connection_pool_added!; end
+  def self.logger; end
+  def self.logger=(obj); end
+  def self.retrieve_pool_options(options); end
+  def silence!; end
+  def silence; end
+  def silence?; end
+  def write(name, value, options = nil); end
+  def write_entry(key, entry, **options); end
+  def write_multi(hash, options = nil); end
+  def write_multi_entries(hash, **options); end
+end
+class ActiveSupport::Cache::Entry
+  def compress!(compress_threshold); end
+  def compressed?; end
+  def dup_value!; end
+  def expired?; end
+  def expires_at; end
+  def expires_at=(value); end
+  def initialize(value, compress: nil, compress_threshold: nil, version: nil, expires_in: nil, **arg5); end
+  def mismatched?(version); end
+  def size; end
+  def uncompress(value); end
+  def value; end
+  def version; end
+end
+module ActiveSupport::MarshalWithAutoloading
+  def load(source, proc = nil); end
+end
+class File < IO
+  def self.atomic_write(file_name, temp_dir = nil); end
+  def self.empty?(arg0); end
 end
 class Method
   def duplicable?; end
 end
-class Complex < Numeric
+class UnboundMethod
+  def duplicable?; end
 end
-class Rational < Numeric
+module ActiveSupport::Cache::Strategy::LocalCache
+  def bypass_local_cache; end
+  def cleanup(**options); end
+  def clear(**options); end
+  def decrement(name, amount = nil, **options); end
+  def delete_entry(key, **options); end
+  def increment(name, amount = nil, **options); end
+  def local_cache; end
+  def local_cache_key; end
+  def middleware; end
+  def read_entry(key, **options); end
+  def read_multi_entries(keys, **options); end
+  def use_temporary_local_cache(temporary_cache); end
+  def with_local_cache; end
+  def write_cache_value(name, value, **options); end
+  def write_entry(key, entry, **options); end
 end
-class Integer < Numeric
-  def month; end
-  def months; end
-  def year; end
-  def years; end
+class ActiveSupport::Cache::Strategy::LocalCache::LocalCacheRegistry
+  def cache_for(local_cache_key); end
+  def initialize; end
+  def self.cache_for(l); end
+  def self.set_cache_for(l, v); end
+  def set_cache_for(local_cache_key, value); end
+  extend ActiveSupport::PerThreadRegistry
 end
-class ActiveSupport::XMLConverter
-  def become_array?(value); end
-  def become_content?(value); end
-  def become_empty_string?(value); end
-  def become_hash?(value); end
-  def deep_to_h(value); end
-  def garbage?(value); end
-  def initialize(xml, disallowed_types = nil); end
-  def normalize_keys(params); end
-  def nothing?(value); end
-  def process_array(value); end
-  def process_content(value); end
-  def process_hash(value); end
-  def to_h; end
+class ActiveSupport::Cache::Strategy::LocalCache::LocalStore < ActiveSupport::Cache::Store
+  def clear(options = nil); end
+  def delete_entry(key, **options); end
+  def fetch_entry(key, options = nil); end
+  def initialize; end
+  def read_entry(key, **options); end
+  def read_multi_entries(keys, **options); end
+  def synchronize; end
+  def write_entry(key, value, **options); end
 end
-class ActiveSupport::XMLConverter::DisallowedType < StandardError
-  def initialize(type); end
+class ActiveSupport::Cache::FileStore < ActiveSupport::Cache::Store
+  def cache_path; end
+  def cleanup(**options); end
+  def clear(**options); end
+  def decrement(name, amount = nil, **options); end
+  def delete_empty_directories(dir); end
+  def delete_entry(key, **options); end
+  def delete_matched(matcher, options = nil); end
+  def ensure_cache_path(path); end
+  def file_path_key(path); end
+  def increment(name, amount = nil, **options); end
+  def initialize(cache_path, options = nil); end
+  def lock_file(file_name, &block); end
+  def modify_value(name, amount, options); end
+  def normalize_key(key, options); end
+  def read_entry(key, **options); end
+  def search_dir(dir, &callback); end
+  def self.supports_cache_versioning?; end
+  def write_entry(key, entry, **options); end
+end
+class ActiveSupport::Cache::MemoryStore < ActiveSupport::Cache::Store
+  def cached_size(key, entry); end
+  def cleanup(options = nil); end
+  def clear(options = nil); end
+  def decrement(name, amount = nil, options = nil); end
+  def delete_entry(key, **options); end
+  def delete_matched(matcher, options = nil); end
+  def increment(name, amount = nil, options = nil); end
+  def initialize(options = nil); end
+  def inspect; end
+  def modify_value(name, amount, options); end
+  def prune(target_size, max_time = nil); end
+  def pruning?; end
+  def read_entry(key, **options); end
+  def self.supports_cache_versioning?; end
+  def synchronize(&block); end
+  def write_entry(key, entry, **options); end
+end
+class ActiveSupport::Cache::NullStore < ActiveSupport::Cache::Store
+  def cleanup(**options); end
+  def clear(**options); end
+  def decrement(name, amount = nil, **options); end
+  def delete_entry(key, **options); end
+  def delete_matched(matcher, options = nil); end
+  def increment(name, amount = nil, **options); end
+  def read_entry(key, **options); end
+  def self.supports_cache_versioning?; end
+  def write_entry(key, entry, **options); end
+end
+class ActiveSupport::Cache::Strategy::LocalCache::Middleware
+  def call(env); end
+  def initialize(name, local_cache_key); end
+  def local_cache_key; end
+  def name; end
+  def new(app); end
+end
+class ActiveSupport::OrderedOptions < Hash
+  def [](key); end
+  def []=(key, value); end
+  def _get(arg0); end
+  def extractable_options?; end
+  def method_missing(name, *args); end
+  def respond_to_missing?(name, include_private); end
+end
+class ActiveSupport::InheritableOptions < ActiveSupport::OrderedOptions
+  def inheritable_copy; end
+  def initialize(parent = nil); end
+end
+module ActiveSupport::Configurable
+  def config; end
+  extend ActiveSupport::Concern
+end
+class ActiveSupport::Configurable::Configuration < ActiveSupport::InheritableOptions
+  def compile_methods!; end
+  def self.compile_methods!(keys); end
+end
+module ActiveSupport::Configurable::ClassMethods
+  def config; end
+  def config_accessor(*names, instance_reader: nil, instance_writer: nil, instance_accessor: nil); end
+  def configure; end
+end
+class ActiveSupport::Digest
+  def self.hash_digest_class; end
+  def self.hash_digest_class=(klass); end
+  def self.hexdigest(arg); end
+end
+module ActiveSupport::Gzip
+  def self.compress(source, level = nil, strategy = nil); end
+  def self.decompress(source); end
+end
+class ActiveSupport::Gzip::Stream < StringIO
+  def close; end
+  def initialize(*arg0); end
+end
+module ActiveSupport::JSON
+  def self.convert_dates_from(data); end
+  def self.decode(json); end
+  def self.encode(value, options = nil); end
+  def self.parse_error; end
 end
 module ActiveSupport::BigDecimalWithDefaultFormat
   def to_s(format = nil); end
@@ -1181,7 +1811,16 @@ end
 class Struct
   def as_json(options = nil); end
 end
+class Symbol
+  def as_json(options = nil); end
+end
 class Float < Numeric
+  def as_json(options = nil); end
+end
+class BigDecimal < Numeric
+  def as_json(options = nil); end
+end
+class Regexp
   def as_json(options = nil); end
 end
 module Enumerable
@@ -1201,40 +1840,6 @@ class Pathname
 end
 class Process::Status
   def as_json(options = nil); end
-end
-class Exception
-  def as_json(options = nil); end
-  include ActiveSupport::Dependencies::Blamable
-end
-class ActiveSupport::OptionMerger
-  def initialize(context, options); end
-  def method_missing(method, *arguments, &block); end
-end
-module I18n
-end
-class I18n::Railtie < Rails::Railtie
-  def self.include_fallbacks_module; end
-  def self.init_fallbacks(fallbacks); end
-  def self.initialize_i18n(app); end
-  def self.validate_fallbacks(fallbacks); end
-  def self.watched_dirs_with_extensions(paths); end
-end
-class ActiveSupport::Railtie < Rails::Railtie
-end
-class Class < Module
-  def class_attribute(*attrs); end
-end
-class ActiveSupport::Messages::RotationConfiguration
-  def encrypted; end
-  def initialize; end
-  def rotate(kind, *args); end
-  def signed; end
-end
-module ActiveSupport::JSON
-  def self.convert_dates_from(data); end
-  def self.decode(json); end
-  def self.encode(value, options = nil); end
-  def self.parse_error; end
 end
 module ActiveSupport::JSON::Encoding
   def self.escape_html_entities_in_json; end
@@ -1257,6 +1862,583 @@ class ActiveSupport::JSON::Encoding::JSONGemEncoder::EscapedString < String
   def to_json(*arg0); end
   def to_s; end
 end
+class ActiveSupport::KeyGenerator
+  def generate_key(salt, key_size = nil); end
+  def initialize(secret, options = nil); end
+end
+class ActiveSupport::CachingKeyGenerator
+  def generate_key(*args); end
+  def initialize(key_generator); end
+end
+module ActiveSupport::SecurityUtils
+  def fixed_length_secure_compare(a, b); end
+  def secure_compare(a, b); end
+  def self.fixed_length_secure_compare(a, b); end
+  def self.secure_compare(a, b); end
+end
+module ActiveSupport::Messages
+end
+class ActiveSupport::Messages::Metadata
+  def as_json(options = nil); end
+  def fresh?; end
+  def initialize(message, expires_at = nil, purpose = nil); end
+  def match?(purpose); end
+  def self.decode(message); end
+  def self.encode(message); end
+  def self.extract_metadata(message); end
+  def self.pick_expiry(expires_at, expires_in); end
+  def self.verify(message, purpose); end
+  def self.wrap(message, expires_at: nil, expires_in: nil, purpose: nil); end
+  def verify(purpose); end
+end
+module ActiveSupport::Messages::Rotator
+  def initialize(*arg0, **options); end
+  def rotate(*secrets, **options); end
+  def run_rotations(on_rotation); end
+end
+module ActiveSupport::Messages::Rotator::Encryptor
+  def build_rotation(secret = nil, sign_secret = nil, options); end
+  def decrypt_and_verify(*args, on_rotation: nil, **options); end
+  include ActiveSupport::Messages::Rotator
+end
+module ActiveSupport::Messages::Rotator::Verifier
+  def build_rotation(secret = nil, options); end
+  def verified(*args, on_rotation: nil, **options); end
+  include ActiveSupport::Messages::Rotator
+end
+class ActiveSupport::MessageVerifier
+  def decode(data); end
+  def encode(data); end
+  def generate(value, expires_at: nil, expires_in: nil, purpose: nil); end
+  def generate_digest(data); end
+  def initialize(*arg0, **options); end
+  def valid_message?(signed_message); end
+  def verified(*args, on_rotation: nil, **options); end
+  def verify(*args, **options); end
+end
+class ActiveSupport::MessageVerifier::InvalidSignature < StandardError
+end
+class ActiveSupport::MessageEncryptor
+  def _decrypt(encrypted_message, purpose); end
+  def _encrypt(value, **metadata_options); end
+  def aead_mode?; end
+  def decrypt_and_verify(*args, on_rotation: nil, **options); end
+  def encrypt_and_sign(value, expires_at: nil, expires_in: nil, purpose: nil); end
+  def initialize(*arg0, **options); end
+  def new_cipher; end
+  def resolve_verifier; end
+  def self.default_cipher; end
+  def self.key_len(cipher = nil); end
+  def self.use_authenticated_message_encryption; end
+  def self.use_authenticated_message_encryption=(obj); end
+  def verifier; end
+end
+module ActiveSupport::MessageEncryptor::NullSerializer
+  def self.dump(value); end
+  def self.load(value); end
+end
+module ActiveSupport::MessageEncryptor::NullVerifier
+  def self.generate(value); end
+  def self.verify(value); end
+end
+class ActiveSupport::MessageEncryptor::InvalidMessage < StandardError
+end
+class ActiveSupport::Multibyte::Chars
+  def <=>(*args, &block); end
+  def =~(*args, &block); end
+  def acts_like_string?(*args, &block); end
+  def as_json(options = nil); end
+  def chars(string); end
+  def compose; end
+  def decompose; end
+  def grapheme_length; end
+  def initialize(string); end
+  def limit(limit); end
+  def method_missing(method, *args, &block); end
+  def normalize(form = nil); end
+  def respond_to_missing?(method, include_private); end
+  def reverse!(*args); end
+  def reverse; end
+  def self.consumes?(string); end
+  def slice!(*args); end
+  def split(*args); end
+  def tidy_bytes!(*args); end
+  def tidy_bytes(force = nil); end
+  def titlecase; end
+  def titleize; end
+  def to_s; end
+  def to_str; end
+  def wrapped_string; end
+  include Comparable
+end
+module ActiveSupport::Multibyte::Unicode
+  def compose(codepoints); end
+  def decompose(type, codepoints); end
+  def default_normalization_form; end
+  def default_normalization_form=(arg0); end
+  def downcase(string); end
+  def normalize(string, form = nil); end
+  def pack_graphemes(unpacked); end
+  def recode_windows1252_chars(string); end
+  def swapcase(string); end
+  def tidy_bytes(string, force = nil); end
+  def unpack_graphemes(string); end
+  def upcase(string); end
+  extend ActiveSupport::Multibyte::Unicode
+end
+module ActiveSupport::NumberHelper
+  def number_to_currency(number, options = nil); end
+  def number_to_delimited(number, options = nil); end
+  def number_to_human(number, options = nil); end
+  def number_to_human_size(number, options = nil); end
+  def number_to_percentage(number, options = nil); end
+  def number_to_phone(number, options = nil); end
+  def number_to_rounded(number, options = nil); end
+  extend ActiveSupport::Autoload
+  extend ActiveSupport::NumberHelper
+end
+class ActiveSupport::NumberHelper::NumberConverter
+  def default_format_options; end
+  def default_value(key); end
+  def execute; end
+  def format_options; end
+  def i18n_format_options; end
+  def initialize(number, options); end
+  def namespace; end
+  def namespace=(val); end
+  def namespace?; end
+  def number; end
+  def options; end
+  def opts; end
+  def self.convert(number, options); end
+  def self.namespace; end
+  def self.namespace=(val); end
+  def self.namespace?; end
+  def self.validate_float; end
+  def self.validate_float=(val); end
+  def self.validate_float?; end
+  def translate_in_locale(key, **i18n_options); end
+  def translate_number_value_with_default(key, **i18n_options); end
+  def valid_float?; end
+  def validate_float; end
+  def validate_float=(val); end
+  def validate_float?; end
+end
+class ActiveSupport::NumberHelper::RoundingHelper
+  def absolute_number(number); end
+  def convert_to_decimal(number); end
+  def digit_count(number); end
+  def initialize(options); end
+  def options; end
+  def precision; end
+  def round(number); end
+  def round_significant(number); end
+  def round_without_significant(number); end
+  def significant; end
+end
+class ActiveSupport::NumberHelper::NumberToRoundedConverter < ActiveSupport::NumberHelper::NumberConverter
+  def convert; end
+  def format_number(number); end
+  def self.namespace; end
+  def self.validate_float; end
+  def strip_insignificant_zeros; end
+end
+class ActiveSupport::NumberHelper::NumberToDelimitedConverter < ActiveSupport::NumberHelper::NumberConverter
+  def convert; end
+  def delimiter_pattern; end
+  def parts; end
+  def self.validate_float; end
+end
+class ActiveSupport::NumberHelper::NumberToHumanConverter < ActiveSupport::NumberHelper::NumberConverter
+  def calculate_exponent(units); end
+  def convert; end
+  def determine_unit(units, exponent); end
+  def format; end
+  def self.namespace; end
+  def self.validate_float; end
+  def unit_exponents(units); end
+end
+class ActiveSupport::NumberHelper::NumberToHumanSizeConverter < ActiveSupport::NumberHelper::NumberConverter
+  def base; end
+  def conversion_format; end
+  def convert; end
+  def exponent; end
+  def self.namespace; end
+  def self.validate_float; end
+  def smaller_than_base?; end
+  def storage_unit_key; end
+  def unit; end
+end
+class ActiveSupport::NumberHelper::NumberToPhoneConverter < ActiveSupport::NumberHelper::NumberConverter
+  def convert; end
+  def convert_to_phone_number(number); end
+  def convert_with_area_code(number); end
+  def convert_without_area_code(number); end
+  def country_code(code); end
+  def delimiter; end
+  def phone_ext(ext); end
+  def regexp_pattern(default_pattern); end
+  def start_with_delimiter?(number); end
+end
+class ActiveSupport::NumberHelper::NumberToCurrencyConverter < ActiveSupport::NumberHelper::NumberConverter
+  def convert; end
+  def i18n_opts; end
+  def options; end
+  def self.namespace; end
+end
+class ActiveSupport::NumberHelper::NumberToPercentageConverter < ActiveSupport::NumberHelper::NumberConverter
+  def convert; end
+  def self.namespace; end
+end
+class ActiveSupport::OptionMerger
+  def initialize(context, options); end
+  def invoke_method(method, arguments, options, &block); end
+  def method_missing(method, *arguments, &block); end
+end
+class ActiveSupport::OrderedHash < Hash
+  def encode_with(coder); end
+  def extractable_options?; end
+  def nested_under_indifferent_access; end
+  def reject(*args, &block); end
+  def select(*args, &block); end
+  def to_yaml_type; end
+end
+class ActiveSupport::StringInquirer < String
+  def method_missing(method_name, *arguments); end
+  def respond_to_missing?(method_name, include_private = nil); end
+end
+module ActiveSupport::TaggedLogging
+  def clear_tags!(*args, &block); end
+  def flush; end
+  def pop_tags(*args, &block); end
+  def push_tags(*args, &block); end
+  def self.new(logger); end
+  def tagged(*tags); end
+end
+module ActiveSupport::TaggedLogging::Formatter
+  def call(severity, timestamp, progname, msg); end
+  def clear_tags!; end
+  def current_tags; end
+  def pop_tags(size = nil); end
+  def push_tags(*tags); end
+  def tagged(*tags); end
+  def tags_text; end
+end
+class ActiveSupport::ArrayInquirer < Array
+  def any?(*candidates); end
+  def method_missing(name, *args); end
+  def respond_to_missing?(name, include_private = nil); end
+end
+class ActiveSupport::Duration::ISO8601Parser
+  def finished?; end
+  def initialize(string); end
+  def mode; end
+  def mode=(arg0); end
+  def number; end
+  def parse!; end
+  def parts; end
+  def raise_parsing_error(reason = nil); end
+  def scan(pattern); end
+  def scanner; end
+  def sign; end
+  def sign=(arg0); end
+  def validate!; end
+end
+class ActiveSupport::Duration::ISO8601Parser::ParsingError < ArgumentError
+end
+class ActiveSupport::Duration::ISO8601Serializer
+  def initialize(duration, precision: nil); end
+  def normalize; end
+  def serialize; end
+end
+module ActiveSupport::Rescuable
+  def handler_for_rescue(exception); end
+  def rescue_with_handler(exception); end
+  extend ActiveSupport::Concern
+end
+module ActiveSupport::Rescuable::ClassMethods
+  def constantize_rescue_handler_class(class_or_name); end
+  def find_rescue_handler(exception); end
+  def handler_for_rescue(exception, object: nil); end
+  def rescue_from(*klasses, with: nil, &block); end
+  def rescue_with_handler(exception, object: nil, visited_exceptions: nil); end
+end
+class ERB
+end
+module ERB::Util
+  def html_escape_once(s); end
+  def json_escape(s); end
+  def self.html_escape_once(s); end
+  def self.json_escape(s); end
+  def self.unwrapped_html_escape(s); end
+  def unwrapped_html_escape(s); end
+end
+class ActiveSupport::SafeBuffer < String
+  def %(args); end
+  def *(*arg0); end
+  def +(other); end
+  def <<(value); end
+  def [](*args); end
+  def []=(*args); end
+  def capitalize!(*args); end
+  def capitalize(*args, &block); end
+  def chomp!(*args); end
+  def chomp(*args, &block); end
+  def chop!(*args); end
+  def chop(*args, &block); end
+  def clone_empty; end
+  def concat(value); end
+  def delete!(*args); end
+  def delete(*args, &block); end
+  def delete_prefix!(*args); end
+  def delete_prefix(*args, &block); end
+  def delete_suffix!(*args); end
+  def delete_suffix(*args, &block); end
+  def downcase!(*args); end
+  def downcase(*args, &block); end
+  def encode_with(coder); end
+  def gsub!(*args, &block); end
+  def gsub(*args, &block); end
+  def html_escape_interpolated_argument(arg); end
+  def html_safe?; end
+  def initialize(str = nil); end
+  def initialize_copy(other); end
+  def insert(index, value); end
+  def lstrip!(*args); end
+  def lstrip(*args, &block); end
+  def next!(*args); end
+  def next(*args, &block); end
+  def original_concat(*arg0); end
+  def prepend(value); end
+  def replace(value); end
+  def reverse!(*args); end
+  def reverse(*args, &block); end
+  def rstrip!(*args); end
+  def rstrip(*args, &block); end
+  def safe_concat(value); end
+  def set_block_back_references(block, match_data); end
+  def slice!(*args); end
+  def slice(*args, &block); end
+  def squeeze!(*args); end
+  def squeeze(*args, &block); end
+  def strip!(*args); end
+  def strip(*args, &block); end
+  def sub!(*args, &block); end
+  def sub(*args, &block); end
+  def succ!(*args); end
+  def succ(*args, &block); end
+  def swapcase!(*args); end
+  def swapcase(*args, &block); end
+  def to_param; end
+  def to_s; end
+  def tr!(*args); end
+  def tr(*args, &block); end
+  def tr_s!(*args); end
+  def tr_s(*args, &block); end
+  def unicode_normalize!(*args); end
+  def unicode_normalize(*args, &block); end
+  def upcase!(*args); end
+  def upcase(*args, &block); end
+end
+class ActiveSupport::SafeBuffer::SafeConcatError < StandardError
+  def initialize; end
+end
+module ActiveSupport::Testing
+end
+module ActiveSupport::Testing::TaggedLogging
+  def before_setup; end
+  def tagged_logger; end
+  def tagged_logger=(arg0); end
+end
+module ActiveSupport::Testing::SetupAndTeardown
+  def after_teardown; end
+  def before_setup; end
+  def self.prepended(klass); end
+end
+module ActiveSupport::Testing::SetupAndTeardown::ClassMethods
+  def setup(*args, &block); end
+  def teardown(*args, &block); end
+end
+module ActiveSupport::Testing::Assertions
+  def assert_changes(expression, message = nil, from: nil, to: nil, &block); end
+  def assert_difference(expression, *args, &block); end
+  def assert_no_changes(expression, message = nil, &block); end
+  def assert_no_difference(expression, message = nil, &block); end
+  def assert_not(object, message = nil); end
+  def assert_nothing_raised; end
+end
+module ActiveSupport::Testing::Deprecation
+  def assert_deprecated(match = nil, deprecator = nil, &block); end
+  def assert_not_deprecated(deprecator = nil, &block); end
+  def collect_deprecations(deprecator = nil); end
+end
+module ActiveSupport::Testing::Declarative
+  def test(name, &block); end
+end
+module ActiveSupport::Testing::Isolation
+  def run; end
+  def self.forking_env?; end
+  def self.included(klass); end
+  include ActiveSupport::Testing::Isolation::Forking
+end
+module ActiveSupport::Testing::Isolation::Forking
+  def run_in_isolation(&blk); end
+end
+module ActiveSupport::Testing::Isolation::Subprocess
+  def run_in_isolation(&blk); end
+end
+module ActiveSupport::Testing::ConstantLookup
+  extend ActiveSupport::Concern
+end
+module ActiveSupport::Testing::ConstantLookup::ClassMethods
+  def determine_constant_from_test_name(test_name); end
+end
+class ActiveSupport::Testing::SimpleStubs
+  def initialize; end
+  def stub_object(object, method_name, &block); end
+  def stubbing(object, method_name); end
+  def unstub_all!; end
+  def unstub_object(stub); end
+end
+class ActiveSupport::Testing::SimpleStubs::Stub < Struct
+  def method_name; end
+  def method_name=(_); end
+  def object; end
+  def object=(_); end
+  def original_method; end
+  def original_method=(_); end
+  def self.[](*arg0); end
+  def self.inspect; end
+  def self.members; end
+  def self.new(*arg0); end
+end
+module ActiveSupport::Testing::TimeHelpers
+  def after_teardown; end
+  def freeze_time(&block); end
+  def simple_stubs; end
+  def travel(duration, &block); end
+  def travel_back; end
+  def travel_to(date_or_time); end
+  def unfreeze_time; end
+end
+module ActiveSupport::Testing::FileFixtures
+  def file_fixture(fixture_name); end
+  extend ActiveSupport::Concern
+end
+class ActiveSupport::Testing::Parallelization
+  def <<(work); end
+  def add_setup_exception(result, setup_exception); end
+  def after_fork(worker); end
+  def after_fork_hooks; end
+  def initialize(queue_size); end
+  def run_cleanup(worker); end
+  def run_cleanup_hooks; end
+  def self.after_fork_hook(&blk); end
+  def self.after_fork_hooks; end
+  def self.run_cleanup_hook(&blk); end
+  def self.run_cleanup_hooks; end
+  def shutdown; end
+  def start; end
+end
+class ActiveSupport::Testing::Parallelization::Server
+  def <<(o); end
+  def initialize; end
+  def length; end
+  def pop; end
+  def record(reporter, result); end
+  include DRb::DRbUndumped
+end
+class ActiveSupport::TestCase < Minitest::Test
+  def __callbacks; end
+  def __callbacks?; end
+  def _run_setup_callbacks(&block); end
+  def _run_teardown_callbacks(&block); end
+  def _setup_callbacks; end
+  def _teardown_callbacks; end
+  def assert_no_match(matcher, obj, msg = nil); end
+  def assert_not_empty(obj, msg = nil); end
+  def assert_not_equal(exp, act, msg = nil); end
+  def assert_not_in_delta(exp, act, delta = nil, msg = nil); end
+  def assert_not_in_epsilon(a, b, epsilon = nil, msg = nil); end
+  def assert_not_includes(collection, obj, msg = nil); end
+  def assert_not_instance_of(cls, obj, msg = nil); end
+  def assert_not_kind_of(cls, obj, msg = nil); end
+  def assert_not_nil(obj, msg = nil); end
+  def assert_not_operator(o1, op, o2 = nil, msg = nil); end
+  def assert_not_predicate(o1, op, msg = nil); end
+  def assert_not_respond_to(obj, meth, msg = nil); end
+  def assert_not_same(exp, act, msg = nil); end
+  def assert_raise(*exp); end
+  def file_fixture_path; end
+  def file_fixture_path?; end
+  def method_name; end
+  def self.__callbacks; end
+  def self.__callbacks=(val); end
+  def self.__callbacks?; end
+  def self._setup_callbacks; end
+  def self._setup_callbacks=(value); end
+  def self._teardown_callbacks; end
+  def self._teardown_callbacks=(value); end
+  def self.file_fixture_path; end
+  def self.file_fixture_path=(val); end
+  def self.file_fixture_path?; end
+  def self.parallelize(workers: nil, with: nil); end
+  def self.parallelize_setup(&block); end
+  def self.parallelize_teardown(&block); end
+  def self.test_order; end
+  def self.test_order=(new_order); end
+  extend ActiveSupport::Callbacks::ClassMethods
+  extend ActiveSupport::DescendantsTracker
+  extend ActiveSupport::Testing::Declarative
+  extend ActiveSupport::Testing::SetupAndTeardown::ClassMethods
+  include ActiveSupport::Callbacks
+  include ActiveSupport::Testing::Assertions
+  include ActiveSupport::Testing::Deprecation
+  include ActiveSupport::Testing::FileFixtures
+  include ActiveSupport::Testing::TaggedLogging
+  include ActiveSupport::Testing::TimeHelpers
+end
+module Module::Concerning
+  def concern(topic, &module_definition); end
+  def concerning(topic, &block); end
+end
+class ActiveSupport::EncryptedFile
+  def change(&block); end
+  def content_path; end
+  def decrypt(contents); end
+  def encrypt(contents); end
+  def encryptor; end
+  def env_key; end
+  def handle_missing_key; end
+  def initialize(content_path:, key_path:, env_key:, raise_if_missing_key:); end
+  def key; end
+  def key_path; end
+  def raise_if_missing_key; end
+  def read; end
+  def read_env_key; end
+  def read_key_file; end
+  def self.generate_key; end
+  def write(contents); end
+  def writing(contents); end
+end
+class ActiveSupport::EncryptedFile::MissingContentError < RuntimeError
+  def initialize(content_path); end
+end
+class ActiveSupport::EncryptedFile::MissingKeyError < RuntimeError
+  def initialize(key_path:, env_key:); end
+end
+class ActiveSupport::EncryptedConfiguration < ActiveSupport::EncryptedFile
+  def [](*args, &block); end
+  def config; end
+  def deserialize(config); end
+  def fetch(*args, &block); end
+  def initialize(config_path:, key_path:, env_key:, raise_if_missing_key:); end
+  def method_missing(method, *args, &block); end
+  def options; end
+  def read; end
+  def respond_to_missing?(name, include_private = nil); end
+  def write(contents); end
+end
 class ActiveSupport::HashWithIndifferentAccess < Hash
   def [](key); end
   def []=(key, value); end
@@ -1271,6 +2453,7 @@ class ActiveSupport::HashWithIndifferentAccess < Hash
   def delete(key); end
   def dig(*args); end
   def dup; end
+  def except(*keys); end
   def extractable_options?; end
   def fetch(key, *extras); end
   def fetch_values(*indices, &block); end
@@ -1304,458 +2487,74 @@ class ActiveSupport::HashWithIndifferentAccess < Hash
   def transform_keys(*args, &block); end
   def transform_values(*args, &block); end
   def update(other_hash); end
-  def values_at(*indices); end
+  def values_at(*keys); end
   def with_defaults!(other_hash); end
   def with_defaults(other_hash); end
   def with_indifferent_access; end
+  def without(*keys); end
 end
-module ActiveSupport::Rescuable
-  def handler_for_rescue(exception); end
-  def rescue_with_handler(exception); end
-  extend ActiveSupport::Concern
+module ActiveSupport::Dependencies::ZeitwerkIntegration
+  def self.autoload_once?(autoload_path); end
+  def self.decorate_dependencies; end
+  def self.eager_load?(autoload_path); end
+  def self.freeze_paths; end
+  def self.setup_autoloaders(enable_reloading); end
+  def self.take_over(enable_reloading:); end
 end
-module ActiveSupport::Rescuable::ClassMethods
-  def constantize_rescue_handler_class(class_or_name); end
-  def find_rescue_handler(exception); end
-  def handler_for_rescue(exception, object: nil); end
-  def rescue_from(*klasses, with: nil, &block); end
-  def rescue_with_handler(exception, object: nil, visited_exceptions: nil); end
-end
-class LoadError < ScriptError
-  def is_missing?(location); end
-end
-class NameError < StandardError
-  def missing_name; end
-  def missing_name?(name); end
-end
-module URI
-  def self.parser; end
-end
-module ActiveSupport::Multibyte::Unicode
-  def apply_mapping(string, mapping); end
-  def compose(codepoints); end
-  def database; end
-  def decompose(type, codepoints); end
-  def default_normalization_form; end
-  def default_normalization_form=(arg0); end
-  def downcase(string); end
-  def in_char_class?(codepoint, classes); end
-  def normalize(string, form = nil); end
-  def pack_graphemes(unpacked); end
-  def recode_windows1252_chars(string); end
-  def reorder_characters(codepoints); end
-  def swapcase(string); end
-  def tidy_bytes(string, force = nil); end
-  def unpack_graphemes(string); end
-  def upcase(string); end
-  extend ActiveSupport::Multibyte::Unicode
-end
-class ActiveSupport::Multibyte::Unicode::Codepoint
-  def code; end
-  def code=(arg0); end
-  def combining_class; end
-  def combining_class=(arg0); end
-  def decomp_mapping; end
-  def decomp_mapping=(arg0); end
-  def decomp_type; end
-  def decomp_type=(arg0); end
-  def initialize; end
-  def lowercase_mapping; end
-  def lowercase_mapping=(arg0); end
-  def swapcase_mapping; end
-  def uppercase_mapping; end
-  def uppercase_mapping=(arg0); end
-end
-class ActiveSupport::Multibyte::Unicode::UnicodeDatabase
-  def boundary; end
-  def boundary=(arg0); end
-  def codepoints; end
-  def codepoints=(arg0); end
-  def composition_exclusion; end
-  def composition_exclusion=(arg0); end
-  def composition_map; end
-  def composition_map=(arg0); end
-  def cp1252; end
-  def cp1252=(arg0); end
-  def initialize; end
-  def load; end
-  def self.dirname; end
-  def self.filename; end
-end
-class ERB
-end
-module ERB::Util
-  def html_escape_once(s); end
-  def json_escape(s); end
-  def self.html_escape_once(s); end
-  def self.json_escape(s); end
-  def self.unwrapped_html_escape(s); end
-  def unwrapped_html_escape(s); end
-end
-class ActiveSupport::SafeBuffer < String
-  def %(args); end
-  def +(other); end
-  def <<(value); end
-  def [](*args); end
-  def capitalize!(*args); end
-  def capitalize(*args, &block); end
-  def chomp!(*args); end
-  def chomp(*args, &block); end
-  def chop!(*args); end
-  def chop(*args, &block); end
-  def clone_empty; end
-  def concat(value); end
-  def delete!(*args); end
-  def delete(*args, &block); end
-  def downcase!(*args); end
-  def downcase(*args, &block); end
-  def encode_with(coder); end
-  def gsub!(*args); end
-  def gsub(*args, &block); end
-  def html_escape_interpolated_argument(arg); end
-  def html_safe?; end
-  def initialize(str = nil); end
-  def initialize_copy(other); end
-  def lstrip!(*args); end
-  def lstrip(*args, &block); end
-  def next!(*args); end
-  def next(*args, &block); end
-  def original_concat(*arg0); end
-  def prepend(value); end
-  def reverse!(*args); end
-  def reverse(*args, &block); end
-  def rstrip!(*args); end
-  def rstrip(*args, &block); end
-  def safe_concat(value); end
-  def slice!(*args); end
-  def slice(*args, &block); end
-  def squeeze!(*args); end
-  def squeeze(*args, &block); end
-  def strip!(*args); end
-  def strip(*args, &block); end
-  def sub!(*args); end
-  def sub(*args, &block); end
-  def succ!(*args); end
-  def succ(*args, &block); end
-  def swapcase!(*args); end
-  def swapcase(*args, &block); end
-  def to_param; end
-  def to_s; end
-  def tr!(*args); end
-  def tr(*args, &block); end
-  def tr_s!(*args); end
-  def tr_s(*args, &block); end
-  def upcase!(*args); end
-  def upcase(*args, &block); end
-end
-class ActiveSupport::SafeBuffer::SafeConcatError < StandardError
-  def initialize; end
-end
-class ActiveSupport::Subscriber
-  def self.add_event_subscriber(event); end
-  def self.attach_to(namespace, subscriber = nil, notifier = nil); end
-  def self.method_added(event); end
-  def self.namespace; end
-  def self.notifier; end
-  def self.subscriber; end
-  def self.subscribers; end
-end
-class ActiveSupport::SubscriberQueueRegistry
-  def get_queue(queue_key); end
-  def initialize; end
-  extend ActiveSupport::PerThreadRegistry
-end
-class ActiveSupport::LogSubscriber < ActiveSupport::Subscriber
-  def self.colorize_logging; end
-  def self.colorize_logging=(obj); end
-  def self.flush_all!; end
-  def self.log_subscribers; end
-  def self.logger; end
-  def self.logger=(arg0); end
-end
-module ActiveSupport::Concurrency
-end
-class ActiveSupport::Concurrency::ShareLock
-  def busy_for_exclusive?(purpose); end
-  def busy_for_sharing?(purpose); end
-  def eligible_waiters?(compatible); end
-  def exclusive(purpose: nil, compatible: nil, after_compatible: nil, no_wait: nil); end
-  def initialize; end
-  def raw_state; end
-  def sharing; end
-  def start_exclusive(purpose: nil, compatible: nil, no_wait: nil); end
-  def start_sharing; end
-  def stop_exclusive(compatible: nil); end
-  def stop_sharing; end
-  def wait_for(method); end
-  def yield_shares(purpose: nil, compatible: nil, block_share: nil); end
-  include MonitorMixin
-end
-module ActiveSupport::Dependencies
-  def autoload_module!(into, const_name, qualified_name, path_suffix); end
-  def autoload_once_paths; end
-  def autoload_once_paths=(obj); end
-  def autoload_paths; end
-  def autoload_paths=(obj); end
-  def autoloadable_module?(path_suffix); end
-  def autoloaded?(desc); end
+module ActiveSupport::Dependencies::ZeitwerkIntegration::Decorations
+  def autoloaded?(object); end
   def autoloaded_constants; end
-  def autoloaded_constants=(obj); end
   def clear; end
-  def constant_watch_stack; end
-  def constant_watch_stack=(obj); end
-  def constantize(name); end
-  def depend_on(file_name, message = nil); end
-  def explicitly_unloadable_constants; end
-  def explicitly_unloadable_constants=(obj); end
-  def history; end
-  def history=(obj); end
-  def hook!; end
-  def interlock; end
-  def interlock=(obj); end
-  def load?; end
-  def load_file(path, const_paths = nil); end
-  def load_missing_constant(from_mod, const_name); end
-  def load_once_path?(path); end
-  def loadable_constants_for_path(path, bases = nil); end
-  def loaded; end
-  def loaded=(obj); end
-  def loading; end
-  def loading=(obj); end
-  def mark_for_unload(const_desc); end
-  def mechanism; end
-  def mechanism=(obj); end
-  def new_constants_in(*descs); end
-  def qualified_const_defined?(path); end
-  def qualified_name_for(mod, name); end
-  def reference(klass); end
-  def remove_constant(const); end
-  def remove_unloadable_constants!; end
-  def require_or_load(file_name, const_path = nil); end
-  def safe_constantize(name); end
-  def search_for_file(path_suffix); end
-  def self.autoload_once_paths; end
-  def self.autoload_once_paths=(obj); end
-  def self.autoload_paths; end
-  def self.autoload_paths=(obj); end
-  def self.autoloaded_constants; end
-  def self.autoloaded_constants=(obj); end
-  def self.constant_watch_stack; end
-  def self.constant_watch_stack=(obj); end
-  def self.explicitly_unloadable_constants; end
-  def self.explicitly_unloadable_constants=(obj); end
-  def self.history; end
-  def self.history=(obj); end
-  def self.interlock; end
-  def self.interlock=(obj); end
-  def self.load_interlock; end
-  def self.loaded; end
-  def self.loaded=(obj); end
-  def self.loading; end
-  def self.loading=(obj); end
-  def self.mechanism; end
-  def self.mechanism=(obj); end
-  def self.run_interlock; end
-  def self.unload_interlock; end
-  def self.warnings_on_first_load; end
-  def self.warnings_on_first_load=(obj); end
-  def to_constant_name(desc); end
+  def constantize(cpath); end
+  def safe_constantize(cpath); end
   def unhook!; end
-  def warnings_on_first_load; end
-  def warnings_on_first_load=(obj); end
-  def will_unload?(const_desc); end
-  extend ActiveSupport::Dependencies
+  def verbose=(verbose); end
 end
-class ActiveSupport::Dependencies::Interlock
-  def done_running; end
-  def done_unloading; end
+module ActiveSupport::Dependencies::ZeitwerkIntegration::RequireDependency
+  def require_dependency(filename); end
+end
+module ActiveSupport::Dependencies::ZeitwerkIntegration::Inflector
+  def self.camelize(basename, _abspath); end
+  def self.inflect(overrides); end
+end
+class Integer < Numeric
+  def month; end
+  def months; end
+  def year; end
+  def years; end
+end
+class ActiveSupport::XMLConverter
+  def become_array?(value); end
+  def become_content?(value); end
+  def become_empty_string?(value); end
+  def become_hash?(value); end
+  def deep_to_h(value); end
+  def garbage?(value); end
+  def initialize(xml, disallowed_types = nil); end
+  def normalize_keys(params); end
+  def nothing?(value); end
+  def process_array(value); end
+  def process_content(value); end
+  def process_hash(value); end
+  def to_h; end
+end
+class ActiveSupport::XMLConverter::DisallowedType < StandardError
+  def initialize(type); end
+end
+module I18n
+end
+class I18n::Railtie < Rails::Railtie
+  def self.include_fallbacks_module; end
+  def self.init_fallbacks(fallbacks); end
+  def self.initialize_i18n(app); end
+  def self.validate_fallbacks(fallbacks); end
+  def self.watched_dirs_with_extensions(paths); end
+end
+class ActiveSupport::Railtie < Rails::Railtie
+end
+class ActiveSupport::Messages::RotationConfiguration
+  def encrypted; end
   def initialize; end
-  def loading; end
-  def permit_concurrent_loads; end
-  def raw_state(&block); end
-  def running; end
-  def start_running; end
-  def start_unloading; end
-  def unloading; end
-end
-class ActiveSupport::Dependencies::WatchStack
-  def each(&block); end
-  def initialize; end
-  def new_constants; end
-  def pop_modules(modules); end
-  def watch_namespaces(namespaces); end
-  def watching; end
-  def watching?; end
-  include Enumerable
-end
-module ActiveSupport::Dependencies::ModuleConstMissing
-  def const_missing(const_name); end
-  def guess_for_anonymous(const_name); end
-  def self.append_features(base); end
-  def self.exclude_from(base); end
-  def unloadable(const_desc = nil); end
-end
-module ActiveSupport::Dependencies::Loadable
-  def load(file, wrap = nil); end
-  def load_dependency(file); end
-  def require(file); end
-  def require_dependency(file_name, message = nil); end
-  def require_or_load(file_name); end
-  def self.exclude_from(base); end
-  def unloadable(const_desc); end
-end
-module ActiveSupport::Dependencies::Blamable
-  def blame_file!(file); end
-  def blamed_files; end
-  def copy_blame!(exc); end
-  def describe_blame; end
-end
-class ActiveSupport::Dependencies::ClassCache
-  def [](key); end
-  def clear!; end
-  def empty?; end
-  def get(key); end
-  def initialize; end
-  def key?(key); end
-  def safe_get(key); end
-  def store(klass); end
-end
-module ActiveSupport::Configurable
-  def config; end
-  extend ActiveSupport::Concern
-end
-class ActiveSupport::Configurable::Configuration < ActiveSupport::InheritableOptions
-  def compile_methods!; end
-  def self.compile_methods!(keys); end
-end
-module ActiveSupport::Configurable::ClassMethods
-  def config; end
-  def config_accessor(*names); end
-  def configure; end
-end
-module ActiveSupport::DescendantsTracker
-  def descendants; end
-  def direct_descendants; end
-  def inherited(base); end
-  def self.accumulate_descendants(klass, acc); end
-  def self.clear; end
-  def self.descendants(klass); end
-  def self.direct_descendants(klass); end
-  def self.store_inherited(klass, descendant); end
-end
-module Benchmark
-  def self.ms; end
-end
-module ActiveSupport::Benchmarkable
-  def benchmark(message = nil, options = nil); end
-end
-module ActiveSupport::Callbacks
-  def halted_callback_hook(filter); end
-  def run_callbacks(kind); end
-  extend ActiveSupport::Concern
-end
-module ActiveSupport::Callbacks::Conditionals
-end
-class ActiveSupport::Callbacks::Conditionals::Value
-  def call(target, value); end
-  def initialize(&block); end
-end
-module ActiveSupport::Callbacks::Filters
-end
-class ActiveSupport::Callbacks::Filters::Environment < Struct
-  def halted; end
-  def halted=(_); end
-  def self.[](*arg0); end
-  def self.inspect; end
-  def self.members; end
-  def self.new(*arg0); end
-  def target; end
-  def target=(_); end
-  def value; end
-  def value=(_); end
-end
-class ActiveSupport::Callbacks::Filters::Before
-  def self.build(callback_sequence, user_callback, user_conditions, chain_config, filter); end
-  def self.halting(callback_sequence, user_callback, halted_lambda, filter); end
-  def self.halting_and_conditional(callback_sequence, user_callback, user_conditions, halted_lambda, filter); end
-end
-class ActiveSupport::Callbacks::Filters::After
-  def self.build(callback_sequence, user_callback, user_conditions, chain_config); end
-  def self.conditional(callback_sequence, user_callback, user_conditions); end
-  def self.halting(callback_sequence, user_callback); end
-  def self.halting_and_conditional(callback_sequence, user_callback, user_conditions); end
-  def self.simple(callback_sequence, user_callback); end
-end
-class ActiveSupport::Callbacks::Callback
-  def apply(callback_sequence); end
-  def chain_config; end
-  def check_conditionals(conditionals); end
-  def compute_identifier(filter); end
-  def conditions_lambdas; end
-  def current_scopes; end
-  def duplicates?(other); end
-  def filter; end
-  def initialize(name, filter, kind, options, chain_config); end
-  def kind; end
-  def kind=(arg0); end
-  def matches?(_kind, _filter); end
-  def merge_conditional_options(chain, if_option:, unless_option:); end
-  def name; end
-  def name=(arg0); end
-  def raw_filter; end
-  def self.build(chain, filter, kind, options); end
-end
-class ActiveSupport::Callbacks::CallTemplate
-  def expand(target, value, block); end
-  def initialize(target, method, arguments, block); end
-  def inverted_lambda; end
-  def make_lambda; end
-  def self.build(filter, callback); end
-end
-class ActiveSupport::Callbacks::CallbackSequence
-  def after(&after); end
-  def around(call_template, user_conditions); end
-  def before(&before); end
-  def expand_call_template(arg, block); end
-  def final?; end
-  def initialize(nested = nil, call_template = nil, user_conditions = nil); end
-  def invoke_after(arg); end
-  def invoke_before(arg); end
-  def nested; end
-  def skip?(arg); end
-end
-class ActiveSupport::Callbacks::CallbackChain
-  def append(*callbacks); end
-  def append_one(callback); end
-  def chain; end
-  def clear; end
-  def compile; end
-  def config; end
-  def default_terminator; end
-  def delete(o); end
-  def each(&block); end
-  def empty?; end
-  def index(o); end
-  def initialize(name, config); end
-  def initialize_copy(other); end
-  def insert(index, o); end
-  def name; end
-  def prepend(*callbacks); end
-  def prepend_one(callback); end
-  def remove_duplicates(callback); end
-  include Enumerable
-end
-module ActiveSupport::Callbacks::ClassMethods
-  def __update_callbacks(name); end
-  def define_callbacks(*names); end
-  def get_callbacks(name); end
-  def normalize_callback_params(filters, block); end
-  def reset_callbacks(name); end
-  def set_callback(name, *filter_list, &block); end
-  def set_callbacks(name, callbacks); end
-  def skip_callback(name, *filter_list, &block); end
-end
-class ActiveSupport::StringInquirer < String
-  def method_missing(method_name, *arguments); end
-  def respond_to_missing?(method_name, include_private = nil); end
+  def rotate(kind, *args); end
+  def signed; end
 end

@@ -1,4 +1,4 @@
-# typed: strict
+# typed: false
 module Redcord::Migration::TTL
   extend T::Sig
 

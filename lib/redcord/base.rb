@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 #
-# typed: strict
+# typed: false
 #
 # A Redis ORM API inspired by ActiveRecord:
 # - It provides atomic CRUD operations

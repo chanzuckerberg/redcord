@@ -2,7 +2,9 @@
 #   srb rbi todo
 
 # typed: strong
-module ::Anonymous_Delegator_1; end
+module ::Anonymous_Delegator_4; end
+module Redcord::Attribute::RangeIndexType; end
+module Redcord::InvalidAttribute; end
 module T::InterfaceWrapper::Helpers; end
 module T::Private::Abstract::Hooks; end
 module T::Private::Methods::MethodHooks; end
