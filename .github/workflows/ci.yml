@@ -16,8 +16,6 @@ jobs:
         ruby: [2.7, 3.1, ruby-head]
         use_cluster: [true, false]
         include:
-          - ruby: 3.1 # TODO(mattxwang): remove this ASAP!
-            experimental: true # a hack to allow tests to fail for ruby-head, https://github.com/actions/toolkit/issues/399
           - ruby: ruby-head
             experimental: true # a hack to allow tests to fail for ruby-head, https://github.com/actions/toolkit/issues/399
 
