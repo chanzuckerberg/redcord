@@ -48,7 +48,7 @@ module Redcord::Migration::Index
   sig { params(model: T.class_of(Redcord::Base), key: String).void }
   def _del_zset(model, key)
     # ZPOPMIN might not be avaliable on old redis servers
-    model.redis.zscan_each(nil, match: key) do |id, _|
+    model.redis.zscan_each(key) do |id, _|
       model.redis.zrem(key, id)
     end
 
