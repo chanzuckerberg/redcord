@@ -24,9 +24,16 @@ class Redcord::Railtie < Rails::Railtie
     config_file = 'config/redcord.yml'
 
     if File.file?(config_file)
-      Redcord::Base.configurations = YAML.load(
-        ERB.new(File.read(config_file)).result
-      )
+      if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('3.1.0')
+        Redcord::Base.configurations = YAML.load(
+          ERB.new(File.read(config_file)).result,
+        )
+      else
+        Redcord::Base.configurations = YAML.load(
+          ERB.new(File.read(config_file)).result,
+          aliases: true,
+        )
+      end
     end
 
     Redcord._after_initialize!
