@@ -1,5 +1,6 @@
 name: Create and publish the Redcord package
 on:
+  workflow_dispatch:
   release:
     types: [published]
 jobs:

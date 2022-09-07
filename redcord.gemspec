@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name          = 'redcord'
-  s.version       = '0.1.6'
+  s.version       = '0.2.1'
   s.date          = '2020-06-01'
   s.summary       = 'A Ruby ORM like Active Record, but for Redis'
   s.authors       = ['Chan Zuckerberg Initiative']
@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
   s.files         = Dir.glob('lib/**/*')
 
-  s.required_ruby_version = ['>= 2.5.0']
+  s.required_ruby_version = ['>= 2.7.0']
 
   s.add_dependency 'activesupport', '>= 5'
   s.add_dependency 'railties', '>= 5'
