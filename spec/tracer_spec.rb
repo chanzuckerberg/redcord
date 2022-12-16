@@ -23,7 +23,6 @@ describe Redcord::Tracer do
                 'version' => 'tag_version'
               }) { counter += 1 }
       ).to be 1
-
       expect(counter).to be 1
     end
   end
