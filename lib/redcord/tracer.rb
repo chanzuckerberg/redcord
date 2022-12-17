@@ -22,7 +22,7 @@ module Redcord::Tracer
       params(
         span_name: String,
         model_name: String,
-        tags: T::Hash[T.any(Symbol, String), String],
+        tags: T::Hash[String, String],
         blk: T.proc.returns(T.untyped),
       ).returns(T.untyped)
     }
