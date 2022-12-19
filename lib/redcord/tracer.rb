@@ -22,11 +22,11 @@ module Redcord::Tracer
       params(
         span_name: String,
         model_name: String,
-        tags: T::Array[String],
+        tags: T::Hash[String, String],
         blk: T.proc.returns(T.untyped),
       ).returns(T.untyped)
     }
-    def trace(span_name, model_name:, tags: [], &blk)
+    def trace(span_name, model_name:, tags: {}, &blk)
       return blk.call if @@tracer.nil?
 
       @@tracer.call.trace(
